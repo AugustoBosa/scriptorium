@@ -1,0 +1,33 @@
+{
+  "name": "caligrafia-plotter",
+  "version": "1.0.0",
+  "description": "Gerador de caligrafia de traço único para uma impressora 3D (Anycubic i3 Mega S) adaptada como plotter de caneta.",
+  "scripts": {
+    "test": "node --test",
+    "dev": "vite --port 8765 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 8765",
+    "e2e": "playwright test",
+    "golden": "node --test --test-update-snapshots"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AugustoBosa/3dprinter_plotter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/AugustoBosa/3dprinter_plotter/issues"
+  },
+  "homepage": "https://github.com/AugustoBosa/3dprinter_plotter#readme",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "vite": "^8.3.8"
+  },
+  "dependencies": {
+    "hachure-fill": "^0.5.2"
+  }
+}
