@@ -17,6 +17,16 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M9 Ajuda "?" em cada configuração | FECHADO (ciclo 05, verificado no navegador pelo orquestrador) |
 | M10 2-opt, trajeto, exportar tudo, importar .txt | FECHADO (ciclo 06, verificado no navegador pelo orquestrador) |
 | M11 Scrolls e grimórios de D&D (grimorio.html) | FECHADO (11 testes em test/grimorio.test.mjs; verificado no navegador; falta plotar em papel) |
+| M12 gerar-magias com texto completo pt-BR | FECHADO (commit 4f1cd71) |
+| M13 Fundação (árvore nova, goldens, 2-opt adaptativo, Action do Pages) | ABERTO — ver workflow/EXPANSAO.md |
+| M14 Documento, máquinas, papel | ABERTO |
+| M15 Identidade + oficinas (PARADA para aprovação do usuário) | ABERTO |
+| M16 Motor I: contexto | ABERTO |
+| M17 Motor II: ductus | ABERTO |
+| M18 Ornamento | ABERTO |
+| M19 Arcano | ABERTO |
+| M20 Materiais | ABERTO |
+| M21 Polimento | ABERTO |
 
 ## Itens do DoD comprovados
 
@@ -65,7 +75,14 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 05 | OK: Fase 2 entregue (M7-M9) em 2 lotes; personagens/ apagado; 76 pass / 0 fail; falta verificação no navegador |
 | 06 | OK: M10 feito pelo orquestrador (2-opt em janela, trajeto na prévia, baixar todas as páginas, importar .txt); 81 pass / 0 fail. Medido: `otimizar` A5 6 mm 87 ms, A4 6 mm 327 ms; A4 com letra de 3 mm (9600 traços) ~8 s (lento, só nesse extremo; o guloso O(n²) é a maior parte) |
 
-## Retomada (2026-11-10) — LEIA ESTA PRIMEIRA
+## Retomada (2026-11-15) — LEIA ESTA PRIMEIRA
+
+- Expansão "Scriptorium" planejada: **workflow/EXPANSAO.md** tem decisões, arquitetura, DoD de M13–M21 e o laço de orquestração. Branch `expansao`.
+- Ambiente pronto: npm + Vite + Playwright (Chromium) + hachure-fill; `npm test` 92/92; `npm run build` ok.
+- **Próxima ação:** M13, começando pelos goldens (antes de mover qualquer código).
+- O 2-opt adaptativo virou tarefa do M13; o perfil P2S, tarefa do M14.
+
+## Retomada (2026-11-10)
 
 - Fechado: M1–M10, 81/81 testes, commit `3f39497` publicado em `main` (M10: 2-opt em janela, trajeto na prévia, baixar todas as páginas, importar `.txt`).
 - **Próxima ação já decidida:** aplicar a regra adaptativa em `otimizar` (2-opt completo até 2.000 traços, janela 50 acima). Passo a passo e medições em `workflow/experimentos/otimizar/RESULTADOS.md`. Algoritmo genético descartado.
