@@ -236,4 +236,5 @@ Fora isso: seguir sem perguntar.
 - `npm run build`: `dist/index.html`, `dist/grimorio.html`, `dist/fontes/` (46 arquivos).
 - `npm run e2e`: 4/4 (index e grimório, projetos claro e vela, zero erro de console).
 - Navegador embutido via `preview_start caligrafia` (Vite): prévia desenha, console limpo.
-- **Pendente do usuário:** allowlist de permissões em `.claude/settings.json` (o agente não pode gravar as próprias permissões); trocar a fonte do GitHub Pages para "GitHub Actions" quando o M13 criar o `pages.yml`.
+- Allowlist de permissões em `.claude/settings.json` (local, fora do git): npm test/run, npx vite/playwright, node --test, git status/diff/log/add/commit/mv.
+- **Pendente do usuário:** trocar a fonte do GitHub Pages para "GitHub Actions" quando o M13 criar o `pages.yml`.
