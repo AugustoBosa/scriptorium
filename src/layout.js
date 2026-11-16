@@ -1,5 +1,6 @@
-import { glifo } from './motor/mao.js';
-import { rng } from './rng.js';
+import { glifo, NEUTRA } from './motor/mao.js';
+import { escreverPalavra } from './motor/escrita.js';
+import { rng, ruido1d } from './rng.js';
 import { ROTULOS, AJUDA } from './ajuda.js';
 
 export const PAGINAS = {
@@ -9,6 +10,7 @@ export const PAGINAS = {
 };
 
 export function compor(texto, fontes, mao, pagina, opcoes = {}) {
+  mao = { ...NEUTRA, ...mao }; // personagem antigo pode não ter os campos novos
   const tamanho = opcoes.tamanho ?? 6;
   const entrelinha = opcoes.entrelinha ?? 1.6;
   const alinhamento = opcoes.alinhamento ?? 'esquerda';
@@ -27,21 +29,16 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
 
   // Palavra como unidade: glifos medidos com as ocorrencias que o desenho usara (variacao/pressa mudam a largura).
   const cont = new Map();
-  const escrever = (texto) => {
-    const loc = new Map();
-    let largura = 0;
-    const glifos = [];
-    for (const ch of texto) {
-      const n = loc.get(ch) ?? 0;
-      loc.set(ch, n + 1);
-      const g = glifo(fontes, mao, ch, (cont.get(ch) ?? 0) + n);
-      glifos.push(g);
-      largura += g.adv * tamanho;
-    }
-    return { texto, largura, glifos };
+  const N = Math.max(1, texto.split(/[ \n]/).filter(Boolean).length);
+  const ctxE = { fontes, mao, tamanho, cont, indice: 0, t: 0, F: 0 };
+  let percorrido = 0, cans = 0; // mm escritos (ondulação/deriva) e cansaço acumulado em [0,1]
+  const escrever = (p) => {
+    ctxE.indice = indice; ctxE.t = percorrido / mao.ritmo; ctxE.F = mao.fadiga * cans;
+    return escreverPalavra(p, ctxE);
   };
   const gastar = (s) => { for (const ch of s) cont.set(ch, (cont.get(ch) ?? 0) + 1); };
   const espaco = (glifo(fontes, mao, ' ', 0).adv + mao.espacoPalavra) * tamanho;
+  const aceitar = (w) => { percorrido += w.largura + espaco; cans = Math.min(1, cans + 1 / N); };
 
   const n = opcoes.colunas ?? 1;
   const vao = opcoes.vaoColunas ?? 2 * tamanho;
@@ -62,11 +59,16 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
     fimPag = Math.max(fimPag, base(cur.k - 1));
     cur.k = 0;
     if (++cur.col === cols.length) {
-      cur.col = 0; cur.pag++; cur.topo = margens.topo; fimPag = -Infinity;
+      cur.col = 0; cur.pag++; cans *= 0.5; cur.topo = margens.topo; fimPag = -Infinity;
       paginas.push([]);
     }
     return true;
   };
+  // Margem que anda: recuo só para a direita, então nunca invade margem nem obstáculo.
+  const recuo = ({ pag, col, k }) => mao.deriva > 0 && alinhamento !== 'centro'
+    ? mao.deriva * tamanho * (0.45 * (ruido1d(mao.seed + '|margem|' + pag + '|' + col, k / 5) + 1) / 2
+      + 0.15 * rng(mao.seed + '|recuo|' + pag + '|' + col + '|' + k)())
+    : 0;
   // próxima linha com espaço: { x0, W, y, pag, col, k }
   const vaga = () => {
     for (;;) {
@@ -74,7 +76,8 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
       const y = base(cur.k), c = cols[cur.col];
       const pos = { y, pag: cur.pag, col: cur.col, k: cur.k };
       const obs = obstaculos.filter((o) => o.pagina === cur.pag && o.y < y + 0.3 * tamanho && o.y + o.a > y - tamanho);
-      if (!obs.length) return { x0: c.x, W: c.l, ...pos };
+      const d = recuo(pos);
+      if (!obs.length) return { x0: c.x + d, W: c.l - d, d, ...pos };
       // ponytail: usa só o maior trecho livre; texto não corre dos dois lados de um obstáculo central.
       let s = { x: c.x, l: 0 }, ini = c.x;
       const fim = c.x + c.l;
@@ -82,7 +85,7 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
         if (Math.min(o[0], fim) - ini > s.l) s = { x: ini, l: Math.min(o[0], fim) - ini };
         ini = Math.max(ini, o[1]);
       }
-      if (s.l >= 2 * tamanho) return { x0: s.x, W: s.l, ...pos };
+      if (s.l >= 2 * tamanho) return { x0: s.x + d, W: s.l - d, d, ...pos };
       cur.k++;
     }
   };
@@ -97,16 +100,17 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
     L.pals.forEach((w, i) => {
       if (i > 0) x += espaco + extra;
       ancoras.push({ pagina: v.pag, coluna: v.col, linha: v.k, indice: w.indice, texto: w.texto, x, y: v.y, l: w.largura });
+      const dyW = w.dy + w.F * 0.25 * tamanho * (x - v.x0) / v.W; // base ondulante; fadiga faz a linha cair
       for (const g of w.glifos) {
         for (const t of g.tracos) {
           if (t.length === 0) continue;
           pag.push(t.map(([px, py]) => {
-            const tx = (r() - 0.5) * 2 * mao.tremor;
-            const ty = (r() - 0.5) * 2 * mao.tremor;
-            return [x + px * tamanho + tx, v.y - py * tamanho + ty];
+            const tx = (r() - 0.5) * 2 * w.tremor;
+            const ty = (r() - 0.5) * 2 * w.tremor;
+            return [x + px * w.s + tx + py * w.s * w.tan, v.y - py * w.s + ty + dyW];
           }));
         }
-        x += g.adv * tamanho;
+        x += g.adv * w.s;
       }
     });
     cur.k++;
@@ -118,6 +122,7 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
       if (cur.k > 0 && !avancar()) cur.k++;
       continue;
     }
+    if (indice > 0) cans *= 0.7; // parágrafo: a mão descansa um pouco
     let atual = null;
     for (const p of entrada.split(' ').filter(Boolean)) {
       const w = escrever(p);
@@ -125,28 +130,31 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
       if (atual && atual.w + espaco + w.largura <= atual.v.W) {
         atual.pals.push(w);
         atual.w += espaco + w.largura;
-        gastar(p);
+        gastar(p); aceitar(w);
         continue;
       }
       if (atual) { fecha(atual, true); atual = null; }
       let v = vaga();
-      while (w.largura > v.W && w.largura <= cols[cur.col].l) { cur.k++; v = vaga(); }
+      const abrir = () => { if (w.largura > v.W && w.largura <= v.W + v.d) { v.x0 -= v.d; v.W += v.d; } }; // a linha abre mão do recuo
+      abrir();
+      while (w.largura > v.W && w.largura <= cols[cur.col].l) { cur.k++; v = vaga(); abrir(); }
       if (w.largura <= v.W) {
         atual = { pals: [w], w: w.largura, v };
-        gastar(p);
+        gastar(p); aceitar(w);
         continue;
       }
-      // palavra maior que a linha: quebra por letra
+      // palavra maior que a linha: quebra por letra, reaproveitando os glifos já escritos
       avisos.push(`palavra longa quebrada: ${p}`);
-      for (const ch of p) {
-        const a = escrever(ch);
+      [...p].forEach((ch, i) => {
+        const a = { largura: w.glifos[i].adv * w.s, glifos: [w.glifos[i]] };
         if (atual && atual.w + a.largura > atual.v.W) { fecha(atual, false); atual = null; }
-        if (!atual) atual = { pals: [{ texto: '', largura: 0, glifos: [], indice: w.indice }], w: 0, v: vaga() };
+        if (!atual) atual = { pals: [{ ...w, texto: '', largura: 0, glifos: [] }], w: 0, v: vaga() };
         const q = atual.pals[0];
         q.texto += ch; q.largura += a.largura; q.glifos.push(...a.glifos);
         atual.w += a.largura;
         gastar(ch);
-      }
+      });
+      aceitar(w);
     }
     if (atual) fecha(atual, false);
   }

@@ -1,9 +1,9 @@
 import { rng, hash } from '../rng.js';
 import { ROTULOS, AJUDA } from '../ajuda.js';
 
-export const IDENTIDADE = ['base', 'seed', 'inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio'];
-export const EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo'];
-export const NEUTRA = { base: [], seed: 0, inclinacao: 0, largura: 1, altura: 1, espacamento: 0, espacoPalavra: 0, idio: 0, pressa: 0, capricho: 1, tremor: 0, queda: 0, compressao: 1, variacao: 0, desleixo: 0 };
+export const IDENTIDADE = ['base', 'seed', 'inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate'];
+export const EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo', 'ondulacao', 'deriva', 'ritmo', 'fadiga'];
+export const NEUTRA = { base: [], seed: 0, inclinacao: 0, largura: 1, altura: 1, espacamento: 0, espacoPalavra: 0, idio: 0, pressa: 0, capricho: 1, tremor: 0, queda: 0, compressao: 1, variacao: 0, desleixo: 0, alternativas: 1, contexto: 0, arremate: 0, ondulacao: 0, deriva: 0, ritmo: 80, fadiga: 0 };
 
 const N = 32;
 
@@ -136,6 +136,7 @@ export function mutar(mao, seed, forca) {
 // Parâmetros editáveis (contrato em workflow/ciclos/12/projeto.md). previa: traços em mm via ctx.escrever.
 const viaMao = (chave, texto = 'minimum', extra = () => ({})) => (v, ctx) => ctx.escrever({ ...ctx.mao, ...extra(ctx), [chave]: v }, texto);
 const mutacao = (seed, forca, ctx) => ctx.escrever(mutar(ctx.mao, seed, forca), 'minimum');
+const FRASE = 'a lua cheia sobe no mar e a noite fica calma';
 export const PARAMS = [
   { chave: 'inclinacao', grupo: 'identidade', nivel: 'basico', tipo: 'faixa', min: -30, max: 30, passo: 0.5, padrao: NEUTRA.inclinacao, unidade: '°', rotulo: ROTULOS.inclinacao, ajuda: AJUDA.inclinacao, previa: viaMao('inclinacao') },
   { chave: 'largura', grupo: 'identidade', nivel: 'basico', tipo: 'faixa', min: 0.5, max: 1.5, passo: 0.01, padrao: NEUTRA.largura, rotulo: ROTULOS.largura, ajuda: AJUDA.largura, previa: viaMao('largura') },
@@ -143,6 +144,9 @@ export const PARAMS = [
   { chave: 'espacamento', grupo: 'identidade', nivel: 'avancado', tipo: 'faixa', min: -0.2, max: 0.3, passo: 0.005, padrao: NEUTRA.espacamento, unidade: 'em', rotulo: ROTULOS.espacamento, ajuda: AJUDA.espacamento, previa: viaMao('espacamento') },
   { chave: 'espacoPalavra', grupo: 'identidade', nivel: 'avancado', tipo: 'faixa', min: 0, max: 0.6, passo: 0.01, padrao: NEUTRA.espacoPalavra, unidade: 'em', rotulo: ROTULOS.espacoPalavra, ajuda: AJUDA.espacoPalavra, previa: viaMao('espacoPalavra', 'a mão viu') },
   { chave: 'idio', grupo: 'identidade', nivel: 'avancado', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.idio, rotulo: ROTULOS.idio, ajuda: AJUDA.idio, previa: viaMao('idio') },
+  { chave: 'alternativas', grupo: 'identidade', nivel: 'basico', tipo: 'faixa', min: 1, max: 5, passo: 1, padrao: NEUTRA.alternativas, rotulo: ROTULOS.alternativas, ajuda: AJUDA.alternativas, previa: viaMao('alternativas', 'minimum') },
+  { chave: 'contexto', grupo: 'identidade', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.contexto, rotulo: ROTULOS.contexto, ajuda: AJUDA.contexto, previa: viaMao('contexto', 'Ave lua') },
+  { chave: 'arremate', grupo: 'identidade', nivel: 'avancado', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.arremate, rotulo: ROTULOS.arremate, ajuda: AJUDA.arremate, previa: viaMao('arremate', 'a mão viu') },
   { chave: 'seed', grupo: 'identidade', nivel: 'avancado', tipo: 'numero', min: 0, max: 2147483647, passo: 1, padrao: NEUTRA.seed, rotulo: ROTULOS.seed, ajuda: AJUDA.seed, previa: viaMao('seed', 'minimum', (ctx) => ({ idio: Math.max(ctx.mao.idio, 0.5) })) },
   { chave: 'pressa', grupo: 'execucao', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.pressa, rotulo: ROTULOS.pressa, ajuda: AJUDA.pressa, previa: viaMao('pressa') },
   { chave: 'capricho', grupo: 'execucao', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.capricho, rotulo: ROTULOS.capricho, ajuda: AJUDA.capricho, previa: viaMao('capricho', 'minimum', () => ({ desleixo: 1 })) },
@@ -151,6 +155,10 @@ export const PARAMS = [
   { chave: 'queda', grupo: 'execucao', nivel: 'avancado', tipo: 'faixa', min: -2, max: 2, passo: 0.05, padrao: NEUTRA.queda, unidade: 'mm', rotulo: ROTULOS.queda, ajuda: AJUDA.queda, previa: viaMao('queda', 'um\ndois\ntrês') },
   { chave: 'compressao', grupo: 'execucao', nivel: 'avancado', tipo: 'faixa', min: 0.6, max: 1.4, passo: 0.01, padrao: NEUTRA.compressao, rotulo: ROTULOS.compressao, ajuda: AJUDA.compressao, previa: viaMao('compressao') },
   { chave: 'desleixo', grupo: 'execucao', nivel: 'avancado', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.desleixo, rotulo: ROTULOS.desleixo, ajuda: AJUDA.desleixo, previa: viaMao('desleixo', 'minimum', () => ({ capricho: 0 })) },
+  { chave: 'ondulacao', grupo: 'execucao', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.ondulacao, rotulo: ROTULOS.ondulacao, ajuda: AJUDA.ondulacao, previa: viaMao('ondulacao', FRASE) },
+  { chave: 'deriva', grupo: 'execucao', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.deriva, rotulo: ROTULOS.deriva, ajuda: AJUDA.deriva, previa: viaMao('deriva', FRASE) },
+  { chave: 'ritmo', grupo: 'execucao', nivel: 'avancado', tipo: 'faixa', min: 20, max: 200, passo: 5, padrao: NEUTRA.ritmo, unidade: 'mm', rotulo: ROTULOS.ritmo, ajuda: AJUDA.ritmo, previa: viaMao('ritmo', FRASE, () => ({ ondulacao: 1, deriva: 1 })) },
+  { chave: 'fadiga', grupo: 'execucao', nivel: 'avancado', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.fadiga, rotulo: ROTULOS.fadiga, ajuda: AJUDA.fadiga, previa: viaMao('fadiga', FRASE) },
   { chave: 'peso', grupo: 'fontes', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: 0.5, rotulo: ROTULOS.peso, ajuda: AJUDA.peso,
     previa: (v, ctx) => { const m = structuredClone(ctx.mao); m.base[ctx.indice ?? 0].peso = Math.max(0.01, v); return ctx.escrever(m, 'minimum'); } },
   { chave: 'mutarForca', grupo: 'fontes', nivel: 'avancado', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: 0.3, rotulo: ROTULOS.mutarForca, ajuda: AJUDA.mutarForca, previa: (v, ctx) => mutacao(1, v, ctx) },

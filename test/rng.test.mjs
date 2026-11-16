@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rng, hash } from '../src/rng.js';
+import { rng, hash, ruido1d } from '../src/rng.js';
 
 const primeiros = (gen, n) => Array.from({ length: n }, gen);
 
@@ -41,4 +41,11 @@ test('hash FNV-1a de valores conhecidos', () => {
 test('hash fica em uint32 com acento', () => {
   const h = hash('ação');
   assert.ok(Number.isInteger(h) && h >= 0 && h < 2 ** 32);
+});
+
+test('ruido1d: determinístico, limitado, contínuo e dependente da seed', () => {
+  assert.equal(ruido1d('s', 2.7), ruido1d('s', 2.7));
+  for (let t = -5; t < 50; t += 0.37) assert.ok(Math.abs(ruido1d('s', t)) <= 1);
+  assert.ok(Math.abs(ruido1d('s', 3) - ruido1d('s', 3 - 1e-9)) < 1e-6);
+  assert.notEqual(ruido1d('a', 1.5), ruido1d('b', 1.5));
 });

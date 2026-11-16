@@ -19,3 +19,10 @@ export function rng(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+// Ruído de valor suavizado em [-1, 1). Determinístico; seed é string.
+export function ruido1d(seed, t) {
+  const i = Math.floor(t), f = t - i, u = f * f * (3 - 2 * f);
+  const v = (k) => rng(seed + '|' + k)() * 2 - 1;
+  return v(i) * (1 - u) + v(i + 1) * u;
+}

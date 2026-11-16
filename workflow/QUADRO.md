@@ -20,8 +20,8 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M12 gerar-magias com texto completo pt-BR | FECHADO (commit 4f1cd71) |
 | M13 Fundação (árvore nova, goldens, 2-opt adaptativo, Action do Pages) | FECHADO (ciclos 07–10; revisor Fable devolveu 1 bloqueante, corrigido no ciclo 10 e verificado pelo orquestrador) |
 | M14 Documento, máquinas, papel | FECHADO (ciclo 11; gates verdes; revisor Fable aceitou sem bloqueante) |
-| M15 Identidade + oficinas (PARADA para aprovação do usuário) | AGUARDANDO APROVAÇÃO DO USUÁRIO (ciclos 12–14; gates verdes; revisor devolveu 3 bloqueantes, corrigidos no ciclo 14) |
-| M16 Motor I: contexto | ABERTO |
+| M15 Identidade + oficinas (PARADA para aprovação do usuário) | FECHADO (aprovado pelo usuário em 2026-11-16 com "continue"; ciclos 12–14; gates verdes; revisor devolveu 3 bloqueantes, corrigidos no ciclo 14) |
+| M16 Motor I: contexto | FECHADO (ciclos 15–17; revisor devolveu 1 bloqueante, corrigido no 17) |
 | M17 Motor II: ductus | ABERTO |
 | M18 Ornamento | ABERTO |
 | M19 Arcano | ABERTO |
@@ -106,7 +106,15 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 12 | OK: M15 parte 1 (PARAMS nos 7 módulos, controle com prévia viva, tema.css, svgDocumento); 143 pass / 0 fail; goldens intactos; controle.spec 14/14; build ok. M15 segue ABERTO: falta ciclo 13 (shell + migração dos painéis) e a PARADA para aprovação |
 | 13 | OK: M15 parte 2 (shell Scriptorium, 5 oficinas, painéis migrados para controle/dica, exportação por Documento); 142 pass / 0 fail (143 menos o teste de `ajuda()` removido); goldens intactos; build ok; e2e 42/42 (smoke, controle, visual com contraste AA, claro e vela). **M15 segue ABERTO**: falta revisor e PARADA para o usuário aprovar a UI |
 
-## Retomada (ciclo 13 aceito) — LEIA ESTA PRIMEIRA
+## Retomada (2026-11-16, após M16) — LEIA ESTA PRIMEIRA
+
+- Fechados: M13 `92c9b1a`, M14 `de2b12a`, M15 `eb41202`, M16 (commit "M16: ..."). `npm test` 166/166. ~45% da expansão.
+- **Próxima ação:** M17 (Motor II: ductus — junções, adiamento de pingos/cortes, cinemática, retoques). Conselheiro Fable (tabela de junção + spike de cinemática) → spec em `workflow/ciclos/18/projeto.md`. Trilha de ornamento (M18/M19) pode intercalar (pastas disjuntas: `src/ornamento/`, `src/arcano/`).
+- M16 entregou: `src/motor/contexto.js` (variante, deformar, encaixe, arrematar), `src/motor/escrita.js` (`escreverPalavra`), `ruido1d`, 7 params novos neutros (alternativas, contexto, arremate, ondulacao, deriva, ritmo, fadiga) com prévia; goldens `golden.test.mjs` + `golden-layout.test.mjs` intactos. Ficha: `workflow/ciclos/16/especime.png`.
+- Menores do M16: encaixe em EMSBird só abre avanço (~8% mais largo; conferir EMSAllure no papel); fadiga sempre chega ao máximo no fim do texto (calibrar no papel).
+- Ledger: `.superpowers/sdd/EXPANSAO/progress.md` (fora do git).
+
+## Retomada (ciclo 13 aceito)
 
 - Ciclos 12–13 aceitos; `npm test` 142/142; e2e 42/42. **Próxima ação:** revisor do M15, screenshots (`test-results/`, claro + vela, cada oficina, tiradas com rede) e **PARADA: usuário aprova a identidade visual**. Mostrar também: A4 na Mega S agora bloqueia o G-code (D8); Sigilos com papel fixo 148×210; seletores de dado sem prévia viva (D10); `variacao` do grimório é sobrescrita pela da escrita ao trocar de oficina (cópia de COMPARTILHADAS).
 - M15 itens do DoD comprovados: ver seção "Itens do DoD comprovados".
@@ -116,7 +124,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - Ciclo 12 aceito, `npm test` 143/143. **Próxima ação:** despachar 13-A, 13-B, 13-C (briefs em `ciclos/13/briefs.md`; app fica quebrado até as três entrarem; gate = `npm run build` + `npm run e2e`), depois screenshots e PARADA do M15.
 - Menores do ciclo 12: previa de `colunas`/`alinhamento` usa parágrafo de 44 caracteres (não `3 linhas curtas`); `tema.css` e popover nunca vistos por humano (só e2e); `perfil` tem rótulo "máquina".
 
-## Retomada (2026-11-16, M15 na parada) — LEIA ESTA PRIMEIRA
+## Retomada (2026-11-16, M15 na parada)
 
 - M15 entregue e commitado; **parado esperando o usuário aprovar a identidade visual** (capturas em `test-results/visual-captura-*`, geradas por `npx playwright test e2e/visual.spec.js`). Após aprovação: marcar M15 FECHADO e seguir M16 (antes, gravar golden de `compor` multipágina + justificado + palavra longa).
 - Ciclo 14 (correção): grimório/scroll vazio sem erro ("Nada para plotar ainda", botões desabilitados); barra de exportação em flex; captura do popover sem fullPage e com asserts; rótulos sem unidade duplicada; nav quebra em vez de cortar; sem `aria-pressed` no tema; aviso de oficina em construção sem jargão.

@@ -1,12 +1,12 @@
 import { resolver, validar, novoPersonagem, ajustarVariacao } from '../personagem.js';
 import { rotulo, AJUDA } from '../ajuda.js';
-import { controle, ligar, dica } from './controle.js';
+import { controle, dica } from './controle.js';
 import { PARAMS } from '../motor/mao.js';
 import { amostra } from '../layout.js';
 
 const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
-const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio'];
-const CHAVES_EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo'];
+const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate'];
+const CHAVES_EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo', 'ondulacao', 'deriva', 'ritmo', 'fadiga'];
 
 function slug(nome) {
   return (nome || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -171,10 +171,14 @@ export function montar(elemento, estado, aoMudar) {
     escrever: (m, t, o) => amostra(estado.fontes, m, t, o),
   });
   const ctrlIdentidade = CHAVES_IDENTIDADE.map((chave) =>
-    controle(P[chave], ligar(() => estado.personagem.mao, chave, ctx), aoMudar));
+    controle(P[chave], {
+      ler: () => estado.personagem.mao[chave] ?? P[chave].padrao,
+      gravar: (v) => { estado.personagem.mao[chave] = v; },
+      ctx,
+    }, aoMudar));
   const ctrlExecucao = CHAVES_EXECUCAO.map((chave) =>
     controle(P[chave], {
-      ler: () => resolver(estado.personagem, estado.variacao || null)[chave],
+      ler: () => resolver(estado.personagem, estado.variacao || null)[chave] ?? P[chave].padrao,
       gravar: (v) => ajustarVariacao(estado.personagem, estado.variacao || null, chave, v),
       ctx,
     }, aoMudar));

@@ -46,6 +46,13 @@ export const AJUDA = {
   footer: 'Comandos G-code colocados no fim do arquivo, como estacionar a caneta.',
   otimizar: 'Reordena os traços para a caneta andar menos no ar. Não muda o desenho.',
   trajeto: 'Mostra na prévia o caminho da caneta: tracejado = deslocamento no ar, verde = início de cada traço, vermelho = fim, número = ordem. Usa a ordem otimizada se "otimizar traços" estiver ligado.',
+  alternativas: 'Quantas formas diferentes cada letra tem. Com 1, a letra sai sempre igual; com mais, a mão alterna entre formas e nunca repete a mesma duas vezes seguidas.',
+  contexto: 'Ajusta cada letra às vizinhas: a primeira da palavra sai um pouco maior e o espaço entre letras é corrigido pelo formato delas (como A e V, que se encaixam).',
+  arremate: 'Prolonga o traço final da última letra de cada palavra, como quem solta a caneta em movimento.',
+  ondulacao: 'Faz a linha de base subir e descer devagar ao longo do texto, como em papel sem pauta.',
+  deriva: 'Deixa o tamanho e a inclinação das letras mudarem aos poucos ao longo do texto, e a margem esquerda andar de linha em linha.',
+  ritmo: 'Distância, em milímetros, que a ondulação e a deriva levam para mudar. Valor baixo: mudança rápida e nervosa. Valor alto: mudança lenta.',
+  fadiga: 'Cansaço da mão: quanto mais texto escrito, mais tremor e desleixo e mais a linha cai. Descansa um pouco a cada parágrafo e a cada página.',
   importarTxt: 'Carrega um arquivo .txt (até 200 KB) no lugar do texto atual.',
 };
 
@@ -96,6 +103,13 @@ export const ROTULOS = {
   otimizar: 'otimizar traços',
   trajeto: 'mostrar trajeto da caneta',
   importarTxt: 'importar arquivo .txt',
+  alternativas: 'formas por letra',
+  contexto: 'encaixe',
+  arremate: 'arremate',
+  ondulacao: 'ondulação',
+  deriva: 'deriva',
+  ritmo: 'ritmo',
+  fadiga: 'cansaço',
 };
 
 export function rotulo(chave) {

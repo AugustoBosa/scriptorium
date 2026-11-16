@@ -12,13 +12,16 @@ export function resolver(p, variacao) {
   return { ...base, ...structuredClone(extra) };
 }
 
+// Chaves que personagens antigos podem não ter (a mão é completada com NEUTRA ao compor).
+const OPCIONAIS = ['alternativas', 'contexto', 'arremate', 'ondulacao', 'deriva', 'ritmo', 'fadiga'];
+
 // Lista de erros de um personagem; vazia = ok. Não verifica se a fonte existe em disco.
 export function validar(p) {
   const erros = [];
   if (typeof p.nome !== 'string' || p.nome === '') erros.push('nome vazio ou inválido');
   if (!p.mao) return [...erros, 'mao ausente'];
   for (const chave of Object.keys(NEUTRA)) {
-    if (!(chave in p.mao)) erros.push('mao sem chave: ' + chave);
+    if (!OPCIONAIS.includes(chave) && !(chave in p.mao)) erros.push('mao sem chave: ' + chave);
   }
   const b = p.mao.base;
   if (!Array.isArray(b) || b.length === 0) erros.push('mao.base vazio ou inválido');
@@ -30,12 +33,18 @@ export function validar(p) {
     }
   }
   for (const chave of Object.keys(NEUTRA)) {
-    if (chave === 'base') continue;
+    if (chave === 'base' || (OPCIONAIS.includes(chave) && !(chave in p.mao))) continue;
     if (!Number.isFinite(p.mao[chave])) erros.push('valor não numérico: ' + chave);
   }
   for (const chave of ['idio', 'pressa', 'capricho', 'variacao', 'desleixo']) {
     const v = p.mao[chave];
     if (Number.isFinite(v) && (v < 0 || v > 1)) erros.push(chave + ' fora de [0,1]: ' + v);
+  }
+  for (const chave of OPCIONAIS) {
+    const v = p.mao[chave];
+    if (!Number.isFinite(v)) continue;
+    const [lo, hi] = chave === 'alternativas' ? [1, 5] : chave === 'ritmo' ? [20, 200] : [0, 1];
+    if (v < lo || v > hi || (chave === 'alternativas' && !Number.isInteger(v))) erros.push(`${chave} fora de [${lo},${hi}]: ${v}`);
   }
   for (const [nome, extra] of Object.entries(p.variacoes ?? {})) {
     for (const [chave, v] of Object.entries(extra)) {

@@ -96,3 +96,20 @@ test('ajustarVariacao: grava, remove se igual à mão, altera mão sem variaçã
   assert.throws(() => ajustarVariacao(p, 'formal', 'seed', 3), /chave de identidade/);
   assert.throws(() => ajustarVariacao(p, 'nao-existe', 'tremor', 0.2), /variação desconhecida/);
 });
+
+test('validar: personagem sem as 7 chaves novas é válido', () => {
+  const p = strahdLike();
+  for (const k of ['alternativas', 'contexto', 'arremate', 'ondulacao', 'deriva', 'ritmo', 'fadiga']) delete p.mao[k];
+  assert.deepEqual(validar(p), []);
+});
+
+test('validar: faixas das chaves novas e variação de identidade', () => {
+  const ok = strahdLike();
+  const com = (k, v) => validar({ ...ok, mao: { ...ok.mao, [k]: v } });
+  assert.ok(com('alternativas', 9).length >= 1);
+  assert.ok(com('alternativas', 2.5).length >= 1);
+  assert.ok(com('ritmo', 5).length >= 1);
+  assert.ok(com('deriva', 2).length >= 1);
+  assert.deepEqual(validar({ ...ok, variacoes: { ...ok.variacoes, cansada: { fadiga: 0.5 } } }), []);
+  assert.ok(validar({ ...ok, variacoes: { ...ok.variacoes, v: { alternativas: 3 } } }).some((e) => /identidade/.test(e)));
+});
