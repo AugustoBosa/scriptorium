@@ -2,10 +2,10 @@ import fs from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseFonte } from '../src/fonte.js';
-import { NEUTRA } from '../src/mao.js';
+import { NEUTRA } from '../src/motor/mao.js';
 import { limpar, normalizar, blocos } from '../src/magia.js';
-import { gerarAlfabeto, cifrar, sigilo, LETRAS } from '../src/arcano.js';
-import { comporGrimorio, folha, FOLHAS } from '../src/scroll.js';
+import { gerarAlfabeto, cifrar, sigilo, LETRAS } from '../src/arcano/alfabeto.js';
+import { comporGrimorio, folha, FOLHAS } from '../src/materiais/scroll.js';
 
 const bruta = {
   name: 'Fireball', source: 'PHB', level: 3, school: 'V',

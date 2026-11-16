@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { resolver, validar, novoPersonagem, ajustarVariacao } from '../src/personagem.js';
-import { NEUTRA, IDENTIDADE, glifo } from '../src/mao.js';
+import { NEUTRA, IDENTIDADE, glifo } from '../src/motor/mao.js';
 import { parseFonte } from '../src/fonte.js';
 
 const raiz = new URL('../', import.meta.url);

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseFonte, FONTES } from '../src/fonte.js';
-import { glifo, NEUTRA } from '../src/mao.js';
+import { glifo, NEUTRA } from '../src/motor/mao.js';
 import { compor, PAGINAS } from '../src/layout.js';
 
 const raiz = new URL('../', import.meta.url);

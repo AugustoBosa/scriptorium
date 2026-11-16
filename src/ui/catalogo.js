@@ -1,7 +1,7 @@
-import { CATALOGO, EIXOS, ARQUETIPOS } from './catalogo.js';
-import { glifo, NEUTRA } from './mao.js';
-import { ajuda } from './ajuda.js';
-import { SEM_ACENTOS } from './fonte.js';
+import { CATALOGO, EIXOS, ARQUETIPOS } from '../catalogo.js';
+import { glifo, NEUTRA } from '../motor/mao.js';
+import { ajuda } from '../ajuda.js';
+import { SEM_ACENTOS } from '../fonte.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const FRASE = 'Prezado Senhor, ação!';

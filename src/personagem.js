@@ -1,4 +1,4 @@
-import { NEUTRA, EXECUCAO } from './mao.js';
+import { NEUTRA, EXECUCAO } from './motor/mao.js';
 
 // Devolve uma cópia da mão do personagem com a variação aplicada (sem mutar p).
 export function resolver(p, variacao) {

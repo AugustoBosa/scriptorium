@@ -30,4 +30,4 @@ Página para plotar props de magia: scroll (uma magia por folha) ou grimório (m
 
 Dados das magias: ficam em `dados/` (fora do git, uso próprio). Gerar com `node scripts/gerar-magias.mjs [pasta]` (padrão: `../../dnd/data/spells`, formato 5etools). A tradução (nome e resumo em pt-BR) é `dados/traducao-ptbr.txt`, uma linha `id|Nome|Resumo` por magia; edite e rode o script de novo. Sem `dados/magias.json` (ex.: no GitHub Pages) a página aceita importar o JSON ou criar magias em branco.
 
-Módulos: `src/magia.js` (5etools → ficha pt-BR), `src/arcano.js` (alfabeto, sigilo, moldura), `src/scroll.js` (montagem e ajuste à folha), `src/ui-grimorio.js` (interface). Testes em `test/grimorio.test.mjs`.
+Módulos: `src/magia.js` (5etools → ficha pt-BR), `src/arcano/alfabeto.js` (alfabeto, sigilo, moldura), `src/materiais/scroll.js` (montagem e ajuste à folha), `src/ui/grimorio.js` (interface). Testes em `test/grimorio.test.mjs`.

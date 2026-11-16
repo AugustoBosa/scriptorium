@@ -1,5 +1,5 @@
-import { resolver, validar, novoPersonagem, ajustarVariacao } from './personagem.js';
-import { rotulo, ajuda } from './ajuda.js';
+import { resolver, validar, novoPersonagem, ajustarVariacao } from '../personagem.js';
+import { rotulo, ajuda } from '../ajuda.js';
 
 const SLIDERS_IDENTIDADE = [
   ['inclinacao', -30, 30, 0.5], ['largura', 0.5, 1.5, 0.01], ['altura', 0.5, 1.5, 0.01],

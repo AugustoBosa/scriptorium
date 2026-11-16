@@ -1,8 +1,8 @@
 // Monta scrolls e grimórios: empilha nome, sigilo, ficha e efeito de cada magia nas páginas.
-import { compor } from './layout.js';
-import { glifo } from './mao.js';
-import { blocos } from './magia.js';
-import { cifrar, sigilo, moldura, LETRAS } from './arcano.js';
+import { compor } from '../layout.js';
+import { glifo } from '../motor/mao.js';
+import { blocos } from '../magia.js';
+import { cifrar, sigilo, moldura, LETRAS } from '../arcano/alfabeto.js';
 
 // [largura, altura, margem] em mm.
 export const FOLHAS = { A5: [148, 210, 12], A6: [105, 148, 9], A7: [74, 105, 6], A8: [52, 74, 4] };

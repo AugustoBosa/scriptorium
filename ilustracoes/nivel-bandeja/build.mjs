@@ -4,10 +4,11 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { otimizar, svg, gcode } from '../../src/exportar.js';
+import { svg, gcode } from '../../src/maquina/gcode.js';
+import { otimizar } from '../../src/maquina/otimizar.js';
 import { parseFonte } from '../../src/fonte.js';
 import { compor } from '../../src/layout.js';
-import { NEUTRA } from '../../src/mao.js';
+import { NEUTRA } from '../../src/motor/mao.js';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = join(AQUI, '..', '..');

@@ -1,6 +1,6 @@
-import { mutar } from './mao.js';
-import { rotulo, ajuda } from './ajuda.js';
-import { abrirCatalogo } from './ui-catalogo.js';
+import { mutar } from '../motor/mao.js';
+import { rotulo, ajuda } from '../ajuda.js';
+import { abrirCatalogo } from './catalogo.js';
 
 function titulo(texto, chave) {
   const h = document.createElement('h3');

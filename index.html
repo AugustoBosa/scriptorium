@@ -95,13 +95,14 @@ figure { margin: 0; min-width: 0; }
 <script type="module">
 import { parseFonte, FONTES } from './src/fonte.js';
 import { PAGINAS, compor } from './src/layout.js';
-import { PERFIL_PADRAO, svg, otimizar } from './src/exportar.js';
+import { PERFIL_PADRAO, svg } from './src/maquina/gcode.js';
+import { otimizar } from './src/maquina/otimizar.js';
 import { resolver, novoPersonagem } from './src/personagem.js';
 import { ajuda } from './src/ajuda.js';
-import * as pPersonagem from './src/ui-personagem.js';
-import * as pFontes from './src/ui-fontes.js';
-import * as pTexto from './src/ui-texto.js';
-import * as pExportar from './src/ui-exportar.js';
+import * as pPersonagem from './src/ui/personagem.js';
+import * as pFontes from './src/ui/fontes.js';
+import * as pTexto from './src/ui/texto.js';
+import * as pExportar from './src/ui/exportar.js';
 
 const $ = (id) => document.getElementById(id);
 const IDS_PAINEIS = ['painel-personagem', 'painel-fontes', 'painel-texto', 'painel-exportar'];

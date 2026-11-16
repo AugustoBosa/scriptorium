@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseFonte } from '../src/fonte.js';
 import { compor, PAGINAS } from '../src/layout.js';
-import { NEUTRA } from '../src/mao.js';
+import { NEUTRA } from '../src/motor/mao.js';
 
 const raiz = new URL('../', import.meta.url);
 const carregar = (nome) => parseFonte(fs.readFileSync(new URL(`fontes/${nome}.svg`, raiz), 'utf8'), nome);

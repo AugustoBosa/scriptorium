@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { hash } from '../src/rng.js';
-import { NEUTRA, EXECUCAO, glifo, misturar, mutar } from '../src/mao.js';
+import { NEUTRA, EXECUCAO, glifo, misturar, mutar } from '../src/motor/mao.js';
 
 const F = { nome: 'F', upm: 1000, ascent: 800, descent: -200, advPadrao: 500, glifos: {
   a: { adv: 600, tracos: [[[0, 0], [100, 200], [200, 0]]] },

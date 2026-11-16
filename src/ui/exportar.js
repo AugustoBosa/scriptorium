@@ -1,5 +1,6 @@
-import { PERFIL_PADRAO, svg, otimizar, gcode } from './exportar.js';
-import { rotulo, ajuda } from './ajuda.js';
+import { PERFIL_PADRAO, svg, gcode } from '../maquina/gcode.js';
+import { otimizar } from '../maquina/otimizar.js';
+import { rotulo, ajuda } from '../ajuda.js';
 
 // Chave do campo = chave de estado.perfil = chave de ajuda.
 const CAMPOS = [

@@ -1,6 +1,6 @@
 # Roteiro de verificação da interface (manual, no navegador)
 
-Roda sob demanda. Não entra no `node --test`. Rode depois de mexer em `src/ui-*.js` ou `index.html`.
+Roda sob demanda. Não entra no `node --test`. Rode depois de mexer em `src/ui/*.js` ou `index.html`.
 
 ## Preparar
 1. Na raiz do projeto: `python -m http.server 8765`.

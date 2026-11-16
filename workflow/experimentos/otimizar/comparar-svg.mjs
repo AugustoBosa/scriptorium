@@ -2,8 +2,8 @@ import fs from 'node:fs';
 const P = new URL('../../../', import.meta.url).href;
 const { parseFonte } = await import(P + 'src/fonte.js');
 const { compor, PAGINAS } = await import(P + 'src/layout.js');
-const { NEUTRA } = await import(P + 'src/mao.js');
-const { otimizar, viagem } = await import(P + 'src/exportar.js');
+const { NEUTRA } = await import(P + 'src/motor/mao.js');
+const { otimizar, viagem } = await import(P + 'src/maquina/otimizar.js');
 const { rng } = await import(P + 'src/rng.js');
 
 const TEMPO_AG = Number(process.argv[2] ?? 15) * 1000;

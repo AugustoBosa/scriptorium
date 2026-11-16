@@ -18,7 +18,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M10 2-opt, trajeto, exportar tudo, importar .txt | FECHADO (ciclo 06, verificado no navegador pelo orquestrador) |
 | M11 Scrolls e grimórios de D&D (grimorio.html) | FECHADO (11 testes em test/grimorio.test.mjs; verificado no navegador; falta plotar em papel) |
 | M12 gerar-magias com texto completo pt-BR | FECHADO (commit 4f1cd71) |
-| M13 Fundação (árvore nova, goldens, 2-opt adaptativo, Action do Pages) | ABERTO — ver workflow/EXPANSAO.md |
+| M13 Fundação (árvore nova, goldens, 2-opt adaptativo, Action do Pages) | FECHADO (ciclos 07–10; revisor Fable devolveu 1 bloqueante, corrigido no ciclo 10 e verificado pelo orquestrador) |
 | M14 Documento, máquinas, papel | ABERTO |
 | M15 Identidade + oficinas (PARADA para aprovação do usuário) | ABERTO |
 | M16 Motor I: contexto | ABERTO |
@@ -40,6 +40,10 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - M2 determinismo/seed, NEUTRA, idio vs variacao, misturar, mutar (JSON), caractere ausente — test/mao.test.mjs (7 testes)
 - M3 todos os 4 itens — test/personagem.test.mjs (resolver/erro, identidade intacta, 4 presets validar, glifo de Teste)
 - M4 todos os 6 itens — test/layout.test.mjs (PAGINAS, quebra, parágrafo/página, alinhamentos, limites, queda)
+- M13 goldens de `compor`, `comporGrimorio`, `sigilo`, `gcode` — test/golden.test.mjs (8 testes, gravados antes de mover o código; passam intactos depois)
+- M13 2-opt adaptativo, viagem nova ≤ antiga — test/exportar.test.mjs ('otimizar 2-opt completo ... não é pior que janela 50')
+- M13 `npm test` verde na árvore nova — 101/101
+- M13 `pages.yml` criado (verificação real só com push em main). `npm run build` ok e `npm run e2e` 4/4 (orquestrador); `npm test` numa cópia limpa sem `arquivo/` (simula o CI): 100 pass, 1 skipped
 
 ## Tarefas
 
@@ -63,6 +67,11 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 05-D | M7/M9 | index.html, src/ui-personagem.js | aceita | sem presets, CSS .ajuda |
 | 05-E | M8/M9 | src/ui-fontes.js | aceita | botão Tabela de fontes |
 | 05-F | M9 | src/ui-texto.js, src/ui-exportar.js | aceita | rótulos + ? |
+| 07-A | M13 | test/golden.test.mjs | aceita | 8 testes de snapshot; gravados pelo orquestrador (173 KB) |
+| 07-D | M13 | .github/workflows/pages.yml | aceita | Node 25; usuário troca a fonte do Pages para Actions |
+| 08-C | M13 | src/exportar.js (hoje src/maquina/otimizar.js), test/exportar.test.mjs | aceita | 2-opt completo ≤ 2000 traços, janela 50 acima; `{ janela }`; 1 teste |
+| 09-B | M13 | git mv para a árvore nova + imports | aceita | motor/, arcano/, materiais/, maquina/{gcode,otimizar}, ui/; 101 pass; goldens intactos |
+| 10-A | M13 | test/exportar.test.mjs, src/ui/grimorio.js | aceita | devolução do revisor: teste do vpype.toml pula se `arquivo/` ausente (CI) |
 
 ## Ciclos
 
@@ -74,8 +83,23 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 04 | OK: UI M6 entregue (4 ui-*.js + index.html) e espaçamento do Strahd corrigido; 65 pass / 0 fail; falta verificar M6 no navegador |
 | 05 | OK: Fase 2 entregue (M7-M9) em 2 lotes; personagens/ apagado; 76 pass / 0 fail; falta verificação no navegador |
 | 06 | OK: M10 feito pelo orquestrador (2-opt em janela, trajeto na prévia, baixar todas as páginas, importar .txt); 81 pass / 0 fail. Medido: `otimizar` A5 6 mm 87 ms, A4 6 mm 327 ms; A4 com letra de 3 mm (9600 traços) ~8 s (lento, só nesse extremo; o guloso O(n²) é a maior parte) |
+| 07 | M13 parcial: goldens (07-A) e pages.yml (07-D) aceitos; 92 pass / 8 fail (só "Missing snapshots" até o orquestrador gravar). M13 segue ABERTO: faltam árvore nova e 2-opt adaptativo (ciclo 08) |
+| 08 | OK: 2-opt adaptativo (08-C) aceito; 101 pass / 0 fail |
+| 09 | OK: árvore nova (09-B) aceita; imports sem resto antigo; 101 pass / 0 fail. M13: faltam gates build/e2e, pages.yml no GitHub e revisor (orquestrador fecha) |
+| 10 | OK: revisor devolveu 1 bloqueante (teste lia `arquivo/vpype.toml`, fora do git → CI quebraria); 10-A corrigiu; gates verdes; **M13 FECHADO** |
 
-## Retomada (2026-11-15) — LEIA ESTA PRIMEIRA
+## Retomada (2026-11-15, após M13) — LEIA ESTA PRIMEIRA
+
+- M13 FECHADO (commit "M13: ..."): árvore nova (`src/motor`, `arcano`, `materiais`, `maquina`, `ui`), goldens em `test/golden.test.mjs` (+ `.snapshot`), 2-opt adaptativo em `src/maquina/otimizar.js`, `.github/workflows/pages.yml`. `npm test` 101/101.
+- **Próxima ação:** M14 (Documento, máquinas, papel) — começa pelo Conselheiro Fable (§5.2 passo 2), ciclo 11.
+- Pendente do usuário: trocar a fonte do GitHub Pages para "GitHub Actions" antes do primeiro push em main.
+- Menores do revisor M13 (fazer quando tocar no arquivo):
+  - `src/ajuda.js:108` usa `document.createElement` fora de `src/ui/` (regra §4.1) → mover `ajuda()` para `src/ui/` quando nascer `ui/controle.js` (M15).
+  - Golden guarda `avisos` com float cru ("1.7999999999999998 mm") — ponto frágil entre SO.
+  - `pages.yml` com `node-version: 25` (ímpar, sem LTS); trocar por `lts/*` (≥ 23.4 por causa do snapshot) se o setup-node falhar.
+  - `workflow/DOD.md`, `EXPANSAO.md` §1/§3, `experimentos/otimizar/RESULTADOS.md`, `p2s/PESQUISA.md` citam caminhos antigos (só documentação).
+
+## Retomada (2026-11-15, planejamento)
 
 - Expansão "Scriptorium" planejada: **workflow/EXPANSAO.md** tem decisões, arquitetura, DoD de M13–M21 e o laço de orquestração. Branch `expansao`.
 - Ambiente pronto: npm + Vite + Playwright (Chromium) + hachure-fill; `npm test` 92/92; `npm run build` ok.

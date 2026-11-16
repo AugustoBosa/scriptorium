@@ -1,14 +1,15 @@
 // Interface da página de scrolls e grimórios (grimorio.html).
-import { resolver, novoPersonagem, validar } from './personagem.js';
-import { restaurar } from './ui-personagem.js';
-import { NEUTRA } from './mao.js';
-import { parseFonte } from './fonte.js';
-import { svg, otimizar, PERFIL_PADRAO } from './exportar.js';
-import { magiaVazia, ESCOLAS } from './magia.js';
-import { gerarAlfabeto, sigilo, LETRAS, CAIXA } from './arcano.js';
-import { comporGrimorio, folha, FOLHAS, CFG_PADRAO } from './scroll.js';
-import * as pExportar from './ui-exportar.js';
-import { ajuda } from './ajuda.js';
+import { resolver, novoPersonagem, validar } from '../personagem.js';
+import { restaurar } from './personagem.js';
+import { NEUTRA } from '../motor/mao.js';
+import { parseFonte } from '../fonte.js';
+import { svg, PERFIL_PADRAO } from '../maquina/gcode.js';
+import { otimizar } from '../maquina/otimizar.js';
+import { magiaVazia, ESCOLAS } from '../magia.js';
+import { gerarAlfabeto, sigilo, LETRAS, CAIXA } from '../arcano/alfabeto.js';
+import { comporGrimorio, folha, FOLHAS, CFG_PADRAO } from '../materiais/scroll.js';
+import * as pExportar from './exportar.js';
+import { ajuda } from '../ajuda.js';
 
 const $ = (id) => document.getElementById(id);
 const CHAVE = 'grimorio.estado';
@@ -30,7 +31,7 @@ const estado = {
   simbolos: { letras: {}, sigilos: {} },
   personagem: null, variacao: 'normal',
   fontes: {},
-  // usados pelo painel de exportação (ui-exportar.js)
+  // usados pelo painel de exportação (ui/exportar.js)
   perfil: structuredClone(PERFIL_PADRAO), otimizar: true, trajeto: false, paginaAtual: 0, resultado: null, pagina: null,
 };
 const SALVOS = ['selecionadas', 'atual', 'folhaNome', 'paisagem', 'margem', 'cfg', 'estilo', 'simbolos', 'variacao'];

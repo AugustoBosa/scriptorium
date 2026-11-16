@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { IDENTIDADE, EXECUCAO } from '../src/mao.js';
+import { IDENTIDADE, EXECUCAO } from '../src/motor/mao.js';
 import { AJUDA, ROTULOS, rotulo, ajuda } from '../src/ajuda.js';
 
 const CHAVES = [

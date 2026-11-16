@@ -1,5 +1,5 @@
 // Escrita arcana: alfabeto cifrado gerado por seed, sigilo por magia e moldura. Tudo em traço único.
-import { rng, hash } from './rng.js';
+import { rng, hash } from '../rng.js';
 
 export const LETRAS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 export const CAIXA = { largura: 500, altura: 700 }; // caixa de uma letra, em unidades da fonte (y para cima)

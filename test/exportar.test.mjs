@@ -1,14 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { PERFIL_PADRAO, svg, otimizar, gcode, viagem } from '../src/exportar.js';
+import { readFileSync, existsSync } from 'node:fs';
+import { PERFIL_PADRAO, svg, gcode } from '../src/maquina/gcode.js';
+import { otimizar, viagem } from '../src/maquina/otimizar.js';
 
 const raiz = new URL('../', import.meta.url);
-const toml = readFileSync(new URL('arquivo/vpype.toml', raiz), 'utf8');
-const lerToml = (chave) => toml.match(new RegExp(`${chave} = "(.*)"`))[1].replace(/\\n/g, '\n');
+const arqToml = new URL('arquivo/vpype.toml', raiz);
 const pagina = { largura: 210, altura: 210 };
 
-test('PERFIL_PADRAO bate com vpype.toml e valores fixos', () => {
+test('PERFIL_PADRAO bate com vpype.toml e valores fixos', { skip: !existsSync(arqToml) && 'arquivo/vpype.toml fora do git' }, () => {
+  const toml = readFileSync(arqToml, 'utf8');
+  const lerToml = (chave) => toml.match(new RegExp(`${chave} = "(.*)"`))[1].replace(/\\n/g, '\n');
   assert.equal(PERFIL_PADRAO.header, lerToml('document_start'));
   assert.equal(PERFIL_PADRAO.footer, lerToml('document_end'));
   assert.equal(PERFIL_PADRAO.fDesenho, 2400);
@@ -108,6 +110,20 @@ test('otimizar 2-opt: nunca pior que o original, preserva pontos e é determiní
   assert.equal(o.length, 60);
   assert.equal(o.flat().length, 120);
   assert.deepEqual(otimizar(x, 0), o);
+});
+
+test('otimizar 2-opt completo (padrão ≤ 2000 traços) não é pior que janela 50', () => {
+  let s = 11;
+  const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const x = Array.from({ length: 300 }, () => {
+    const a = [r() * 200, r() * 200];
+    return [a, [a[0] + r() * 8, a[1] + r() * 8]];
+  });
+  const completo = otimizar(x, 0);
+  const janela50 = otimizar(x, 0, { janela: 50 });
+  assert.ok(viagem(completo) <= viagem(janela50) + 1e-9);
+  assert.ok(viagem(janela50) <= viagem(x));
+  assert.equal(completo.flat().length, 600);
 });
 
 test('svg com trajeto desenha viagem e marcadores; sem trajeto fica igual', () => {

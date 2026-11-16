@@ -1,5 +1,5 @@
-import { PAGINAS } from './layout.js';
-import { rotulo, ajuda } from './ajuda.js';
+import { PAGINAS } from '../layout.js';
+import { rotulo, ajuda } from '../ajuda.js';
 
 function titulo(texto, chave) {
   const h = document.createElement('h3');

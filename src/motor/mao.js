@@ -1,4 +1,4 @@
-import { rng, hash } from './rng.js';
+import { rng, hash } from '../rng.js';
 
 export const IDENTIDADE = ['base', 'seed', 'inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio'];
 export const EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo'];

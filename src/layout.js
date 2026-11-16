@@ -1,4 +1,4 @@
-import { glifo } from './mao.js';
+import { glifo } from './motor/mao.js';
 import { rng } from './rng.js';
 
 export const PAGINAS = {
