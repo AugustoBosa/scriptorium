@@ -1,22 +1,27 @@
-import { PAGINAS } from '../layout.js';
-import { rotulo, ajuda } from '../ajuda.js';
+import { PARAMS as PARAMS_DOC, PAPEIS, papel } from '../materiais/documento.js';
+import { PARAMS as PARAMS_LAYOUT, amostra } from '../layout.js';
+import { resolver } from '../personagem.js';
+import { AJUDA, rotulo } from '../ajuda.js';
+import { controle, dica, ligar } from './controle.js';
 
-function titulo(texto, chave) {
+const PD = Object.fromEntries(PARAMS_DOC.map((p) => [p.chave, p]));
+const PL = Object.fromEntries(PARAMS_LAYOUT.map((p) => [p.chave, p]));
+const MARGENS = ['margemTopo', 'margemDir', 'margemBase', 'margemEsq'];
+const LADOS = { margemTopo: 'topo', margemDir: 'dir', margemBase: 'base', margemEsq: 'esq' };
+
+const ctxDe = (estado) => () => ({
+  fontes: estado.fontes,
+  mao: resolver(estado.personagem, estado.variacao || null),
+  escrever: (m, t, o) => amostra(estado.fontes, m, t, o),
+  papel: estado.pagina,
+  perfil: estado.perfil,
+});
+
+function titulo(texto, dicaTexto) {
   const h = document.createElement('h3');
   h.append(texto);
-  if (chave) h.append(' ', ajuda(chave));
+  if (dicaTexto) h.append(' ', dica(dicaTexto));
   return h;
-}
-
-function linha(chave, controle) {
-  const l = document.createElement('label');
-  l.append(rotulo(chave), ' ', ajuda(chave), ' ', controle);
-  return l;
-}
-
-// Não mexe no elemento que o usuário está editando (evita perder o cursor).
-function sincronizar(el, valor) {
-  if (el !== document.activeElement && String(el.value) !== String(valor)) el.value = valor;
 }
 
 export function montar(elemento, estado, aoMudar) {
@@ -24,79 +29,6 @@ export function montar(elemento, estado, aoMudar) {
   textarea.rows = 8;
   textarea.addEventListener('input', () => {
     estado.texto = textarea.value;
-    aoMudar();
-  });
-
-  const selPagina = document.createElement('select');
-  for (const nome of ['A4', 'A5', 'mesa', 'personalizada']) {
-    const op = document.createElement('option');
-    op.value = nome;
-    op.textContent = nome;
-    selPagina.append(op);
-  }
-  selPagina.addEventListener('change', () => {
-    const nome = selPagina.value;
-    if (nome !== 'personalizada') {
-      estado.pagina = structuredClone(PAGINAS[nome]);
-      estado.paginaAtual = 0;
-    }
-    estado.paginaNome = nome;
-    aoMudar();
-  });
-
-  const medidas = [
-    ['larguraPagina', 20, () => estado.pagina, 'largura'],
-    ['alturaPagina', 20, () => estado.pagina, 'altura'],
-    ['margemTopo', 0, () => estado.pagina.margens, 'topo'],
-    ['margemDir', 0, () => estado.pagina.margens, 'dir'],
-    ['margemBase', 0, () => estado.pagina.margens, 'base'],
-    ['margemEsq', 0, () => estado.pagina.margens, 'esq'],
-  ].map(([chave, min, alvo, campo]) => {
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.min = min;
-    input.step = 1;
-    input.addEventListener('input', () => {
-      const n = Number(input.value);
-      if (input.value === '' || Number.isNaN(n) || n < min) return;
-      alvo()[campo] = n;
-      estado.paginaNome = 'personalizada';
-      aoMudar();
-    });
-    return { input, alvo, campo, linha: linha(chave, input) };
-  });
-
-  const deslizantes = [
-    ['tamanho', 3, 15, 0.5, 'tamanho'],
-    ['entrelinha', 1, 3, 0.05, 'entrelinha'],
-  ].map(([chave, min, max, passo, opcao]) => {
-    const input = document.createElement('input');
-    input.type = 'range';
-    input.min = min;
-    input.max = max;
-    input.step = passo;
-    const saida = document.createElement('output');
-    input.addEventListener('input', () => {
-      estado.opcoes[opcao] = Number(input.value);
-      aoMudar();
-    });
-    const texto = document.createElement('span');
-    texto.append(rotulo(chave), ' ', ajuda(chave));
-    const l = document.createElement('label');
-    l.className = 'slider';
-    l.append(texto, input, ' ', saida);
-    return { input, saida, opcao, linha: l };
-  });
-
-  const selAlinhamento = document.createElement('select');
-  for (const nome of ['esquerda', 'centro', 'justificado']) {
-    const op = document.createElement('option');
-    op.value = nome;
-    op.textContent = nome;
-    selAlinhamento.append(op);
-  }
-  selAlinhamento.addEventListener('change', () => {
-    estado.opcoes.alinhamento = selAlinhamento.value;
     aoMudar();
   });
 
@@ -113,27 +45,81 @@ export function montar(elemento, estado, aoMudar) {
     estado.texto = await f.text();
     aoMudar();
   });
+  const rotuloArquivo = document.createElement('label');
+  rotuloArquivo.append(rotulo('importarTxt'), ' ', dica(AJUDA.importarTxt), ' ', arquivo);
 
-  elemento.replaceChildren(
-    titulo('Texto', 'texto'),
-    textarea,
-    linha('importarTxt', arquivo),
-    titulo('Página'),
-    linha('pagina', selPagina),
-    ...medidas.map((m) => m.linha),
-    titulo('Aparência'),
-    ...deslizantes.map((d) => d.linha),
-    linha('alinhamento', selAlinhamento),
-  );
+  elemento.replaceChildren(titulo('Texto', AJUDA.texto), textarea, rotuloArquivo);
 
   return function atualizar() {
     if (textarea.value !== estado.texto) textarea.value = estado.texto;
-    sincronizar(selPagina, estado.paginaNome);
-    for (const m of medidas) sincronizar(m.input, m.alvo()[m.campo]);
-    for (const d of deslizantes) {
-      sincronizar(d.input, estado.opcoes[d.opcao]);
-      d.saida.textContent = String(estado.opcoes[d.opcao]);
+  };
+}
+
+// Constrói o Papel a partir da configuração: papel() e depois as 4 margens individuais.
+function construir(cfg) {
+  const p = papel(cfg.papel, { paisagem: cfg.paisagem, margem: cfg.margem, largura: cfg.largura, altura: cfg.altura });
+  for (const k of MARGENS) p.margens[LADOS[k]] = cfg[k];
+  return p;
+}
+
+function cfgInicial(estado) {
+  const { largura, altura, margens: m } = estado.pagina;
+  const nome = estado.paginaNome;
+  const ehPadrao = Object.hasOwn(PAPEIS, nome);
+  const [l, a] = ehPadrao ? PAPEIS[nome] : [largura, altura];
+  return {
+    papel: ehPadrao ? nome : 'personalizado',
+    paisagem: ehPadrao && largura > altura,
+    largura: l, altura: a, margem: m.topo,
+    margemTopo: m.topo, margemDir: m.dir, margemBase: m.base, margemEsq: m.esq,
+  };
+}
+
+export function montarPapel(elemento, estado, aoMudar) {
+  estado.papelCfg ??= cfgInicial(estado);
+  const cfg = estado.papelCfg;
+  const ctx = ctxDe(estado);
+
+  const recalcular = () => {
+    estado.pagina = construir(cfg);
+    estado.paginaNome = cfg.papel;
+  };
+
+  const gravar = (chave) => (v) => {
+    cfg[chave] = v;
+    if (chave === 'papel') {
+      if (v !== 'personalizado') {
+        [cfg.largura, cfg.altura] = PAPEIS[v];
+        cfg.margem = PAPEIS[v][2];
+        for (const k of MARGENS) cfg[k] = cfg.margem;
+      }
+      estado.paginaAtual = 0;
+    } else if (chave === 'margem') {
+      for (const k of MARGENS) cfg[k] = v;
     }
-    sincronizar(selAlinhamento, estado.opcoes.alinhamento);
+    recalcular();
+  };
+
+  const ctrl = (def, ler, gr) => controle(def, { ler, gravar: gr, ctx }, aoMudar);
+  const doCfg = (def) => ctrl(def, () => cfg[def.chave], gravar(def.chave));
+  const dasOpcoes = (def) => controle(def, ligar(estado.opcoes, def.chave, ctx), aoMudar);
+
+  const controles = ['papel', 'paisagem', 'largura', 'altura', 'margem', ...MARGENS].map((c) => doCfg(PD[c]));
+  const [, , cLargura, cAltura] = controles;
+  const cColunas = ctrl(PL.colunas, () => estado.opcoes.colunas, (v) => {
+    estado.opcoes.colunas = v;
+    if (estado.oficina === 'livro') estado.colunasLivro = v;
+  });
+  const aparencia = [dasOpcoes(PL.tamanho), dasOpcoes(PL.entrelinha), dasOpcoes(PL.alinhamento), cColunas];
+
+  elemento.replaceChildren(
+    titulo('Papel'), ...controles.map((c) => c.el),
+    titulo('Aparência'), ...aparencia.map((c) => c.el),
+  );
+
+  return function atualizar() {
+    for (const c of [...controles, ...aparencia]) c.atualizar();
+    cLargura.el.hidden = cAltura.el.hidden = cfg.papel !== 'personalizado';
+    cColunas.el.hidden = estado.oficina === 'carta';
   };
 }

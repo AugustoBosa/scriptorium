@@ -1,4 +1,6 @@
 // Documento: papel, canetas, camadas e traços. Ponto de entrada único para o modelo de dados (M14).
+import { ROTULOS, AJUDA } from '../ajuda.js';
+import { papelMaximo } from '../maquina/perfis.js';
 /** @typedef {[number, number][]} Traco  mm, origem no canto sup-esq do papel, y para baixo */
 /** @typedef {{id:string, caneta:string, personagem:string|null, ordem:'escrita'|'otimizada', tracos:Traco[]}} Camada */
 /** @typedef {{camadas:Camada[]}} Pagina */
@@ -56,3 +58,24 @@ export function validarDocumento(doc) {
   }
   return erros;
 }
+
+// Parâmetros editáveis. Prévia: contorno do papel + janela útil da máquina, ou papel + área dentro das margens.
+const ret = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]];
+const comJanela = (l, a, ctx) => { const m = papelMaximo(ctx.perfil); return [ret(0, 0, l, a), ret(0, 0, m.largura, m.altura)]; };
+const comMargens = (l, a, { topo, dir, base, esq }) => [ret(0, 0, l, a), ret(esq, topo, l - dir, a - base)];
+const lado = (k) => (v, ctx) => comMargens(ctx.papel.largura, ctx.papel.altura, { ...ctx.papel.margens, [k]: v });
+const marg = (chave, k, rot) => ({ chave, grupo: 'papel', nivel: 'avancado', tipo: 'faixa', min: 0, max: 60, passo: 1, padrao: 12, unidade: 'mm', rotulo: ROTULOS[rot], ajuda: AJUDA[rot], previa: lado(k) });
+export const PARAMS = [
+  { chave: 'papel', grupo: 'papel', nivel: 'basico', tipo: 'opcao', padrao: 'A5', rotulo: ROTULOS.pagina, ajuda: AJUDA.pagina,
+    opcoes: [...Object.keys(PAPEIS), 'personalizado'].map((valor) => ({ valor, rotulo: valor })),
+    previa: (v, ctx) => { const p = v === 'personalizado' ? ctx.papel : papel(v); return comJanela(p.largura, p.altura, ctx); } },
+  { chave: 'paisagem', grupo: 'papel', nivel: 'basico', tipo: 'marca', padrao: false, rotulo: 'paisagem',
+    ajuda: 'Deita o papel: a folha fica mais larga que alta. Desligado, a folha fica em pé (retrato).',
+    previa: (v, ctx) => { const [a, b] = [Math.min(ctx.papel.largura, ctx.papel.altura), Math.max(ctx.papel.largura, ctx.papel.altura)]; return v ? comJanela(b, a, ctx) : comJanela(a, b, ctx); } },
+  { chave: 'largura', grupo: 'papel', nivel: 'basico', tipo: 'faixa', min: 20, max: 420, passo: 1, padrao: 148, unidade: 'mm', rotulo: ROTULOS.larguraPagina, ajuda: AJUDA.larguraPagina, previa: (v, ctx) => comJanela(v, ctx.papel.altura, ctx) },
+  { chave: 'altura', grupo: 'papel', nivel: 'basico', tipo: 'faixa', min: 20, max: 420, passo: 1, padrao: 210, unidade: 'mm', rotulo: ROTULOS.alturaPagina, ajuda: AJUDA.alturaPagina, previa: (v, ctx) => comJanela(ctx.papel.largura, v, ctx) },
+  { chave: 'margem', grupo: 'papel', nivel: 'basico', tipo: 'faixa', min: 0, max: 30, passo: 0.5, padrao: 12, unidade: 'mm', rotulo: 'margem (mm)',
+    ajuda: 'Espaço em branco, em mm, nas quatro bordas do papel. Para ajustar cada lado separadamente, use as margens individuais.',
+    previa: (v, ctx) => comMargens(ctx.papel.largura, ctx.papel.altura, { topo: v, dir: v, base: v, esq: v }) },
+  marg('margemTopo', 'topo', 'margemTopo'), marg('margemDir', 'dir', 'margemDir'), marg('margemBase', 'base', 'margemBase'), marg('margemEsq', 'esq', 'margemEsq'),
+];

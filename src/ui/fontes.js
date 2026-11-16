@@ -1,35 +1,23 @@
-import { mutar } from '../motor/mao.js';
-import { rotulo, ajuda } from '../ajuda.js';
+import { mutar, PARAMS } from '../motor/mao.js';
+import { rotulo, AJUDA } from '../ajuda.js';
+import { controle, ligar, dica } from './controle.js';
+import { resolver } from '../personagem.js';
+import { amostra } from '../layout.js';
 import { abrirCatalogo } from './catalogo.js';
+
+const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
 
 function titulo(texto, chave) {
   const h = document.createElement('h3');
   h.append(texto);
-  if (chave) h.append(' ', ajuda(chave));
+  if (chave) h.append(' ', dica(AJUDA[chave]));
   return h;
 }
 
-function campo(chave, controle) {
+function campo(chave, entrada) {
   const l = document.createElement('label');
-  l.append(rotulo(chave), ' ', ajuda(chave), ' ', controle);
+  l.append(rotulo(chave), ' ', dica(AJUDA[chave]), ' ', entrada);
   return l;
-}
-
-function deslizante(chave, min, max, passo, valor) {
-  const input = document.createElement('input');
-  input.type = 'range';
-  input.min = min;
-  input.max = max;
-  input.step = passo;
-  input.value = valor;
-  const saida = document.createElement('output');
-  saida.textContent = String(valor);
-  const t = document.createElement('span');
-  t.append(rotulo(chave), ' ', ajuda(chave));
-  const l = document.createElement('label');
-  l.className = 'slider';
-  l.append(t, input, ' ', saida);
-  return { rotulo: l, input, saida };
 }
 
 // Não mexe no elemento que o usuário está editando (evita perder o cursor/arraste).
@@ -40,6 +28,11 @@ function sincronizar(el, valor) {
 export function montar(elemento, estado, aoMudar) {
   const lista = document.createElement('div');
   let linhas = [];
+  const ctx = () => ({
+    fontes: estado.fontes,
+    mao: resolver(estado.personagem, estado.variacao || null),
+    escrever: (m, t, o) => amostra(estado.fontes, m, t, o),
+  });
 
   function criarLinha(i) {
     const sel = document.createElement('select');
@@ -54,11 +47,11 @@ export function montar(elemento, estado, aoMudar) {
       aoMudar();
     });
 
-    const peso = deslizante('peso', 0, 1, 0.05, 0);
-    peso.input.addEventListener('input', () => {
-      estado.personagem.mao.base[i].peso = Math.max(0.01, Number(peso.input.value));
-      aoMudar();
-    });
+    const peso = controle(P.peso, {
+      ler: () => estado.personagem.mao.base[i].peso,
+      gravar: (v) => { estado.personagem.mao.base[i].peso = Math.max(0.01, v); },
+      ctx: () => ({ ...ctx(), indice: i }),
+    }, aoMudar);
 
     const remover = document.createElement('button');
     remover.type = 'button';
@@ -69,7 +62,7 @@ export function montar(elemento, estado, aoMudar) {
     });
 
     const linha = document.createElement('div');
-    linha.append(campo('base', sel), peso.rotulo, remover);
+    linha.append(campo('base', sel), peso.el, remover);
     return { linha, sel, peso, remover };
   }
 
@@ -81,32 +74,19 @@ export function montar(elemento, estado, aoMudar) {
     aoMudar();
   });
 
-  const seedMao = document.createElement('input');
-  seedMao.type = 'number';
-  seedMao.step = 1;
-  seedMao.addEventListener('input', () => {
-    const n = Math.trunc(Number(seedMao.value));
-    if (seedMao.value === '' || Number.isNaN(n)) return;
-    estado.personagem.mao.seed = n;
-    aoMudar();
-  });
+  const seed = controle(P.seed, ligar(() => estado.personagem.mao, 'seed', ctx), aoMudar);
 
-  const seedMutar = document.createElement('input');
-  seedMutar.type = 'number';
-  seedMutar.step = 1;
-  seedMutar.value = 1;
-
-  const forca = deslizante('mutarForca', 0, 1, 0.05, 0.3);
-  forca.input.addEventListener('input', () => {
-    forca.saida.textContent = forca.input.value;
-  });
+  const m = { mutarSeed: 1, mutarForca: 0.3 };
+  const mutarCtx = () => ({ ...ctx(), mao: estado.personagem.mao });
+  const cSeed = controle(P.mutarSeed, ligar(m, 'mutarSeed', mutarCtx), aoMudar);
+  const cForca = controle(P.mutarForca, ligar(m, 'mutarForca', mutarCtx), aoMudar);
 
   const botaoMutar = document.createElement('button');
   botaoMutar.type = 'button';
   botaoMutar.textContent = 'Mutar';
   botaoMutar.addEventListener('click', () => {
-    estado.personagem.mao = mutar(estado.personagem.mao, Number(seedMutar.value), Number(forca.input.value));
-    seedMutar.value = Number(seedMutar.value) + 1;
+    estado.personagem.mao = mutar(estado.personagem.mao, m.mutarSeed, m.mutarForca);
+    m.mutarSeed += 1;
     aoMudar();
   });
 
@@ -120,10 +100,10 @@ export function montar(elemento, estado, aoMudar) {
     tabela,
     lista,
     adicionar,
-    campo('seed', seedMao),
+    seed.el,
     titulo('Mutar', 'mutarForca'),
-    campo('mutarSeed', seedMutar),
-    forca.rotulo,
+    cSeed.el,
+    cForca.el,
     botaoMutar,
   );
 
@@ -137,10 +117,11 @@ export function montar(elemento, estado, aoMudar) {
     base.forEach((it, i) => {
       const l = linhas[i];
       sincronizar(l.sel, it.fonte);
-      sincronizar(l.peso.input, it.peso);
-      l.peso.saida.textContent = String(it.peso);
+      l.peso.atualizar();
       l.remover.disabled = base.length <= 1;
     });
-    sincronizar(seedMao, estado.personagem.mao.seed);
+    seed.atualizar();
+    cSeed.atualizar();
+    cForca.atualizar();
   };
 }

@@ -1,5 +1,6 @@
 import { glifo } from './motor/mao.js';
 import { rng } from './rng.js';
+import { ROTULOS, AJUDA } from './ajuda.js';
 
 export const PAGINAS = {
   A4: { largura: 210, altura: 297, margens: { topo: 20, dir: 20, base: 20, esq: 20 } },
@@ -154,3 +155,23 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
   const fim = cur.k > 0 ? Math.max(fimPag, base(cur.k - 1)) : (fimPag > -Infinity ? fimPag : cur.topo);
   return { paginas, avisos, fim, ancoras };
 }
+
+const FOLHA_AMOSTRA = { largura: 60, altura: 40, margens: { topo: 2, dir: 2, base: 2, esq: 2 } };
+// Traços (mm) da 1ª página de um texto curto numa folha pequena: prévia dos parâmetros.
+export function amostra(fontes, mao, texto, opcoes = {}) {
+  return compor(texto, fontes, mao, opcoes.pagina ?? FOLHA_AMOSTRA, { tamanho: 6, ...opcoes }).paginas[0];
+}
+
+const PARAGRAFO = 'a lua cheia sobe no mar e a noite fica calma';
+export const PARAMS = [
+  { chave: 'tamanho', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 3, max: 15, passo: 0.5, padrao: 6, unidade: 'mm', rotulo: ROTULOS.tamanho, ajuda: AJUDA.tamanho,
+    previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, 'mão', { tamanho: v }) },
+  { chave: 'entrelinha', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 1, max: 3, passo: 0.01, padrao: 1.6, rotulo: ROTULOS.entrelinha, ajuda: AJUDA.entrelinha,
+    previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, 'uma\nduas', { entrelinha: v }) },
+  { chave: 'alinhamento', grupo: 'aparencia', nivel: 'basico', tipo: 'opcao', padrao: 'esquerda', rotulo: ROTULOS.alinhamento, ajuda: AJUDA.alinhamento,
+    opcoes: [{ valor: 'esquerda', rotulo: 'esquerda' }, { valor: 'centro', rotulo: 'centro' }, { valor: 'justificado', rotulo: 'justificado' }],
+    previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, PARAGRAFO, { tamanho: 3, alinhamento: v }) },
+  { chave: 'colunas', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 1, max: 2, passo: 1, padrao: 1, rotulo: 'colunas',
+    ajuda: 'Divide o texto em colunas lado a lado, como num jornal. Com 2 colunas cada linha fica mais curta e o texto desce em duas faixas.',
+    previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, PARAGRAFO, { tamanho: 3, colunas: v }) },
+];

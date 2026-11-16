@@ -1,25 +1,22 @@
-import { PERFIL_PADRAO, svg, gcode } from '../maquina/gcode.js';
-import { otimizar } from '../maquina/otimizar.js';
-import { rotulo, ajuda } from '../ajuda.js';
+import { gcodeDocumento, svgDocumento } from '../maquina/gcode.js';
+import { PERFIS, PARAMS as PARAMS_PERFIL, mesclarPerfil } from '../maquina/perfis.js';
+import { otimizar, PARAMS as PARAMS_OTIM } from '../maquina/otimizar.js';
+import { amostra } from '../layout.js';
+import { resolver } from '../personagem.js';
+import { AJUDA, rotulo } from '../ajuda.js';
+import { controle, dica, ligar } from './controle.js';
 
-// Chave do campo = chave de estado.perfil = chave de ajuda.
-const CAMPOS = [
-  ['zEscrita', 0.1],
-  ['zLevantada', 0.1],
-  ['fDesenho', 1],
-  ['fViagem', 1],
-  ['fZ', 1],
-  ['offsetX', 0.1],
-  ['offsetY', 0.1],
-  ['mesaX', 1],
-  ['mesaY', 1],
-];
+const PP = Object.fromEntries(PARAMS_PERFIL.map((p) => [p.chave, p]));
+const PO = Object.fromEntries(PARAMS_OTIM.map((p) => [p.chave, p]));
+const CHAVE_PERFIL = 'writer.perfil';
 
-const tracosDaPagina = (estado, i) => {
-  const tr0 = estado.resultado?.paginas[i] ?? [];
-  return estado.otimizar ? otimizar(tr0) : tr0;
-};
-const tracosAtuais = (estado) => tracosDaPagina(estado, estado.paginaAtual);
+const ctxDe = (estado) => () => ({
+  fontes: estado.fontes,
+  mao: resolver(estado.personagem, estado.variacao || null),
+  escrever: (m, t, o) => amostra(estado.fontes, m, t, o),
+  papel: estado.pagina,
+  perfil: estado.perfil,
+});
 
 function baixar(conteudo, nome, tipo) {
   const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
@@ -27,113 +24,139 @@ function baixar(conteudo, nome, tipo) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function montar(elemento, estado, aoMudar) {
-  const sincs = [];
+// Página do documento com cada camada reordenada conforme a opção "otimizar".
+function paginaOtimizada(estado, i) {
+  const pag = estado.doc.paginas[i];
+  return { ...pag, camadas: pag.camadas.map((c) => ({ ...c, tracos: otimizar(c.tracos, 0.1, { ordem: estado.otimizar ? c.ordem : 'escrita' }) })) };
+}
 
-  const linha = (chave, controle) => {
-    const l = document.createElement('label');
-    l.append(rotulo(chave), ' ', ajuda(chave), ' ', controle);
-    elemento.append(l);
+// G-code da página i, ou { erro } quando a máquina não pode plotar.
+function gerarGcode(estado, i) {
+  try {
+    const doc = estado.doc;
+    const g = gcodeDocumento(paginaOtimizada(estado, i), doc.papel, estado.perfil, { canetas: doc.canetas });
+    if (estado.perfil.experimental && g.avisos.some((a) => a.includes('fora da janela'))) {
+      return { g, erro: 'Perfil experimental: há traços fora da janela da máquina.' };
+    }
+    return { g };
+  } catch (e) {
+    return { erro: `Erro: ${e.message}` };
+  }
+}
+
+const gravarPerfil = (perfil) => {
+  try { localStorage.setItem(CHAVE_PERFIL, JSON.stringify(perfil)); } catch { /* sem armazenamento: vale só nesta sessão */ }
+};
+
+export function montar(elemento, estado, aoMudar) {
+  const ctx = ctxDe(estado);
+
+  const editar = (chave, v) => {
+    estado.perfil[chave] = v;
+    estado.perfil.nome = 'personalizado';
+    estado.perfilNome = 'personalizado';
+    gravarPerfil(estado.perfil);
   };
 
-  const botao = (texto, aoClicar) => {
+  const controles = ['zEscrita', 'zLevantada', 'fDesenho', 'fViagem', 'fZ', 'offsetX', 'offsetY', 'mesaX', 'mesaY']
+    .map((c) => controle(PP[c], { ler: () => estado.perfil[c], gravar: (v) => editar(c, v), ctx }, aoMudar));
+  controles.push(controle(PO.otimizar, ligar(estado, 'otimizar', ctx), aoMudar), controle(PO.trajeto, ligar(estado, 'trajeto', ctx), aoMudar));
+
+  const areas = ['header', 'footer'].map((chave) => {
+    const ta = document.createElement('textarea');
+    ta.rows = 5;
+    ta.style.fontFamily = 'var(--fonte-mono)';
+    ta.addEventListener('input', () => { editar(chave, ta.value); aoMudar(); });
+    const l = document.createElement('label');
+    l.append(rotulo(chave), ' ', dica(AJUDA[chave]), ' ', ta);
+    return { ta, chave, l };
+  });
+
+  const restaurar = document.createElement('button');
+  restaurar.type = 'button';
+  restaurar.textContent = 'Restaurar perfil';
+  restaurar.addEventListener('click', () => {
+    estado.perfil = structuredClone(PERFIS[estado.perfilNome === 'personalizado' ? 'megaS' : estado.perfilNome]);
+    estado.perfilNome = estado.perfil.nome === 'p2s' ? 'p2s' : 'megaS';
+    try { localStorage.removeItem(CHAVE_PERFIL); } catch { /* ignora */ }
+    aoMudar();
+  });
+
+  elemento.replaceChildren(...controles.map((c) => c.el), ...areas.map((a) => a.l), restaurar);
+
+  return function atualizar() {
+    for (const c of controles) c.atualizar();
+    for (const { ta, chave } of areas) {
+      if (ta !== document.activeElement && ta.value !== estado.perfil[chave]) ta.value = estado.perfil[chave];
+    }
+  };
+}
+
+export function montarBarra(elemento, estado, aoMudar) {
+  const ctx = ctxDe(estado);
+
+  const trocar = (nome) => {
+    if (nome === 'personalizado') {
+      let salvo;
+      try { salvo = JSON.parse(localStorage.getItem(CHAVE_PERFIL)) ?? undefined; } catch { /* perfil salvo ilegível */ }
+      estado.perfil = mesclarPerfil(salvo);
+    } else {
+      estado.perfil = structuredClone(PERFIS[nome]);
+    }
+    estado.perfilNome = nome;
+    aoMudar();
+  };
+  const seletor = controle(PP.perfil, { ler: () => estado.perfilNome, gravar: trocar, ctx }, aoMudar);
+
+  const resumo = document.createElement('span');
+  resumo.className = 'resumo';
+  const erro = document.createElement('span');
+  erro.className = 'erro';
+
+  const botao = (texto, aoClicar, classe) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.textContent = texto;
+    if (classe) b.className = classe;
     b.addEventListener('click', aoClicar);
-    elemento.append(b);
+    return b;
   };
+  const nome = (i, ext) => `${estado.oficina ?? 'escrita'}-p${i + 1}.${ext}`;
+  const baixarSvg = (i) => baixar(svgDocumento(paginaOtimizada(estado, i), estado.doc.papel, estado.doc.canetas), nome(i, 'svg'), 'image/svg+xml');
 
-  for (const [chave, passo] of CAMPOS) {
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.step = passo;
-    input.addEventListener('input', () => {
-      if (input.value === '') return;
-      estado.perfil[chave] = Number(input.value);
-      aoMudar();
-    });
-    linha(chave, input);
-    sincs.push(() => {
-      if (Number(input.value) !== estado.perfil[chave]) input.value = estado.perfil[chave];
-    });
-  }
-
-  for (const chave of ['header', 'footer']) {
-    const ta = document.createElement('textarea');
-    ta.rows = 5;
-    ta.style.fontFamily = 'monospace';
-    ta.addEventListener('input', () => {
-      estado.perfil[chave] = ta.value;
-      aoMudar();
-    });
-    linha(chave, ta);
-    sincs.push(() => {
-      if (ta.value !== estado.perfil[chave]) ta.value = estado.perfil[chave];
-    });
-  }
-
-  const otim = document.createElement('input');
-  otim.type = 'checkbox';
-  otim.addEventListener('change', () => {
-    estado.otimizar = otim.checked;
-    aoMudar();
+  const bSvg = botao('Baixar SVG', () => baixarSvg(estado.paginaAtual));
+  const bGcode = botao('Baixar G-code', () => {
+    const r = gerarGcode(estado, estado.paginaAtual);
+    if (r.erro) { erro.textContent = r.erro; return; }
+    baixar(r.g.texto, nome(estado.paginaAtual, 'gcode'), 'text/plain');
+  }, 'primario');
+  const bTodosSvg = botao('Todos os SVG', () => estado.doc.paginas.forEach((_, i) => baixarSvg(i)));
+  const bTodosGcode = botao('Todos os G-code', () => {
+    const rs = estado.doc.paginas.map((_, i) => gerarGcode(estado, i));
+    const falha = rs.findIndex((r) => r.erro);
+    if (falha >= 0) { erro.textContent = `Página ${falha + 1}: ${rs[falha].erro}`; return; }
+    rs.forEach((r, i) => baixar(r.g.texto, nome(i, 'gcode'), 'text/plain'));
   });
-  linha('otimizar', otim);
+  const todas = document.createElement('details');
+  const sumario = document.createElement('summary');
+  sumario.textContent = 'Todas as páginas';
+  todas.append(sumario, bTodosSvg, bTodosGcode);
 
-  const traj = document.createElement('input');
-  traj.type = 'checkbox';
-  traj.addEventListener('change', () => {
-    estado.trajeto = traj.checked;
-    aoMudar();
-  });
-  linha('trajeto', traj);
+  elemento.replaceChildren(seletor.el, resumo, erro, bSvg, bGcode, todas);
 
-  botao('Restaurar perfil padrão', () => {
-    estado.perfil = structuredClone(PERFIL_PADRAO);
-    aoMudar();
-  });
-  botao('Baixar SVG', () => {
-    const n = estado.paginaAtual + 1;
-    baixar(svg(tracosAtuais(estado), estado.pagina), `escrita-p${n}.svg`, 'image/svg+xml');
-  });
-  botao('Baixar G-code', () => {
-    const n = estado.paginaAtual + 1;
-    baixar(gcode(tracosAtuais(estado), estado.pagina, estado.perfil).texto, `escrita-p${n}.gcode`, 'text/plain');
-  });
-
-  // Um arquivo por página; sem zip (add se o navegador bloquear vários downloads).
-  const todas = (ext, tipo, gerar) => () => {
-    (estado.resultado?.paginas ?? []).forEach((_, i) =>
-      baixar(gerar(tracosDaPagina(estado, i)), `escrita-p${i + 1}.${ext}`, tipo));
-  };
-  botao('Baixar todos os SVG', todas('svg', 'image/svg+xml', (t) => svg(t, estado.pagina)));
-  botao('Baixar todos os G-code', todas('gcode', 'text/plain', (t) => gcode(t, estado.pagina, estado.perfil).texto));
-
-  const resumo = document.createElement('p');
-  const lista = document.createElement('ul');
-  elemento.append(resumo, lista);
-
-  return () => {
-    for (const sync of sincs) sync();
-    otim.checked = estado.otimizar;
-    traj.checked = estado.trajeto;
-    lista.replaceChildren();
-    if (!estado.resultado) {
-      resumo.textContent = '—';
-      return;
+  return function atualizar() {
+    seletor.atualizar();
+    const doc = estado.doc;
+    const vazio = !doc || !doc.paginas.some((p) => p.camadas.some((c) => c.tracos.length));
+    bSvg.disabled = bTodosSvg.disabled = vazio;
+    let bloqueado = vazio, texto = vazio && doc ? 'Nada para plotar ainda' : '—';
+    erro.textContent = '';
+    if (!vazio) {
+      const r = gerarGcode(estado, estado.paginaAtual);
+      if (r.g) texto = `${r.g.nTracos} traços · ${(r.g.comprimento / 1000).toFixed(1).replace('.', ',')} m`;
+      if (r.erro) { erro.textContent = r.erro; bloqueado = true; }
     }
-    try {
-      const g = gcode(tracosAtuais(estado), estado.pagina, estado.perfil);
-      resumo.textContent = `Traços: ${g.nTracos} | Comprimento: ${g.comprimento.toFixed(1)} mm`;
-      const avisos = g.avisos.length ? g.avisos : ['sem avisos'];
-      for (const a of avisos) {
-        const li = document.createElement('li');
-        li.textContent = a;
-        lista.append(li);
-      }
-    } catch (e) {
-      resumo.textContent = `Erro: ${e.message}`;
-    }
+    resumo.textContent = texto;
+    bGcode.disabled = bTodosGcode.disabled = bloqueado;
   };
 }

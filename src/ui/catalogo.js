@@ -1,6 +1,6 @@
 import { CATALOGO, EIXOS, ARQUETIPOS } from '../catalogo.js';
 import { glifo, NEUTRA } from '../motor/mao.js';
-import { ajuda } from '../ajuda.js';
+import { dica } from './controle.js';
 import { SEM_ACENTOS } from '../fonte.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -23,17 +23,17 @@ function criar() {
     const style = document.createElement('style');
     style.id = 'estilo-catalogo';
     style.textContent = `
-      #catalogo-fontes { width: min(1600px, 98vw); max-height: 90vh; overflow: auto; padding: 12px 16px; border: 1px solid #999; border-radius: 6px; }
+      #catalogo-fontes { width: min(1600px, 98vw); max-height: 90vh; overflow: auto; padding: 12px 16px; border: 1px solid var(--contorno); border-radius: 6px; }
       #catalogo-fontes .topo { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
       #catalogo-fontes .fechar { margin-left: auto; }
       #catalogo-fontes table { border-collapse: collapse; width: 100%; font-size: 13px; }
-      #catalogo-fontes th, #catalogo-fontes td { border-bottom: 1px solid #ddd; padding: 4px 6px; text-align: left; vertical-align: middle; }
-      #catalogo-fontes th { position: sticky; top: 0; background: #fff; }
+      #catalogo-fontes th, #catalogo-fontes td { border-bottom: 1px solid var(--regua); padding: 4px 6px; text-align: left; vertical-align: middle; }
+      #catalogo-fontes th { position: sticky; top: 0; background: var(--campo); }
       #catalogo-fontes td.num { text-align: center; white-space: nowrap; }
-      #catalogo-fontes tr.apta { background: #e6f4ea; }
-      #catalogo-fontes .amostra svg { display: block; color: #111; }
+      #catalogo-fontes tr.apta { background: var(--pergaminho); }
+      #catalogo-fontes .amostra svg { display: block; color: var(--tinta); }
       #catalogo-fontes .nome { font-weight: 600; font-size: 12px; }
-      #catalogo-fontes .nome small { font-weight: 400; color: #666; }
+      #catalogo-fontes .nome small { font-weight: 400; color: var(--tinta-2); }
       #catalogo-fontes td.desc { font-size: 12px; min-width: 220px; max-width: 320px; }
       #catalogo-fontes td.acoes { white-space: nowrap; }
     `;
@@ -67,8 +67,8 @@ function criar() {
   };
   titulo('Fonte e amostra');
   titulo('Ligação');
-  for (const e of Object.values(EIXOS)) titulo(e.nome, ajuda(undefined, e.ajuda));
-  for (const a of Object.values(ARQUETIPOS)) titulo(a.nome, ajuda(undefined, a.ajuda));
+  for (const e of Object.values(EIXOS)) titulo(e.nome, dica(e.ajuda));
+  for (const a of Object.values(ARQUETIPOS)) titulo(a.nome, dica(a.ajuda));
   titulo('Descrição');
   titulo('Ações');
   const thead = document.createElement('thead');

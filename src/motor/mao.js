@@ -1,4 +1,5 @@
 import { rng, hash } from '../rng.js';
+import { ROTULOS, AJUDA } from '../ajuda.js';
 
 export const IDENTIDADE = ['base', 'seed', 'inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio'];
 export const EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo'];
@@ -131,3 +132,27 @@ export function mutar(mao, seed, forca) {
   }
   return m;
 }
+
+// Parâmetros editáveis (contrato em workflow/ciclos/12/projeto.md). previa: traços em mm via ctx.escrever.
+const viaMao = (chave, texto = 'minimum', extra = () => ({})) => (v, ctx) => ctx.escrever({ ...ctx.mao, ...extra(ctx), [chave]: v }, texto);
+const mutacao = (seed, forca, ctx) => ctx.escrever(mutar(ctx.mao, seed, forca), 'minimum');
+export const PARAMS = [
+  { chave: 'inclinacao', grupo: 'identidade', nivel: 'basico', tipo: 'faixa', min: -30, max: 30, passo: 0.5, padrao: NEUTRA.inclinacao, unidade: '°', rotulo: ROTULOS.inclinacao, ajuda: AJUDA.inclinacao, previa: viaMao('inclinacao') },
+  { chave: 'largura', grupo: 'identidade', nivel: 'basico', tipo: 'faixa', min: 0.5, max: 1.5, passo: 0.01, padrao: NEUTRA.largura, rotulo: ROTULOS.largura, ajuda: AJUDA.largura, previa: viaMao('largura') },
+  { chave: 'altura', grupo: 'identidade', nivel: 'basico', tipo: 'faixa', min: 0.5, max: 1.5, passo: 0.01, padrao: NEUTRA.altura, rotulo: ROTULOS.altura, ajuda: AJUDA.altura, previa: viaMao('altura') },
+  { chave: 'espacamento', grupo: 'identidade', nivel: 'avancado', tipo: 'faixa', min: -0.2, max: 0.3, passo: 0.005, padrao: NEUTRA.espacamento, unidade: 'em', rotulo: ROTULOS.espacamento, ajuda: AJUDA.espacamento, previa: viaMao('espacamento') },
+  { chave: 'espacoPalavra', grupo: 'identidade', nivel: 'avancado', tipo: 'faixa', min: 0, max: 0.6, passo: 0.01, padrao: NEUTRA.espacoPalavra, unidade: 'em', rotulo: ROTULOS.espacoPalavra, ajuda: AJUDA.espacoPalavra, previa: viaMao('espacoPalavra', 'a mão viu') },
+  { chave: 'idio', grupo: 'identidade', nivel: 'avancado', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.idio, rotulo: ROTULOS.idio, ajuda: AJUDA.idio, previa: viaMao('idio') },
+  { chave: 'seed', grupo: 'identidade', nivel: 'avancado', tipo: 'numero', min: 0, max: 2147483647, passo: 1, padrao: NEUTRA.seed, rotulo: ROTULOS.seed, ajuda: AJUDA.seed, previa: viaMao('seed', 'minimum', (ctx) => ({ idio: Math.max(ctx.mao.idio, 0.5) })) },
+  { chave: 'pressa', grupo: 'execucao', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.pressa, rotulo: ROTULOS.pressa, ajuda: AJUDA.pressa, previa: viaMao('pressa') },
+  { chave: 'capricho', grupo: 'execucao', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.capricho, rotulo: ROTULOS.capricho, ajuda: AJUDA.capricho, previa: viaMao('capricho', 'minimum', () => ({ desleixo: 1 })) },
+  { chave: 'tremor', grupo: 'execucao', nivel: 'basico', tipo: 'faixa', min: 0, max: 2, passo: 0.05, padrao: NEUTRA.tremor, unidade: 'mm', rotulo: ROTULOS.tremor, ajuda: AJUDA.tremor, previa: viaMao('tremor') },
+  { chave: 'variacao', grupo: 'execucao', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.variacao, rotulo: ROTULOS.variacao, ajuda: AJUDA.variacao, previa: viaMao('variacao', 'mmmm') },
+  { chave: 'queda', grupo: 'execucao', nivel: 'avancado', tipo: 'faixa', min: -2, max: 2, passo: 0.05, padrao: NEUTRA.queda, unidade: 'mm', rotulo: ROTULOS.queda, ajuda: AJUDA.queda, previa: viaMao('queda', 'um\ndois\ntrês') },
+  { chave: 'compressao', grupo: 'execucao', nivel: 'avancado', tipo: 'faixa', min: 0.6, max: 1.4, passo: 0.01, padrao: NEUTRA.compressao, rotulo: ROTULOS.compressao, ajuda: AJUDA.compressao, previa: viaMao('compressao') },
+  { chave: 'desleixo', grupo: 'execucao', nivel: 'avancado', tipo: 'faixa', min: 0, max: 1, passo: 0.01, padrao: NEUTRA.desleixo, rotulo: ROTULOS.desleixo, ajuda: AJUDA.desleixo, previa: viaMao('desleixo', 'minimum', () => ({ capricho: 0 })) },
+  { chave: 'peso', grupo: 'fontes', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: 0.5, rotulo: ROTULOS.peso, ajuda: AJUDA.peso,
+    previa: (v, ctx) => { const m = structuredClone(ctx.mao); m.base[ctx.indice ?? 0].peso = Math.max(0.01, v); return ctx.escrever(m, 'minimum'); } },
+  { chave: 'mutarForca', grupo: 'fontes', nivel: 'avancado', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: 0.3, rotulo: ROTULOS.mutarForca, ajuda: AJUDA.mutarForca, previa: (v, ctx) => mutacao(1, v, ctx) },
+  { chave: 'mutarSeed', grupo: 'fontes', nivel: 'avancado', tipo: 'numero', min: 0, max: 99999, passo: 1, padrao: 1, rotulo: ROTULOS.mutarSeed, ajuda: AJUDA.mutarSeed, previa: (v, ctx) => mutacao(v, 0.3, ctx) },
+];

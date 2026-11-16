@@ -8,26 +8,30 @@ const valido = (t) => Array.isArray(t) && t.length >= 2;
 const dist = ([x1, y1], [x2, y2]) => Math.hypot(x2 - x1, y2 - y1);
 const num = (v) => String(+v.toFixed(3));
 
-// trajeto: desenha por cima a viagem no ar (tracejado), início (verde) e fim (vermelho) de cada traço, numerados.
+// trajeto: viagem no ar (tracejado), início (verde) e fim (vermelho) de cada traço, numerados.
+function viagemSvg(validos) {
+  const extra = [];
+  let pos = [0, 0];
+  validos.forEach((t, i) => {
+    const [ix, iy] = t[0], [fx, fy] = t[t.length - 1];
+    extra.push(
+      `<path d="M ${num(pos[0])} ${num(pos[1])} L ${num(ix)} ${num(iy)}" fill="none" stroke="#888" stroke-width="0.2" stroke-dasharray="1 1"/>`,
+      `<circle cx="${num(ix)}" cy="${num(iy)}" r="0.6" fill="green"/>`,
+      `<circle cx="${num(fx)}" cy="${num(fy)}" r="0.6" fill="red"/>`,
+      `<text x="${num(ix + 0.8)}" y="${num(iy - 0.8)}" font-size="2" fill="#06c">${i + 1}</text>`,
+    );
+    pos = [fx, fy];
+  });
+  return extra;
+}
+
+// desenha por cima a viagem no ar quando trajeto é true
 export function svg(tracos, pagina, { trajeto = false } = {}) {
   const { largura, altura } = pagina;
   const validos = tracos.filter(valido);
   const paths = validos.map((t) =>
     `<path d="M ${t.map(([x, y]) => `${num(x)} ${num(y)}`).join(" L ")}" fill="none" stroke="black" stroke-width="0.3" stroke-linecap="round" stroke-linejoin="round"/>`);
-  const extra = [];
-  if (trajeto) {
-    let pos = [0, 0];
-    validos.forEach((t, i) => {
-      const [ix, iy] = t[0], [fx, fy] = t[t.length - 1];
-      extra.push(
-        `<path d="M ${num(pos[0])} ${num(pos[1])} L ${num(ix)} ${num(iy)}" fill="none" stroke="#888" stroke-width="0.2" stroke-dasharray="1 1"/>`,
-        `<circle cx="${num(ix)}" cy="${num(iy)}" r="0.6" fill="green"/>`,
-        `<circle cx="${num(fx)}" cy="${num(fy)}" r="0.6" fill="red"/>`,
-        `<text x="${num(ix + 0.8)}" y="${num(iy - 0.8)}" font-size="2" fill="#06c">${i + 1}</text>`,
-      );
-      pos = [fx, fy];
-    });
-  }
+  const extra = trajeto ? viagemSvg(validos) : [];
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}mm" height="${altura}mm" viewBox="0 0 ${largura} ${altura}">`,
     ...paths,
@@ -92,4 +96,28 @@ export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, 
     nTracos += validos.length;
   }
   return { texto: texto + perfil.footer, avisos, nTracos, comprimento, trocas };
+}
+
+export function svgDocumento(pagina, papel, canetas = {}, { camadas, trajeto = false } = {}) {
+  const { largura, altura } = papel;
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const grupos = [], todos = [];
+  for (const c of pagina.camadas.filter((k) => !camadas || camadas.includes(k.id))) {
+    const validos = c.tracos.filter(valido);
+    if (!validos.length) continue;
+    const cor = canetas[c.caneta]?.cor ?? '#000';
+    const esp = canetas[c.caneta]?.espessura ?? 0.3;
+    grupos.push(
+      `<g data-camada="${esc(c.id)}" fill="none" stroke="${esc(cor)}" stroke-width="${num(esp)}" stroke-linecap="round" stroke-linejoin="round">`,
+      ...validos.map((t) => `<path d="M ${t.map(([x, y]) => `${num(x)} ${num(y)}`).join(" L ")}"/>`),
+      "</g>",
+    );
+    todos.push(...validos);
+  }
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}mm" height="${altura}mm" viewBox="0 0 ${largura} ${altura}">`,
+    ...grupos,
+    ...(trajeto ? viagemSvg(todos) : []),
+    "</svg>",
+  ].join("\n");
 }

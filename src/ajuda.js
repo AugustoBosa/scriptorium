@@ -1,5 +1,4 @@
 // Textos de ajuda e rótulos legíveis para as opções da UI.
-// document só é usado dentro de ajuda(), para o import funcionar no Node.
 
 export const AJUDA = {
   base: 'Fonte que forma as letras. Com mais de uma, as letras são misturadas conforme o peso. Funciona melhor com fontes da mesma família.',
@@ -53,16 +52,16 @@ export const AJUDA = {
 export const ROTULOS = {
   base: 'fontes da mão',
   seed: 'seed da mão',
-  inclinacao: 'inclinação (graus)',
+  inclinacao: 'inclinação',
   largura: 'largura',
   altura: 'altura',
-  espacamento: 'espaçamento (em)',
+  espacamento: 'espaçamento',
   espacoPalavra: 'espaço entre palavras',
   idio: 'idiossincrasia',
   pressa: 'pressa',
   capricho: 'capricho',
-  tremor: 'tremor (mm)',
-  queda: 'queda por linha (mm)',
+  tremor: 'tremor',
+  queda: 'queda por linha',
   compressao: 'compressão entre letras',
   variacao: 'variação',
   desleixo: 'desleixo',
@@ -73,25 +72,25 @@ export const ROTULOS = {
   mutarForca: 'força da mutação',
   texto: 'texto',
   pagina: 'formato',
-  larguraPagina: 'largura (mm)',
-  alturaPagina: 'altura (mm)',
-  margemTopo: 'margem superior (mm)',
-  margemDir: 'margem direita (mm)',
-  margemBase: 'margem inferior (mm)',
-  margemEsq: 'margem esquerda (mm)',
-  tamanho: 'tamanho (mm)',
+  larguraPagina: 'largura',
+  alturaPagina: 'altura',
+  margemTopo: 'margem superior',
+  margemDir: 'margem direita',
+  margemBase: 'margem inferior',
+  margemEsq: 'margem esquerda',
+  tamanho: 'tamanho',
   entrelinha: 'entrelinha',
   alinhamento: 'alinhamento',
   comparar: 'comparar duas variações',
-  offsetX: 'desvio X (mm)',
-  offsetY: 'desvio Y (mm)',
-  zEscrita: 'altura Z ao escrever (mm)',
-  zLevantada: 'altura Z no ar (mm)',
-  fDesenho: 'velocidade de escrita (mm/min)',
-  fViagem: 'velocidade no ar (mm/min)',
-  fZ: 'velocidade de subir e descer (mm/min)',
-  mesaX: 'mesa X (mm)',
-  mesaY: 'mesa Y (mm)',
+  offsetX: 'desvio X',
+  offsetY: 'desvio Y',
+  zEscrita: 'altura Z ao escrever',
+  zLevantada: 'altura Z no ar',
+  fDesenho: 'velocidade de escrita',
+  fViagem: 'velocidade no ar',
+  fZ: 'velocidade de subir e descer',
+  mesaX: 'mesa X',
+  mesaY: 'mesa Y',
   header: 'início do arquivo (G-code)',
   footer: 'fim do arquivo (G-code)',
   otimizar: 'otimizar traços',
@@ -103,23 +102,3 @@ export function rotulo(chave) {
   return ROTULOS[chave] ?? chave;
 }
 
-export function ajuda(chave, texto = AJUDA[chave]) {
-  if (!texto) throw new Error('sem texto de ajuda: ' + chave);
-  const el = document.createElement('span');
-  el.className = 'ajuda';
-  el.tabIndex = 0;
-  el.setAttribute('role', 'note');
-  el.dataset.ajuda = texto;
-  el.textContent = '?';
-  const posicionar = () => {
-    // tooltip: 220px de largura, centrado no "?"; empurra para dentro do contêiner (.esquerda ou dialog) ou da janela
-    const r = el.getBoundingClientRect();
-    const c = el.closest('.esquerda, dialog')?.getBoundingClientRect() ?? { left: 0, right: innerWidth };
-    const centro = r.left + r.width / 2;
-    const esq = Math.max(c.left + 4, Math.min(centro - 110, c.right - 4 - 220));
-    el.style.setProperty('--dx', esq - (centro - 110) + 'px');
-  };
-  el.addEventListener('mouseenter', posicionar);
-  el.addEventListener('focus', posicionar);
-  return el;
-}

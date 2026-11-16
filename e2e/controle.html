@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR" data-bancada>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bancada do controle</title>
+</head>
+<body data-nivel="avancado">
+<main style="display:block; max-width:420px"><aside id="painel"></aside></main>
+<script type="module">
+import '../src/ui/tema.css'
+import { controle, ligar } from '../src/ui/controle.js'
+
+window.gravados = []
+const reta = v => [[[0, 20 - v / 3], [40, 20 + v / 3]]]
+const base = { grupo: 'teste', nivel: 'basico', ajuda: 'Texto de ajuda do parâmetro.' }
+const defs = [
+  { ...base, chave: 'inclinacao', tipo: 'faixa', min: -30, max: 30, passo: 0.5, padrao: 0, unidade: '°', rotulo: 'inclinação', ajuda: 'Inclina as letras, de −30 a 30 graus.', previa: reta },
+  { ...base, chave: 'colunas', tipo: 'numero', min: 1, max: 8, passo: 1, padrao: 2, rotulo: 'colunas', previa: v => reta(v * 5) },
+  { ...base, chave: 'estilo', tipo: 'opcao', padrao: 'a', rotulo: 'estilo', opcoes: [{ valor: 'a', rotulo: 'reto' }, { valor: 'b', rotulo: 'curvo' }, { valor: 'c', rotulo: 'onda' }], previa: v => reta({ a: 0, b: 30, c: -30 }[v]) },
+  { ...base, chave: 'moldura', tipo: 'marca', padrao: false, rotulo: 'moldura', previa: v => reta(v ? 30 : 0) },
+  { ...base, chave: 'quebra', tipo: 'faixa', min: 0, max: 10, passo: 1, padrao: 5, rotulo: 'quebrada', ajuda: 'Esta prévia lança.', previa: () => { throw new Error('boom') } },
+]
+const alvo = { inclinacao: 12, colunas: 2, estilo: 'a', moldura: false, quebra: 5 }
+const painel = document.getElementById('painel')
+for (const d of defs) {
+  const e = ligar(alvo, d.chave)
+  const g = e.gravar
+  e.gravar = v => { window.gravados.push([d.chave, v]); g(v) }
+  const c = controle(d, e, () => {})
+  painel.append(c.el)
+}
+</script>
+</body>
+</html>

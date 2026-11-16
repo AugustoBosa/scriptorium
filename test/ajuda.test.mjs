@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { IDENTIDADE, EXECUCAO } from '../src/motor/mao.js';
-import { AJUDA, ROTULOS, rotulo, ajuda } from '../src/ajuda.js';
+import { AJUDA, ROTULOS, rotulo } from '../src/ajuda.js';
 
 const CHAVES = [
   'base', 'seed', 'inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio',
@@ -41,8 +41,4 @@ test('textos de ajuda têm até 220 caracteres e rótulos não são chaves camel
 test('rotulo devolve o rótulo da chave ou a própria chave se não existir', () => {
   assert.equal(rotulo('espacoPalavra'), ROTULOS.espacoPalavra);
   assert.equal(rotulo('xyz'), 'xyz');
-});
-
-test('ajuda sem texto lança erro antes de tocar document', () => {
-  assert.throws(() => ajuda('xyz'));
 });

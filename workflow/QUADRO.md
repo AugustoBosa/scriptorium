@@ -20,7 +20,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M12 gerar-magias com texto completo pt-BR | FECHADO (commit 4f1cd71) |
 | M13 Fundação (árvore nova, goldens, 2-opt adaptativo, Action do Pages) | FECHADO (ciclos 07–10; revisor Fable devolveu 1 bloqueante, corrigido no ciclo 10 e verificado pelo orquestrador) |
 | M14 Documento, máquinas, papel | FECHADO (ciclo 11; gates verdes; revisor Fable aceitou sem bloqueante) |
-| M15 Identidade + oficinas (PARADA para aprovação do usuário) | ABERTO |
+| M15 Identidade + oficinas (PARADA para aprovação do usuário) | AGUARDANDO APROVAÇÃO DO USUÁRIO (ciclos 12–14; gates verdes; revisor devolveu 3 bloqueantes, corrigidos no ciclo 14) |
 | M16 Motor I: contexto | ABERTO |
 | M17 Motor II: ductus | ABERTO |
 | M18 Ornamento | ABERTO |
@@ -47,6 +47,9 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - M14 G-code P2S sem M412/M104/M109/E, dentro da janela, Z >= zMin; pausa na troca de caneta; erro papel > janela e Z < zMin — test/gcode-camadas.test.mjs, test/perfis.test.mjs
 - M14 papéis A3–A8, carta, ofício, personalizado; `FOLHAS` derivada; `deTracos`/`validarDocumento` — test/documento.test.mjs
 - M14 `compor` com `ancoras`, `obstaculos`, `colunas`; saída antiga idêntica ao golden — test/layout-caixas.test.mjs, test/golden.test.mjs (126/126)
+- M15 `PARAMS` válidos nos 7 módulos — test/params.test.mjs (9 testes); `svgDocumento` — test/svg-documento.test.mjs (8)
+- M15 um `index.html`, 5 oficinas navegáveis, `grimorio.html` redireciona, controles migrados com prévia viva, Básico/Avançado, tema persistido — e2e/smoke.spec.js, e2e/controle.spec.js (npm run e2e 42/42)
+- M15 contraste AA nos dois temas e screenshots por oficina e tema — e2e/visual.spec.js (falta a aprovação do usuário)
 
 ## Tarefas
 
@@ -78,6 +81,12 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 11-A | M14 | src/maquina/perfis.js, gcode.js, otimizar.js, test/perfis, test/gcode-camadas | aceita | removi import não usado |
 | 11-B | M14 | src/layout.js, test/layout-caixas.test.mjs | aceita | glifo pode invadir caixa até ~0,3 mm |
 | 11-C | M14 | src/materiais/documento.js, scroll.js, test/documento.test.mjs | aceita | 7 testes |
+| 12-A | M15 | PARAMS em mao/layout/documento/perfis/otimizar/scroll/alfabeto, amostra, mesclarPerfil, test/params.test.mjs | aceita | 9 testes; desvios aceitos (ver ciclos/12/relatorio.md) |
+| 12-B | M15 | src/ui/controle.js, tema.css, e2e/controle.html, e2e/controle.spec.js | aceita | 14 e2e (2 temas); popover sem verificação visual humana |
+| 12-C | M15 | src/maquina/gcode.js, test/svg-documento.test.mjs | aceita | svgDocumento + viagemSvg privada; 8 testes |
+| 13-A | M15 | index.html, grimorio.html, src/ui/app.js, previa.js, e2e/smoke, e2e/visual | aceita | shell único, 5 oficinas; papel de Sigilos fixo 148×210 (personalizado) |
+| 13-B | M15 | ui/personagem.js, fontes.js, catalogo.js, ajuda.js, test/ajuda | aceita | controle()+dica; `ajuda()` e seu teste removidos |
+| 13-C | M15 | ui/texto.js, exportar.js, grimorio.js | aceita | montarPapel, montarBarra, criar(); compor() do grimório captura erro de comporGrimorio |
 
 ## Ciclos
 
@@ -94,8 +103,33 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 09 | OK: árvore nova (09-B) aceita; imports sem resto antigo; 101 pass / 0 fail. M13: faltam gates build/e2e, pages.yml no GitHub e revisor (orquestrador fecha) |
 | 10 | OK: revisor devolveu 1 bloqueante (teste lia `arquivo/vpype.toml`, fora do git → CI quebraria); 10-A corrigiu; gates verdes; **M13 FECHADO** |
 | 11 | OK: M14 entregue (perfis P2S/megaS, gcodeDocumento, papéis, layout com âncoras/obstáculos/colunas); 126 pass / 0 fail; goldens intactos. Faltam gates build/e2e/revisor. A5 não cabe na P2S (207×200): levar ao usuário |
+| 12 | OK: M15 parte 1 (PARAMS nos 7 módulos, controle com prévia viva, tema.css, svgDocumento); 143 pass / 0 fail; goldens intactos; controle.spec 14/14; build ok. M15 segue ABERTO: falta ciclo 13 (shell + migração dos painéis) e a PARADA para aprovação |
+| 13 | OK: M15 parte 2 (shell Scriptorium, 5 oficinas, painéis migrados para controle/dica, exportação por Documento); 142 pass / 0 fail (143 menos o teste de `ajuda()` removido); goldens intactos; build ok; e2e 42/42 (smoke, controle, visual com contraste AA, claro e vela). **M15 segue ABERTO**: falta revisor e PARADA para o usuário aprovar a UI |
 
-## Retomada (2026-11-16, após M14) — LEIA ESTA PRIMEIRA
+## Retomada (ciclo 13 aceito) — LEIA ESTA PRIMEIRA
+
+- Ciclos 12–13 aceitos; `npm test` 142/142; e2e 42/42. **Próxima ação:** revisor do M15, screenshots (`test-results/`, claro + vela, cada oficina, tiradas com rede) e **PARADA: usuário aprova a identidade visual**. Mostrar também: A4 na Mega S agora bloqueia o G-code (D8); Sigilos com papel fixo 148×210; seletores de dado sem prévia viva (D10); `variacao` do grimório é sobrescrita pela da escrita ao trocar de oficina (cópia de COMPARTILHADAS).
+- M15 itens do DoD comprovados: ver seção "Itens do DoD comprovados".
+
+## Retomada (ciclo 12 aceito)
+
+- Ciclo 12 aceito, `npm test` 143/143. **Próxima ação:** despachar 13-A, 13-B, 13-C (briefs em `ciclos/13/briefs.md`; app fica quebrado até as três entrarem; gate = `npm run build` + `npm run e2e`), depois screenshots e PARADA do M15.
+- Menores do ciclo 12: previa de `colunas`/`alinhamento` usa parágrafo de 44 caracteres (não `3 linhas curtas`); `tema.css` e popover nunca vistos por humano (só e2e); `perfil` tem rótulo "máquina".
+
+## Retomada (2026-11-16, M15 na parada) — LEIA ESTA PRIMEIRA
+
+- M15 entregue e commitado; **parado esperando o usuário aprovar a identidade visual** (capturas em `test-results/visual-captura-*`, geradas por `npx playwright test e2e/visual.spec.js`). Após aprovação: marcar M15 FECHADO e seguir M16 (antes, gravar golden de `compor` multipágina + justificado + palavra longa).
+- Ciclo 14 (correção): grimório/scroll vazio sem erro ("Nada para plotar ainda", botões desabilitados); barra de exportação em flex; captura do popover sem fullPage e com asserts; rótulos sem unidade duplicada; nav quebra em vez de cortar; sem `aria-pressed` no tema; aviso de oficina em construção sem jargão.
+- Menores pendentes do M15 (revisor + orquestrador):
+  - Em 375 px: cabeçalho quebra a navegação em 3 linhas e o botão "Vela" encosta na borda; botões desabilitados ("Abrir", "Excluir", "remover") parecem mais destacados que os ativos (fundo `--regua`).
+  - Select de fonte da mão sem prévia viva (pedido 5, fora pelo D10); seletores de dado e campos de texto sem prévia.
+  - "?" do Nome cai sozinho numa linha; Básico de Personagem abre com 9 botões de gestão antes dos sliders (mover JSON/"Meus personagens" para Avançado).
+  - Caixa inconsistente ("Nome" vs "variação", "megaS", "remover"); `margem (mm)` escrito direto em `src/materiais/documento.js:77`.
+  - Contraste automático não cobre `.rotulo`, `h3`, placeholder, desabilitado; fantasmas min/máx do popover com a mesma cor.
+  - Variação salva do grimório sobrescrita em memória pela da escrita ao trocar de oficina; Sigilos com papel personalizado fixo 148×210.
+  - EB Garamond só carrega com rede.
+
+## Retomada (2026-11-16, após M14)
 
 - M13 e M14 FECHADOS. `npm test` 126/126. M14: `src/maquina/perfis.js` (megaS, p2s experimental, personalizado; `papelMaximo`, `cabeNaMaquina`), `gcodeDocumento` multicamada com troca de caneta, `ordem:'escrita'`, `src/materiais/documento.js` (PAPEIS, papel, deTracos, validarDocumento), `compor` com `obstaculos`/`colunas`/`ancoras` (revisor provou saída bit a bit igual à antiga em 384 combinações).
 - **Próxima ação:** M15 (Identidade + oficinas) — Conselheiro Fable com `impeccable`/`frontend-design`, ciclo 12. **PARADA obrigatória após M15** para aprovação da UI.

@@ -1,5 +1,6 @@
 // Escrita arcana: alfabeto cifrado gerado por seed, sigilo por magia e moldura. Tudo em traço único.
 import { rng, hash } from '../rng.js';
+import { ESCOLAS } from '../magia.js';
 
 export const LETRAS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 export const CAIXA = { largura: 500, altura: 700 }; // caixa de uma letra, em unidades da fonte (y para cima)
@@ -132,3 +133,23 @@ export function moldura(pagina) {
     .map(([x, y]) => [[x - q, y], [x, y - q], [x + q, y], [x, y + q], [x - q, y]]);
   return [ret(a), ret(a + q * 1.2), ...cantos];
 }
+
+// Parâmetros editáveis. Prévia: três letras do alfabeto (altura 10 mm) ou o sigilo em raio 10 mm.
+const letras = (chave) => (v, ctx) => {
+  const g = gerarAlfabeto({ ...ctx.estilo, [chave]: v }).glifos, s = 10 / CAIXA.altura;
+  let x0 = 0;
+  const tr = [];
+  for (const ch of 'abc') { tr.push(...g[ch].tracos.map((t) => t.map(([x, y]) => [x0 + x * s, 10 - y * s]))); x0 += g[ch].adv * s; }
+  return tr;
+};
+const sig = (chave) => (v, ctx) => sigilo({ ...ctx.magia, [chave]: v }, ctx.estilo.seed).map((t) => t.map(([x, y]) => [x * 10, y * 10]));
+export const PARAMS = [
+  { chave: 'seed', grupo: 'tradicao', nivel: 'basico', tipo: 'numero', min: 0, max: 99999, passo: 1, padrao: 1, rotulo: 'seed do alfabeto', ajuda: 'Número que sorteia o alfabeto arcano. A mesma seed dá sempre as mesmas letras; trocar a seed troca todos os símbolos.', previa: letras('seed') },
+  { chave: 'curva', grupo: 'tradicao', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: 0.4, rotulo: 'curvatura', ajuda: 'Quanto os traços das letras arcanas são curvos, de 0 a 1. 0 = só linhas retas; 1 = quase tudo em arcos.', previa: letras('curva') },
+  { chave: 'complexidade', grupo: 'tradicao', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: 0.5, rotulo: 'complexidade', ajuda: 'Quantos traços cada letra arcana tem, de 0 a 1. Valores baixos dão símbolos simples; altos dão símbolos cheios.', previa: letras('complexidade') },
+  { chave: 'nivel', grupo: 'sigilo', nivel: 'basico', tipo: 'faixa', min: 0, max: 9, passo: 1, padrao: 1, rotulo: 'nível da magia', ajuda: 'Nível da magia de exemplo, de 0 a 9. No sigilo, o nível vira o número de pontas da estrela: nível + 2.', previa: sig('nivel') },
+  { chave: 'escola', grupo: 'sigilo', nivel: 'basico', tipo: 'opcao', padrao: 'V', rotulo: 'escola', ajuda: 'Escola de magia de exemplo. Cada escola tem um desenho próprio no miolo do sigilo.',
+    opcoes: Object.entries(ESCOLAS).map(([valor, rotulo]) => ({ valor, rotulo })), previa: sig('escola') },
+  { chave: 'conc', grupo: 'sigilo', nivel: 'basico', tipo: 'marca', padrao: false, rotulo: 'concentração', ajuda: 'Magia que exige concentração. No sigilo, ganha um segundo anel por dentro do círculo.', previa: sig('conc') },
+  { chave: 'ritual', grupo: 'sigilo', nivel: 'basico', tipo: 'marca', padrao: false, rotulo: 'ritual', ajuda: 'Magia que pode ser lançada como ritual. No sigilo, ganha dentes em volta do círculo.', previa: sig('ritual') },
+];

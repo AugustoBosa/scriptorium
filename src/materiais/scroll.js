@@ -118,3 +118,33 @@ export function comporGrimorio(magias, ctx, cfgParcial, pagina) {
   if (cfg.moldura) for (const p of paginas) p.push(...moldura(pagina));
   return { paginas, avisos: [...new Set(avisos)], modos };
 }
+
+// Parâmetros editáveis. Prévia: papel (retângulo em mm) com o que o parâmetro desenha, ou a escrita de uma palavra.
+const ret = (l, a) => [[0, 0], [l, 0], [l, a], [0, a], [0, 0]];
+const util = (p) => ({ l: p.largura - p.margens.esq - p.margens.dir, a: p.altura - p.margens.topo - p.margens.base });
+const pautas = (p, n) => Array.from({ length: n }, (_, i) => { const y = p.margens.topo + ((i + 0.5) * util(p).a) / n; return [[p.margens.esq, y], [p.largura - p.margens.dir, y]]; });
+const cif = (v, ctx) => (v ? ctx.escrever(ctx.maoArcana, cifrar('magia')) : ctx.escrever(ctx.mao, 'magia'));
+const P = (chave, grupo, nivel, rotulo, ajuda, previa, resto) => ({ chave, grupo, nivel, rotulo, ajuda, previa, ...resto });
+export const PARAMS = [
+  P('tamanho', 'folha', 'basico', 'tamanho da letra', 'Altura das letras da magia, em mm. O programa diminui a letra até o mínimo se a magia não couber na folha.',
+    (v, ctx) => ctx.escrever(ctx.mao, 'magia', { tamanho: v }), { tipo: 'faixa', min: 2, max: 8, passo: 0.25, padrao: CFG_PADRAO.tamanho, unidade: 'mm' }),
+  P('minimo', 'folha', 'avancado', 'letra mínima', 'Menor altura de letra permitida ao encolher uma magia para caber na folha. Abaixo disso o texto vira resumo.',
+    (v, ctx) => ctx.escrever(ctx.mao, 'magia', { tamanho: v }), { tipo: 'faixa', min: 1.5, max: 5, passo: 0.25, padrao: CFG_PADRAO.minimo, unidade: 'mm' }),
+  P('entrelinha', 'folha', 'avancado', 'entrelinha do scroll', 'Distância entre as linhas do texto da magia, de 1,1 a 2,2. Valores menores deixam a magia mais compacta e ajudam a caber.',
+    (v, ctx) => ctx.escrever(ctx.mao, 'magia\nruna', { tamanho: 4, entrelinha: v }), { tipo: 'faixa', min: 1.1, max: 2.2, passo: 0.05, padrao: CFG_PADRAO.entrelinha }),
+  P('sigilo', 'folha', 'basico', 'tamanho do sigilo', 'Tamanho do sigilo desenhado acima do texto, como fração da folha. 0 = sem sigilo. O sigilo codifica nível, escola e componentes.',
+    (v, ctx) => {
+      const p = ctx.papel, u = util(p), r = (v * Math.min(u.l, u.a)) / 2;
+      return [ret(p.largura, p.altura), ...sigilo(ctx.magia, ctx.estilo.seed).map((t) => t.map(([x, y]) => [p.largura / 2 + x * r, p.altura / 2 + y * r]))];
+    }, { tipo: 'faixa', min: 0, max: 0.8, passo: 0.05, padrao: CFG_PADRAO.sigilo }),
+  P('moldura', 'folha', 'basico', 'moldura', 'Desenha uma moldura dupla com losangos nos cantos em volta de cada página.',
+    (v, ctx) => [ret(ctx.papel.largura, ctx.papel.altura), ...(v ? moldura(ctx.papel) : [])], { tipo: 'marca', padrao: CFG_PADRAO.moldura }),
+  P('completo', 'folha', 'basico', 'texto completo', 'Escolhe entre o texto inteiro da magia (sempre completo), só um resumo ou o texto inteiro apenas quando couber na folha (auto).',
+    (v, ctx) => [ret(ctx.papel.largura, ctx.papel.altura), ...pautas(ctx.papel, { nao: 3, auto: 6, sim: 10 }[v])],
+    { tipo: 'opcao', padrao: CFG_PADRAO.completo, semEscala: true, opcoes: [{ valor: 'auto', rotulo: 'auto' }, { valor: 'nao', rotulo: 'só resumo' }, { valor: 'sim', rotulo: 'sempre completo' }] }),
+  P('chave', 'folha', 'basico', 'página da chave', 'Acrescenta no fim uma página com cada letra legível ao lado do símbolo arcano, para decifrar o texto.',
+    (v, ctx) => [...ctx.escrever(ctx.mao, 'a b c'), ...(v ? ctx.escrever(ctx.maoArcana, 'a b c').map((t) => t.map(([x, y]) => [x, y + 14])) : [])], { tipo: 'marca', padrao: CFG_PADRAO.chave }),
+  P('cifrarNome', 'cifrar', 'basico', 'cifrar o nome', 'Escreve o nome da magia no alfabeto arcano em vez da sua letra.', cif, { tipo: 'marca', padrao: CFG_PADRAO.cifrar.nome }),
+  P('cifrarFicha', 'cifrar', 'basico', 'cifrar a ficha', 'Escreve a ficha da magia (nível, tempo, alcance) no alfabeto arcano em vez da sua letra.', cif, { tipo: 'marca', padrao: CFG_PADRAO.cifrar.ficha }),
+  P('cifrarEfeito', 'cifrar', 'basico', 'cifrar o efeito', 'Escreve a descrição do efeito da magia no alfabeto arcano em vez da sua letra.', cif, { tipo: 'marca', padrao: CFG_PADRAO.cifrar.efeito }),
+];

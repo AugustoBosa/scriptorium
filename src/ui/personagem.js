@@ -1,14 +1,12 @@
 import { resolver, validar, novoPersonagem, ajustarVariacao } from '../personagem.js';
-import { rotulo, ajuda } from '../ajuda.js';
+import { rotulo, AJUDA } from '../ajuda.js';
+import { controle, ligar, dica } from './controle.js';
+import { PARAMS } from '../motor/mao.js';
+import { amostra } from '../layout.js';
 
-const SLIDERS_IDENTIDADE = [
-  ['inclinacao', -30, 30, 0.5], ['largura', 0.5, 1.5, 0.01], ['altura', 0.5, 1.5, 0.01],
-  ['espacamento', -0.2, 0.3, 0.005], ['espacoPalavra', 0, 0.6, 0.01], ['idio', 0, 1, 0.01],
-];
-const SLIDERS_EXECUCAO = [
-  ['pressa', 0, 1, 0.01], ['capricho', 0, 1, 0.01], ['tremor', 0, 2, 0.05], ['queda', -2, 2, 0.05],
-  ['compressao', 0.6, 1.4, 0.01], ['variacao', 0, 1, 0.01], ['desleixo', 0, 1, 0.01],
-];
+const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
+const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio'];
+const CHAVES_EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo'];
 
 function slug(nome) {
   return (nome || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -37,15 +35,9 @@ export function restaurar(estado) {
 }
 
 export function montar(elemento, estado, aoMudar) {
-  const sincs = [];
   const erro = document.createElement('p');
   erro.className = 'erro';
 
-  function campo(texto, controle) {
-    const l = document.createElement('label');
-    l.append(texto + ' ', controle);
-    return l;
-  }
   function botao(texto, fn) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -172,46 +164,29 @@ export function montar(elemento, estado, aoMudar) {
     aoMudar();
   });
 
-  // Sliders: get/set recebem a chave via closure
-  function slider([chave, min, max, passo], get, set) {
-    const input = document.createElement('input');
-    input.type = 'range';
-    input.min = min; input.max = max; input.step = passo;
-    const out = document.createElement('output');
-    const t = document.createElement('span');
-    t.append(rotulo(chave), ' ', ajuda(chave));
-    const l = document.createElement('label');
-    l.className = 'slider';
-    l.append(t, input, out);
-    input.addEventListener('input', () => {
-      set(Number(input.value));
-      aoMudar();
-    });
-    sincs.push(() => {
-      const v = get();
-      if (String(input.value) !== String(v)) input.value = v;
-      out.textContent = String(v);
-    });
-    return l;
-  }
+  // Controles de parâmetro: prévia viva com o valor atual
+  const ctx = () => ({
+    fontes: estado.fontes,
+    mao: resolver(estado.personagem, estado.variacao || null),
+    escrever: (m, t, o) => amostra(estado.fontes, m, t, o),
+  });
+  const ctrlIdentidade = CHAVES_IDENTIDADE.map((chave) =>
+    controle(P[chave], ligar(() => estado.personagem.mao, chave, ctx), aoMudar));
+  const ctrlExecucao = CHAVES_EXECUCAO.map((chave) =>
+    controle(P[chave], {
+      ler: () => resolver(estado.personagem, estado.variacao || null)[chave],
+      gravar: (v) => ajustarVariacao(estado.personagem, estado.variacao || null, chave, v),
+      ctx,
+    }, aoMudar));
 
-  const blocosIdentidade = SLIDERS_IDENTIDADE.map(spec => {
-    const chave = spec[0];
-    return slider(spec, () => estado.personagem.mao[chave], v => { estado.personagem.mao[chave] = v; });
-  });
-  const blocosExecucao = SLIDERS_EXECUCAO.map(spec => {
-    const chave = spec[0];
-    return slider(spec,
-      () => resolver(estado.personagem, estado.variacao || null)[chave],
-      v => ajustarVariacao(estado.personagem, estado.variacao || null, chave, v));
-  });
+  const labelNome = document.createElement('label');
+  labelNome.append('Nome ', inputNome, ' ', dica(AJUDA.personagem));
 
   const labelVar = document.createElement('label');
-  labelVar.append(rotulo('variacaoSel'), ' ', ajuda('variacaoSel'), ' ', selVar);
+  labelVar.append(rotulo('variacaoSel'), ' ', dica(AJUDA.variacaoSel), ' ', selVar);
 
   elemento.append(
-    titulo('Personagem ', ajuda('personagem')),
-    campo('Nome', inputNome),
+    labelNome,
     linhaBotoes(
       botao('Novo personagem', () => {
         estado.personagem = novoPersonagem();
@@ -267,8 +242,8 @@ export function montar(elemento, estado, aoMudar) {
       btnRenomear,
       btnRemover,
     ),
-    titulo('Identidade'), ...blocosIdentidade,
-    titulo('Execução'), ...blocosExecucao,
+    titulo('Identidade'), ...ctrlIdentidade.map((c) => c.el),
+    titulo('Execução'), ...ctrlExecucao.map((c) => c.el),
     erro,
   );
 
@@ -281,7 +256,7 @@ export function montar(elemento, estado, aoMudar) {
     reconstruirVariacoes(chaves);
     selVar.value = estado.variacao;
     btnRenomear.disabled = btnRemover.disabled = !chaves.length;
-    for (const s of sincs) s();
+    [...ctrlIdentidade, ...ctrlExecucao].forEach((c) => c.atualizar());
     try {
       localStorage.setItem('writer.personagem', JSON.stringify({ personagem: p, variacao: estado.variacao }));
     } catch {}
