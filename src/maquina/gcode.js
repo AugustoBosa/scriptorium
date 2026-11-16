@@ -1,9 +1,6 @@
-export const PERFIL_PADRAO = {
-  zEscrita: 3, zLevantada: 6, fDesenho: 2400, fViagem: 6000, fZ: 500,
-  offsetX: 0, offsetY: 0, mesaX: 210, mesaY: 210,
-  header: "G21\nG91\nG0 Z10 F500\nG90\nM412 S0\nG28 X Y\nG28 Z\nG0 Z6 F500\n",
-  footer: "G0 Z15 F500\nG0 X0 Y200 F6000\nM84\n",
-};
+import { PERFIS, cabeNaMaquina } from './perfis.js';
+
+export const PERFIL_PADRAO = PERFIS.megaS;
 
 // ponytail: duplicado de propósito; unificar em geo.js no M18
 const valido = (t) => Array.isArray(t) && t.length >= 2;
@@ -59,4 +56,40 @@ export function gcode(tracos, pagina, perfil = PERFIL_PADRAO) {
   });
   texto += p.footer;
   return { texto, avisos, nTracos: validos.length, comprimento };
+}
+
+export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, canetas = {} } = {}) {
+  const zMin = perfil.zMin ?? 0;
+  for (const [campo, z] of [['zEscrita', perfil.zEscrita], ['zLevantada', perfil.zLevantada], ['estaciona.z', perfil.estaciona.z]]) {
+    if (z < zMin) throw new Error(`Z de escrita ${z} abaixo do piso ${zMin} (zMin) do perfil ${perfil.nome} (${campo})`);
+  }
+  const c = cabeNaMaquina(papel, perfil);
+  if (!c.ok) throw new Error(c.motivo);
+  const j = perfil.janela ?? { x0: 0, y0: 0, x1: perfil.mesaX, y1: perfil.mesaY };
+  const { estaciona: e, fZ, fViagem, fDesenho, zEscrita, zLevantada } = perfil;
+  const avisos = [];
+  let texto = perfil.header, nTracos = 0, comprimento = 0, trocas = 0, anterior = null;
+  for (const camada of pagina.camadas.filter((k) => !camadas || camadas.includes(k.id))) {
+    const validos = camada.tracos.filter(valido);
+    if (!validos.length) continue;
+    const nome = (canetas[camada.caneta]?.nome ?? camada.caneta).replace(/[\r\n]/g, ' ');
+    if (anterior !== null && camada.caneta !== anterior) {
+      texto += `G0 Z${e.z} F${fZ}\nG0 X${e.x.toFixed(3)} Y${e.y.toFixed(3)} F${fViagem}\n`;
+      texto += perfil.trocaCaneta.replace('{nome}', () => nome) + '\n';
+      trocas++;
+    }
+    anterior = camada.caneta;
+    texto += `; camada ${camada.id} caneta ${nome}\n`;
+    validos.forEach((t, i) => {
+      const maq = t.map(([x, y]) => [j.x0 + perfil.offsetX + x, j.y0 + perfil.offsetY + (papel.altura - y)]);
+      if (maq.some(([x, y]) => x < j.x0 || x > j.x1 || y < j.y0 || y > j.y1)) avisos.push(`camada ${camada.id}: traço ${i + 1} fora da janela`);
+      const [ini, ...resto] = maq;
+      texto += `G0 X${ini[0].toFixed(3)} Y${ini[1].toFixed(3)} F${fViagem}\nG1 Z${zEscrita} F${fZ}\n`;
+      for (const [x, y] of resto) texto += `G1 X${x.toFixed(3)} Y${y.toFixed(3)} F${fDesenho}\n`;
+      texto += `G0 Z${zLevantada} F${fZ}\n`;
+      for (let k = 1; k < maq.length; k++) comprimento += dist(maq[k - 1], maq[k]);
+    });
+    nTracos += validos.length;
+  }
+  return { texto: texto + perfil.footer, avisos, nTracos, comprimento, trocas };
 }

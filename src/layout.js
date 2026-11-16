@@ -7,52 +7,6 @@ export const PAGINAS = {
   mesa: { largura: 210, altura: 210, margens: { topo: 15, dir: 15, base: 15, esq: 15 } },
 };
 
-// Quebra o texto em linhas de saída (null = linha em branco) já com largura medida.
-// `gastar(s)` avanca o contador de ocorrencias quando a palavra e colocada (igual ao desenho).
-function quebrar(texto, medir, gastar, espaco, W, avisos) {
-  const linhas = [];
-  for (const entrada of texto.split('\n')) {
-    if (entrada.trim() === '') { linhas.push(null); continue; }
-    const saida = [];
-    let atual = { pals: [], w: 0 };
-    const fecha = (just) => {
-      saida.push({ pals: atual.pals, w: atual.w, just });
-      atual = { pals: [], w: 0 };
-    };
-    for (const p of entrada.split(' ').filter(Boolean)) {
-      const w = medir(p);
-      if (atual.pals.length && atual.w + espaco + w <= W) {
-        atual.pals.push(p);
-        atual.w += espaco + w;
-        gastar(p);
-        continue;
-      }
-      if (atual.pals.length) fecha(true);
-      if (w <= W) {
-        atual = { pals: [p], w };
-        gastar(p);
-        continue;
-      }
-      // palavra maior que a linha: quebra por letra
-      avisos.push(`palavra longa quebrada: ${p}`);
-      let pedaco = '', wp = 0;
-      for (const ch of p) {
-        const a = medir(ch);
-        if (pedaco && wp + a > W) {
-          saida.push({ pals: [pedaco], w: wp, just: false });
-          pedaco = ''; wp = 0;
-        }
-        pedaco += ch; wp += a;
-        gastar(ch);
-      }
-      atual = { pals: [pedaco], w: wp };
-    }
-    fecha(false);
-    linhas.push(...saida);
-  }
-  return linhas;
-}
-
 export function compor(texto, fontes, mao, pagina, opcoes = {}) {
   const tamanho = opcoes.tamanho ?? 6;
   const entrelinha = opcoes.entrelinha ?? 1.6;
@@ -70,70 +24,133 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
   const faltam = new Set([...texto].filter((c) => c.trim() && !tem(c)));
   for (const c of faltam) avisos.push(`glifo ausente: ${c}`);
 
-  // Mede com as mesmas ocorrencias que o desenho usara (variacao/pressa mudam a largura).
+  // Palavra como unidade: glifos medidos com as ocorrencias que o desenho usara (variacao/pressa mudam a largura).
   const cont = new Map();
-  const medir = (s) => {
+  const escrever = (texto) => {
     const loc = new Map();
-    let w = 0;
-    for (const ch of s) {
+    let largura = 0;
+    const glifos = [];
+    for (const ch of texto) {
       const n = loc.get(ch) ?? 0;
       loc.set(ch, n + 1);
-      w += glifo(fontes, mao, ch, (cont.get(ch) ?? 0) + n).adv * tamanho;
+      const g = glifo(fontes, mao, ch, (cont.get(ch) ?? 0) + n);
+      glifos.push(g);
+      largura += g.adv * tamanho;
     }
-    return w;
+    return { texto, largura, glifos };
   };
   const gastar = (s) => { for (const ch of s) cont.set(ch, (cont.get(ch) ?? 0) + 1); };
   const espaco = (glifo(fontes, mao, ' ', 0).adv + mao.espacoPalavra) * tamanho;
-  const linhas = quebrar(texto, medir, gastar, espaco, W, avisos);
+
+  const n = opcoes.colunas ?? 1;
+  const vao = opcoes.vaoColunas ?? 2 * tamanho;
+  const cols = n === 1 ? [{ x: margens.esq, l: W }]
+    : Array.from({ length: n }, (_, i) => { const l = (W - (n - 1) * vao) / n; return { x: margens.esq + i * (l + vao), l }; });
+  const obstaculos = (opcoes.obstaculos ?? []).map((o) => ({ pagina: 0, ...o }));
 
   const r = rng(mao.seed + '|tremor');
-  const ocor = new Map();
-  // opcoes.topo: onde a primeira página começa (blocos empilhados); as seguintes voltam à margem.
-  let topo = opcoes.topo ?? margens.topo;
-  const base = (k) => topo + tamanho + k * tamanho * entrelinha + mao.queda * k;
-
   const paginas = [[]];
-  let pag = paginas[0];
-  let k = 0;
+  const ancoras = [];
+  // opcoes.topo: onde a primeira página começa (blocos empilhados); as seguintes voltam à margem.
+  const cur = { pag: 0, col: 0, k: 0, topo: opcoes.topo ?? margens.topo };
+  const base = (k) => cur.topo + tamanho + k * tamanho * entrelinha + mao.queda * k;
+  let fimPag = -Infinity; // maior base de colunas já fechadas na página atual
 
-  const desenhar = (L, y) => {
-    const n = L.pals.length;
-    const extra = alinhamento === 'justificado' && L.just && n > 1 ? (W - L.w) / (n - 1) : 0;
-    let x = margens.esq;
-    if (alinhamento === 'centro') x += (W - L.w) / 2;
-    for (let i = 0; i < n; i++) {
+  const avancar = () => {
+    if (!(cur.k > 0 && base(cur.k) > limite)) return false;
+    fimPag = Math.max(fimPag, base(cur.k - 1));
+    cur.k = 0;
+    if (++cur.col === cols.length) {
+      cur.col = 0; cur.pag++; cur.topo = margens.topo; fimPag = -Infinity;
+      paginas.push([]);
+    }
+    return true;
+  };
+  // próxima linha com espaço: { x0, W, y, pag, col, k }
+  const vaga = () => {
+    for (;;) {
+      avancar();
+      const y = base(cur.k), c = cols[cur.col];
+      const pos = { y, pag: cur.pag, col: cur.col, k: cur.k };
+      const obs = obstaculos.filter((o) => o.pagina === cur.pag && o.y < y + 0.3 * tamanho && o.y + o.a > y - tamanho);
+      if (!obs.length) return { x0: c.x, W: c.l, ...pos };
+      // ponytail: usa só o maior trecho livre; texto não corre dos dois lados de um obstáculo central.
+      let s = { x: c.x, l: 0 }, ini = c.x;
+      const fim = c.x + c.l;
+      for (const o of [...obs.map((o) => [o.x, o.x + o.l]), [fim, fim]].sort((a, b) => a[0] - b[0])) {
+        if (Math.min(o[0], fim) - ini > s.l) s = { x: ini, l: Math.min(o[0], fim) - ini };
+        ini = Math.max(ini, o[1]);
+      }
+      if (s.l >= 2 * tamanho) return { x0: s.x, W: s.l, ...pos };
+      cur.k++;
+    }
+  };
+
+  const fecha = (L, just) => {
+    const { v } = L;
+    const pag = paginas[v.pag];
+    const np = L.pals.length;
+    const extra = alinhamento === 'justificado' && just && np > 1 ? (v.W - L.w) / (np - 1) : 0;
+    let x = v.x0;
+    if (alinhamento === 'centro') x += (v.W - L.w) / 2;
+    L.pals.forEach((w, i) => {
       if (i > 0) x += espaco + extra;
-      for (const ch of L.pals[i]) {
-        const oc = ocor.get(ch) ?? 0;
-        ocor.set(ch, oc + 1);
-        const g = glifo(fontes, mao, ch, oc);
+      ancoras.push({ pagina: v.pag, coluna: v.col, linha: v.k, indice: w.indice, texto: w.texto, x, y: v.y, l: w.largura });
+      for (const g of w.glifos) {
         for (const t of g.tracos) {
           if (t.length === 0) continue;
           pag.push(t.map(([px, py]) => {
             const tx = (r() - 0.5) * 2 * mao.tremor;
             const ty = (r() - 0.5) * 2 * mao.tremor;
-            return [x + px * tamanho + tx, y - py * tamanho + ty];
+            return [x + px * tamanho + tx, v.y - py * tamanho + ty];
           }));
         }
         x += g.adv * tamanho;
       }
-    }
+    });
+    cur.k++;
   };
 
-  for (const L of linhas) {
-    if (L === null && k === 0) continue; // em branco no topo da página é ignorada
-    if (k > 0 && base(k) > limite) {
-      pag = [];
-      paginas.push(pag);
-      k = 0;
-      topo = margens.topo;
-      if (L === null) continue;
+  let indice = 0;
+  for (const entrada of texto.split('\n')) {
+    if (entrada.trim() === '') {
+      if (cur.k > 0 && !avancar()) cur.k++;
+      continue;
     }
-    if (L === null) { k++; continue; }
-    desenhar(L, base(k));
-    k++;
+    let atual = null;
+    for (const p of entrada.split(' ').filter(Boolean)) {
+      const w = escrever(p);
+      w.indice = indice++;
+      if (atual && atual.w + espaco + w.largura <= atual.v.W) {
+        atual.pals.push(w);
+        atual.w += espaco + w.largura;
+        gastar(p);
+        continue;
+      }
+      if (atual) { fecha(atual, true); atual = null; }
+      let v = vaga();
+      while (w.largura > v.W && w.largura <= cols[cur.col].l) { cur.k++; v = vaga(); }
+      if (w.largura <= v.W) {
+        atual = { pals: [w], w: w.largura, v };
+        gastar(p);
+        continue;
+      }
+      // palavra maior que a linha: quebra por letra
+      avisos.push(`palavra longa quebrada: ${p}`);
+      for (const ch of p) {
+        const a = escrever(ch);
+        if (atual && atual.w + a.largura > atual.v.W) { fecha(atual, false); atual = null; }
+        if (!atual) atual = { pals: [{ texto: '', largura: 0, glifos: [], indice: w.indice }], w: 0, v: vaga() };
+        const q = atual.pals[0];
+        q.texto += ch; q.largura += a.largura; q.glifos.push(...a.glifos);
+        atual.w += a.largura;
+        gastar(ch);
+      }
+    }
+    if (atual) fecha(atual, false);
   }
 
-  // fim: linha de base da última linha escrita na última página.
-  return { paginas, avisos, fim: k > 0 ? base(k - 1) : topo };
+  // fim: linha de base da última linha escrita (a maior entre as colunas da última página).
+  const fim = cur.k > 0 ? Math.max(fimPag, base(cur.k - 1)) : (fimPag > -Infinity ? fimPag : cur.topo);
+  return { paginas, avisos, fim, ancoras };
 }

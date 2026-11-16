@@ -3,15 +3,11 @@ import { compor } from '../layout.js';
 import { glifo } from '../motor/mao.js';
 import { blocos } from '../magia.js';
 import { cifrar, sigilo, moldura, LETRAS } from '../arcano/alfabeto.js';
+import { PAPEIS, papel } from './documento.js';
 
 // [largura, altura, margem] em mm.
-export const FOLHAS = { A5: [148, 210, 12], A6: [105, 148, 9], A7: [74, 105, 6], A8: [52, 74, 4] };
-
-export function folha(nome, paisagem = false, margem) {
-  const [l, a, m0] = FOLHAS[nome];
-  const m = margem ?? m0;
-  return { largura: paisagem ? a : l, altura: paisagem ? l : a, margens: { topo: m, dir: m, base: m, esq: m } };
-}
+export const FOLHAS = Object.fromEntries(['A5', 'A6', 'A7', 'A8'].map((n) => [n, PAPEIS[n]]));
+export const folha = (nome, paisagem = false, margem) => papel(nome, { paisagem, margem });
 
 export const CFG_PADRAO = {
   tamanho: 4, minimo: 2.5, entrelinha: 1.5,

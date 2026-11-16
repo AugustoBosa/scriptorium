@@ -11,7 +11,8 @@ export function viagem(tracos) {
 }
 
 // ponytail: guloso + 2-opt; completo até 2000 traços, janela de 50 acima (custo O(n²): 2465 traços ~2 s, 7600 ~30 s, travaria a prévia); até 5 passadas; Or-opt se a viagem ainda pesar
-export function otimizar(tracos, tol = 0.1, { janela } = {}) {
+export function otimizar(tracos, tol = 0.1, { janela, ordem = 'otimizada' } = {}) {
+  if (ordem === 'escrita') return tracos.filter(valido).map((t) => t.map((p) => [...p]));
   const restantes = tracos.filter(valido).map((t) => t.map((p) => [...p]));
   let seq = [];
   let pos = [0, 0];

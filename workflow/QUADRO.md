@@ -19,7 +19,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M11 Scrolls e grimórios de D&D (grimorio.html) | FECHADO (11 testes em test/grimorio.test.mjs; verificado no navegador; falta plotar em papel) |
 | M12 gerar-magias com texto completo pt-BR | FECHADO (commit 4f1cd71) |
 | M13 Fundação (árvore nova, goldens, 2-opt adaptativo, Action do Pages) | FECHADO (ciclos 07–10; revisor Fable devolveu 1 bloqueante, corrigido no ciclo 10 e verificado pelo orquestrador) |
-| M14 Documento, máquinas, papel | ABERTO |
+| M14 Documento, máquinas, papel | FECHADO (ciclo 11; gates verdes; revisor Fable aceitou sem bloqueante) |
 | M15 Identidade + oficinas (PARADA para aprovação do usuário) | ABERTO |
 | M16 Motor I: contexto | ABERTO |
 | M17 Motor II: ductus | ABERTO |
@@ -44,6 +44,9 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - M13 2-opt adaptativo, viagem nova ≤ antiga — test/exportar.test.mjs ('otimizar 2-opt completo ... não é pior que janela 50')
 - M13 `npm test` verde na árvore nova — 101/101
 - M13 `pages.yml` criado (verificação real só com push em main). `npm run build` ok e `npm run e2e` 4/4 (orquestrador); `npm test` numa cópia limpa sem `arquivo/` (simula o CI): 100 pass, 1 skipped
+- M14 G-code P2S sem M412/M104/M109/E, dentro da janela, Z >= zMin; pausa na troca de caneta; erro papel > janela e Z < zMin — test/gcode-camadas.test.mjs, test/perfis.test.mjs
+- M14 papéis A3–A8, carta, ofício, personalizado; `FOLHAS` derivada; `deTracos`/`validarDocumento` — test/documento.test.mjs
+- M14 `compor` com `ancoras`, `obstaculos`, `colunas`; saída antiga idêntica ao golden — test/layout-caixas.test.mjs, test/golden.test.mjs (126/126)
 
 ## Tarefas
 
@@ -72,6 +75,9 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 08-C | M13 | src/exportar.js (hoje src/maquina/otimizar.js), test/exportar.test.mjs | aceita | 2-opt completo ≤ 2000 traços, janela 50 acima; `{ janela }`; 1 teste |
 | 09-B | M13 | git mv para a árvore nova + imports | aceita | motor/, arcano/, materiais/, maquina/{gcode,otimizar}, ui/; 101 pass; goldens intactos |
 | 10-A | M13 | test/exportar.test.mjs, src/ui/grimorio.js | aceita | devolução do revisor: teste do vpype.toml pula se `arquivo/` ausente (CI) |
+| 11-A | M14 | src/maquina/perfis.js, gcode.js, otimizar.js, test/perfis, test/gcode-camadas | aceita | removi import não usado |
+| 11-B | M14 | src/layout.js, test/layout-caixas.test.mjs | aceita | glifo pode invadir caixa até ~0,3 mm |
+| 11-C | M14 | src/materiais/documento.js, scroll.js, test/documento.test.mjs | aceita | 7 testes |
 
 ## Ciclos
 
@@ -87,8 +93,22 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 08 | OK: 2-opt adaptativo (08-C) aceito; 101 pass / 0 fail |
 | 09 | OK: árvore nova (09-B) aceita; imports sem resto antigo; 101 pass / 0 fail. M13: faltam gates build/e2e, pages.yml no GitHub e revisor (orquestrador fecha) |
 | 10 | OK: revisor devolveu 1 bloqueante (teste lia `arquivo/vpype.toml`, fora do git → CI quebraria); 10-A corrigiu; gates verdes; **M13 FECHADO** |
+| 11 | OK: M14 entregue (perfis P2S/megaS, gcodeDocumento, papéis, layout com âncoras/obstáculos/colunas); 126 pass / 0 fail; goldens intactos. Faltam gates build/e2e/revisor. A5 não cabe na P2S (207×200): levar ao usuário |
 
-## Retomada (2026-11-15, após M13) — LEIA ESTA PRIMEIRA
+## Retomada (2026-11-16, após M14) — LEIA ESTA PRIMEIRA
+
+- M13 e M14 FECHADOS. `npm test` 126/126. M14: `src/maquina/perfis.js` (megaS, p2s experimental, personalizado; `papelMaximo`, `cabeNaMaquina`), `gcodeDocumento` multicamada com troca de caneta, `ordem:'escrita'`, `src/materiais/documento.js` (PAPEIS, papel, deTracos, validarDocumento), `compor` com `obstaculos`/`colunas`/`ancoras` (revisor provou saída bit a bit igual à antiga em 384 combinações).
+- **Próxima ação:** M15 (Identidade + oficinas) — Conselheiro Fable com `impeccable`/`frontend-design`, ciclo 12. **PARADA obrigatória após M15** para aprovação da UI.
+- Para o usuário (hardware): A5 não cabe na janela P2S (207×200) em nenhuma orientação — maior papel de tabela é A6; header/footer P2S montado da PESQUISA, nunca testado; confirmar que `M0` é retomável na Mega S (tela TFT sem encoder), senão a troca de caneta trava.
+- Menores do revisor M14 (fazer quando tocar no arquivo):
+  - M15 precisa: `svg()` por camada/cor; bloquear download com aviso "fora da janela" em perfil experimental; perfil `personalizado` carregado do localStorage deve mesclar com `PERFIS.megaS` (sem `estaciona`/`trocaCaneta` dá TypeError, `gcode.js:63`) e usar `structuredClone` (`perfis.js:28` é cópia rasa); validar `colunas` ≥ 1 inteiro no controle (`layout.js:45`).
+  - Antes do M20: sanitizar `camada.id` no comentário do G-code (`gcode.js:82`, `
+` vira linha real).
+  - `gcode.js:64` mensagem diz "Z de escrita" para os 3 campos; falta teste de `estaciona.z < zMin`; `gcode.js:68` repete `janelaDe` de `perfis.js:30`.
+  - Antes do M16: gravar golden de `compor` multipágina + justificado + palavra longa (DoD do M16 depende); testes de âncoras em justificado/centro, obstáculo em página ≥ 1, palavra quebrada.
+  - Papel girado em `cabeNaMaquina` (fora do escopo M14).
+
+## Retomada (2026-11-15, após M13)
 
 - M13 FECHADO (commit "M13: ..."): árvore nova (`src/motor`, `arcano`, `materiais`, `maquina`, `ui`), goldens em `test/golden.test.mjs` (+ `.snapshot`), 2-opt adaptativo em `src/maquina/otimizar.js`, `.github/workflows/pages.yml`. `npm test` 101/101.
 - **Próxima ação:** M14 (Documento, máquinas, papel) — começa pelo Conselheiro Fable (§5.2 passo 2), ciclo 11.
