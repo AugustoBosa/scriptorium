@@ -108,9 +108,10 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 
 ## Retomada (2026-11-17, EXPANSÃO CONCLUÍDA) — LEIA ESTA PRIMEIRA
 
-- M13–M21 FECHADOS na branch `expansao` (sem push). `npm test` 794/0; build ok; e2e 68/68. Decisões de todos os ciclos: `workflow/ciclos/LEDGER-expansao.md`; relatórios por ciclo em `workflow/ciclos/NN/relatorio.md`.
-- **Pendências do usuário:** (1) decidir merge/push da branch `expansao` para `main`; (2) trocar a fonte do GitHub Pages para "GitHub Actions" antes do primeiro push; (3) hardware: confirmar que `M0` retoma na Mega S; P2S nunca testada (A5 não cabe na janela 207×200); calibrar no papel cinemática, fadiga, encaixe e ligações (EMSAllure/Swiss/Society).
+- M13–M21 FECHADOS. Merge fast-forward de `expansao` em `main` (`11b263e`) e push feitos em 2026-11-17; Pages publicado via Actions e verificado (https://augustobosa.github.io/3dprinter_plotter/). `npm test` 794/0; build ok; e2e 68/68. Decisões de todos os ciclos: `workflow/ciclos/LEDGER-expansao.md`; relatórios por ciclo em `workflow/ciclos/NN/relatorio.md`.
+- **Pendências do usuário:** hardware: confirmar que `M0` retoma na Mega S; P2S nunca testada (A5 não cabe na janela 207×200); calibrar no papel cinemática, fadiga, encaixe e ligações (EMSAllure/Swiss/Society).
 - **Pendências técnicas (próximo pedido):** 2-opt de blocos para a ordem de escrita (viagem 1,6–1,7× hoje); `PARES` por fonte (z da EMSSwiss); livro 2 colunas sem equilíbrio na última página; prévia viva em "Quem escreve"/"Variação" do grimório; "mostrar trajeto" otimiza a cada render; grade antiga do alfabeto passa ~10% da caixa; ogham/curvo empastam < 5 mm; habitada A/M com vinha em gravetos; Fable exige créditos (papéis dele rodaram em Opus desde o M17).
+- CI: `actions/deploy-pages@v4` roda em Node 20 (descontinuado pelo GitHub); atualizar a action quando sair versão nova.
 - Ambiente: `127.0.0.1:8765` estava ocupada por processo de outra sessão; e2e rodado com config temporária `[::1]`.
 
 ## Retomada (2026-11-16, após M16)
