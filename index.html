@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<meta name="theme-color" content="#f4ecd8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Scriptorium — caligrafia para plotter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,16 +27,16 @@
   </aside>
   <section id="area-previa">
     <div class="barra-previa">
-      <div class="paginas"><button type="button" id="pag-ant">‹ Anterior</button><span id="pag-info">Página 1 de 1</span><button type="button" id="pag-prox">Próxima ›</button></div>
-      <label id="rotulo-comparar"><input type="checkbox" id="comparar"> comparar</label>
+      <div class="paginas"><button type="button" id="pag-ant">‹ Anterior</button><span id="pag-info" aria-live="polite">Página 1 de 1</span><button type="button" id="pag-prox">Próxima ›</button></div>
+      <label id="rotulo-comparar"><input type="checkbox" id="comparar"> Comparar</label>
       <select id="variacao-b" aria-label="Variação B" hidden></select>
     </div>
     <div id="previas">
-      <figure><p class="rotulo" id="rotulo-a"></p><div class="folha" id="previa"></div></figure>
+      <figure><p class="rotulo" id="rotulo-a"></p><div class="folha" id="previa"><p class="rotulo">Carregando fontes…</p></div></figure>
       <figure id="previa-b-bloco" hidden><p class="rotulo" id="rotulo-b"></p><div class="folha" id="previa-b"></div></figure>
     </div>
     <p id="erro" class="erro" role="alert"></p>
-    <ul id="avisos"></ul>
+    <ul id="avisos" aria-live="polite"></ul>
   </section>
   <footer id="exportar" class="barra-exportar"></footer>
 </main>

@@ -20,7 +20,7 @@ const ctxDe = (estado) => () => ({
 function titulo(texto, dicaTexto) {
   const h = document.createElement('h3');
   h.append(texto);
-  if (dicaTexto) h.append(' ', dica(dicaTexto));
+  if (dicaTexto) h.append(' ', dica(dicaTexto, texto));
   return h;
 }
 
@@ -45,10 +45,15 @@ export function montar(elemento, estado, aoMudar) {
     estado.texto = await f.text();
     aoMudar();
   });
-  const rotuloArquivo = document.createElement('label');
-  rotuloArquivo.append(rotulo('importarTxt'), ' ', dica(AJUDA.importarTxt), ' ', arquivo);
+  arquivo.id = 'importar-txt';
+  const rotuloArquivo = document.createElement('div');
+  rotuloArquivo.className = 'linha-campo';
+  const lab = document.createElement('label');
+  lab.htmlFor = arquivo.id;
+  lab.append(rotulo('importarTxt'));
+  rotuloArquivo.append(lab, ' ', dica(AJUDA.importarTxt, 'Importar .txt'));
 
-  elemento.replaceChildren(titulo('Texto', AJUDA.texto), textarea, rotuloArquivo);
+  elemento.replaceChildren(titulo('Texto', AJUDA.texto), textarea, rotuloArquivo, arquivo);
 
   return function atualizar() {
     if (textarea.value !== estado.texto) textarea.value = estado.texto;

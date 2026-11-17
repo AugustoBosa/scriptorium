@@ -10,19 +10,8 @@ const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
 function titulo(texto, chave) {
   const h = document.createElement('h3');
   h.append(texto);
-  if (chave) h.append(' ', dica(AJUDA[chave]));
+  if (chave) h.append(' ', dica(AJUDA[chave], texto));
   return h;
-}
-
-function campo(chave, entrada) {
-  const l = document.createElement('label');
-  l.append(rotulo(chave), ' ', dica(AJUDA[chave]), ' ', entrada);
-  return l;
-}
-
-// Não mexe no elemento que o usuário está editando (evita perder o cursor/arraste).
-function sincronizar(el, valor) {
-  if (el !== document.activeElement && String(el.value) !== String(valor)) el.value = valor;
 }
 
 export function montar(elemento, estado, aoMudar) {
@@ -35,17 +24,15 @@ export function montar(elemento, estado, aoMudar) {
   });
 
   function criarLinha(i) {
-    const sel = document.createElement('select');
-    for (const nome of estado.nomesFontes) {
-      const op = document.createElement('option');
-      op.value = nome;
-      op.textContent = nome;
-      sel.append(op);
-    }
-    sel.addEventListener('change', () => {
-      estado.personagem.mao.base[i].fonte = sel.value;
-      aoMudar();
-    });
+    const fonte = controle({
+      chave: 'base', nivel: 'basico', tipo: 'opcao', grade: false, rotulo: rotulo('base'), ajuda: AJUDA.base,
+      opcoes: estado.nomesFontes.map((n) => ({ valor: n, rotulo: n })),
+      previa: (v, c) => amostra(c.fontes, { ...c.mao, base: [{ fonte: v, peso: 1 }] }, 'a mão viu', { tamanho: 6 }),
+    }, {
+      ler: () => estado.personagem.mao.base[i].fonte,
+      gravar: (v) => { estado.personagem.mao.base[i].fonte = v; },
+      ctx,
+    }, aoMudar);
 
     const peso = controle(P.peso, {
       ler: () => estado.personagem.mao.base[i].peso,
@@ -55,20 +42,20 @@ export function montar(elemento, estado, aoMudar) {
 
     const remover = document.createElement('button');
     remover.type = 'button';
-    remover.textContent = 'remover';
+    remover.textContent = 'Remover';
     remover.addEventListener('click', () => {
       estado.personagem.mao.base.splice(i, 1);
       aoMudar();
     });
 
     const linha = document.createElement('div');
-    linha.append(campo('base', sel), peso.el, remover);
-    return { linha, sel, peso, remover };
+    linha.append(fonte.el, peso.el, remover);
+    return { linha, fonte, peso, remover };
   }
 
   const adicionar = document.createElement('button');
   adicionar.type = 'button';
-  adicionar.textContent = 'adicionar fonte';
+  adicionar.textContent = 'Adicionar fonte';
   adicionar.addEventListener('click', () => {
     estado.personagem.mao.base.push({ fonte: estado.nomesFontes[0], peso: 0.5 });
     aoMudar();
@@ -109,14 +96,13 @@ export function montar(elemento, estado, aoMudar) {
 
   return function atualizar() {
     const base = estado.personagem.mao.base;
-    const mudou = base.length !== linhas.length || base.some((it, i) => linhas[i].sel.value !== String(it.fonte));
-    if (mudou) {
+    if (base.length !== linhas.length) {
       linhas = base.map((_, i) => criarLinha(i));
       lista.replaceChildren(...linhas.map((l) => l.linha));
     }
     base.forEach((it, i) => {
       const l = linhas[i];
-      sincronizar(l.sel, it.fonte);
+      l.fonte.atualizar();
       l.peso.atualizar();
       l.remover.disabled = base.length <= 1;
     });

@@ -38,10 +38,11 @@ function escolhida(estado, i) {
 }
 
 // G-code da página i (só `camadas`, se dadas), ou { erro } quando a máquina não pode plotar.
-function gerarGcode(estado, i, camadas) {
+// rapido: página crua, sem 2-opt (a barra só precisa de contagem, comprimento aproximado e avisos).
+function gerarGcode(estado, i, camadas, rapido = false) {
   try {
     const doc = estado.doc;
-    const g = gcodeDocumento(paginaOtimizada(estado, i), doc.papel, estado.perfil, { canetas: doc.canetas, camadas });
+    const g = gcodeDocumento(rapido ? doc.paginas[i] : paginaOtimizada(estado, i), doc.papel, estado.perfil, { canetas: doc.canetas, camadas });
     if (estado.perfil.experimental && g.avisos.some((a) => a.includes('fora da janela'))) {
       return { g, erro: 'Perfil experimental: há traços fora da janela da máquina.' };
     }
@@ -74,8 +75,15 @@ export function montar(elemento, estado, aoMudar) {
     ta.rows = 5;
     ta.style.fontFamily = 'var(--fonte-mono)';
     ta.addEventListener('input', () => { editar(chave, ta.value); aoMudar(); });
-    const l = document.createElement('label');
-    l.append(rotulo(chave), ' ', dica(AJUDA[chave]), ' ', ta);
+    ta.id = `perfil-${chave}`;
+    const lab = document.createElement('label');
+    lab.htmlFor = ta.id;
+    lab.append(rotulo(chave));
+    const cab = document.createElement('div');
+    cab.className = 'linha-campo';
+    cab.append(lab, ' ', dica(AJUDA[chave], chave));
+    const l = document.createElement('div');
+    l.append(cab, ta);
     return { ta, chave, l };
   });
 
@@ -164,7 +172,7 @@ export function montarBarra(elemento, estado, aoMudar) {
     const doc = estado.doc;
     const ids = doc?.paginas[estado.paginaAtual]?.camadas.map((c) => c.id) ?? [];
     if (camada.dataset.ids !== ids.join('|')) {
-      camada.replaceChildren(new Option('todas', 'todas'), ...ids.map((v) => new Option(ROTULO_CAMADA[v] ?? v, v)));
+      camada.replaceChildren(new Option('Todas', 'todas'), ...ids.map((v) => new Option(ROTULO_CAMADA[v] ?? v, v)));
       camada.dataset.ids = ids.join('|');
     }
     camada.value = ids.includes(estado.camada) ? estado.camada : 'todas';
@@ -173,8 +181,8 @@ export function montarBarra(elemento, estado, aoMudar) {
     let bloqueado = vazio, texto = vazio && doc ? 'Nada para plotar ainda' : '—';
     erro.textContent = '';
     if (!vazio) {
-      const r = gerarGcode(estado, estado.paginaAtual, escolhida(estado, estado.paginaAtual));
-      if (r.g) texto = `${r.g.nTracos} traços · ${(r.g.comprimento / 1000).toFixed(1).replace('.', ',')} m`;
+      const r = gerarGcode(estado, estado.paginaAtual, escolhida(estado, estado.paginaAtual), true);
+      if (r.g) texto = `${r.g.nTracos} traços · ≈ ${(r.g.comprimento / 1000).toFixed(1).replace('.', ',')} m`;
       if (r.erro) { erro.textContent = r.erro; bloqueado = true; }
     }
     resumo.textContent = texto;

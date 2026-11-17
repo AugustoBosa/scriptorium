@@ -136,10 +136,13 @@ function linha(f, arq) {
   celula(f.ligacao);
   for (const [k, e] of Object.entries(EIXOS)) {
     const n = f.eixos[k];
-    celula('●'.repeat(n) + '○'.repeat(5 - n), 'num').title = `${e.min} … ${e.max}`;
+    const td = celula('●'.repeat(n) + '○'.repeat(5 - n), 'num');
+    td.title = `${e.min} … ${e.max}`;
+    td.setAttribute('aria-label', `${n} de 5`);
   }
   for (const k of Object.keys(ARQUETIPOS)) {
-    celula('★'.repeat(f.aptidao[k]), 'num');
+    const n = f.aptidao[k];
+    celula('★'.repeat(n), 'num').setAttribute('aria-label', `${n} ${n === 1 ? 'estrela' : 'estrelas'}`);
   }
   celula(f.descricao, 'desc');
 

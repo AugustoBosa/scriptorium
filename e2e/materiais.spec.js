@@ -58,3 +58,10 @@ test('sigilos: complexidade muda o SVG da prévia (tipo círculo)', async ({ pag
   await page.locator('#painel .controle[data-chave="complexidade"] input').fill('0.9')
   await expect.poll(() => page.locator('#previa').innerHTML()).not.toBe(antes)
 })
+
+test('livro: marcação da Carta não vira texto literal', async ({ page }) => {
+  await abrir(page, 'livro')
+  await escrever(page, 'A neblina {nota: cuidado} cobre {_Barovia_} e o castelo.')
+  expect(await page.locator('#previa').innerHTML()).not.toContain('{')
+  await expect(page.locator('#avisos')).not.toContainText('{')
+})

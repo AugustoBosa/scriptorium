@@ -73,8 +73,10 @@ function render() {
   const cab = el('div', 'pv-cab'); cab.append(el('span', null, def.rotulo), el('span', null, textoValor(def, v)));
   filhos.push(cab);
   if (def.tipo === 'opcao') {
-    const ts = def.opcoes.map(o => tentar(def, o.valor, ctx));
-    if (ts.every(Boolean)) filhos.push(grade(def.opcoes.map((o, i) => [o.rotulo, ts[i], o.valor === v])));
+    // grade:false = só a opção atual (listas longas, como as 43 fontes)
+    const ops = def.grade === false ? def.opcoes.filter(o => o.valor === v) : def.opcoes;
+    const ts = ops.map(o => tentar(def, o.valor, ctx));
+    if (ts.length && ts.every(Boolean)) filhos.push(grade(ops.map((o, i) => [o.rotulo, ts[i], o.valor === v]), def.grade === false ? 1 : 4));
   } else if (def.tipo === 'marca') {
     const ts = [false, true].map(b => tentar(def, b, ctx));
     if (ts.every(Boolean)) filhos.push(grade([['desligado', ts[0], !v], ['ligado', ts[1], !!v]], 2));
@@ -159,9 +161,9 @@ export function ligar(alvo, chave, ctx) {
   return { ler: () => obj()[chave], gravar: v => { obj()[chave] = v; }, ctx: typeof ctx === 'function' ? ctx : () => ctx };
 }
 
-export function dica(texto) {
+export function dica(texto, nome) {
   ouvirGlobal();
-  const b = el('button', 'dica', '?'); b.type = 'button'; b.setAttribute('aria-label', 'Ajuda');
+  const b = el('button', 'dica', '?'); b.type = 'button'; b.setAttribute('aria-label', nome ? 'Ajuda: ' + nome : 'Ajuda');
   const abre = () => abrir({ ancora: b, texto });
   b.addEventListener('pointerenter', abre); b.addEventListener('focus', abre); b.addEventListener('click', abre);
   b.addEventListener('pointerleave', () => document.activeElement !== b && fechar());

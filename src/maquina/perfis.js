@@ -60,7 +60,7 @@ const num = (chave, min, max, passo, unidade, previa, extra = {}) => ({ chave, g
 export const PARAMS = [
   { chave: 'perfil', grupo: 'maquina', nivel: 'basico', tipo: 'opcao', padrao: 'megaS', rotulo: 'máquina',
     ajuda: 'Escolhe a impressora que vai desenhar. Muda o tamanho da mesa, a janela útil para o papel e as alturas Z. A P2S ainda não foi testada.',
-    opcoes: [{ valor: 'megaS', rotulo: 'megaS' }, { valor: 'p2s', rotulo: 'p2s' }, { valor: 'personalizado', rotulo: 'personalizado' }],
+    opcoes: [{ valor: 'megaS', rotulo: 'Anycubic Mega S' }, { valor: 'p2s', rotulo: 'Bambu P2S (experimental)' }, { valor: 'personalizado', rotulo: 'Personalizado' }],
     previa: (v) => mesaEJanela(PERFIS[v]) },
   num('zEscrita', 0, 30, 0.1, 'mm', haste, { semEscala: true }),
   num('zLevantada', 0, 30, 0.1, 'mm', haste, { semEscala: true }),

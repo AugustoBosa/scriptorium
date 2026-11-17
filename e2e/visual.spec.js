@@ -48,7 +48,7 @@ function medir() {
   const visivel = el => !el.closest('[hidden], .so-leitor') && el.getClientRects().length > 0
   const fundo = el => { for (let e = el; e; e = e.parentElement) { const c = rgb(getComputedStyle(e).backgroundColor); if (c.length >= 3 && (c[3] ?? 1) === 1) return c } return [255, 255, 255] }
   const falhas = []
-  const texto = ['h1', 'nav.oficinas a', 'summary', '.controle label', '.controle output', 'button', 'select', '#pag-info', '#avisos li', '#previa-viva .pv-ajuda']
+  const texto = ['h1', 'nav.oficinas a', 'summary', '.controle label', '.controle output', 'button', 'select', '#pag-info', '#avisos li', 'h3', '.rotulo', 'label', '#previa-viva .pv-ajuda']
   for (const sel of texto) for (const el of document.querySelectorAll(sel)) {
     if (!visivel(el)) continue
     const r = razao(rgb(getComputedStyle(el).color), fundo(el))
@@ -67,10 +67,10 @@ function medir() {
   return falhas
 }
 
-for (const [id, avancado] of [['carta', true], ['grimorio', false]]) {
+for (const id of OFICINAS) {
   test(`contraste AA em ${id}`, async ({ page }) => {
     await abrir(page, id)
-    if (avancado) await page.getByLabel('Avançado').check()
+    await page.getByLabel('Avançado').check()
     const campo = page.locator('#grupos input[type=range]:visible').first()
     if (await campo.count()) await campo.focus() // abre o popover para medir o texto de ajuda
     const falhas = await page.evaluate(medir) // com o popover aberto

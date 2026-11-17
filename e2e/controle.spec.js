@@ -67,3 +67,16 @@ test('a 375 px o popover cabe na viewport', async ({ page }) => {
   expect(b.x + b.width).toBeLessThanOrEqual(375)
   expect(b.y + b.height).toBeLessThanOrEqual(812)
 })
+
+test('Básico esconde Salvar JSON; Avançado mostra; "?" com nome e fonte da mão com prévia', async ({ page }) => {
+  await page.goto('index.html')
+  await page.locator('[data-chave="base"] select').first().focus()
+  await expect(page.locator('#previa-viva figure')).toHaveCount(1)
+  const salvar = page.getByRole('button', { name: 'Salvar JSON' })
+  await expect(salvar).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Ajuda: Nome' })).toBeVisible()
+  await page.getByLabel('Avançado').check()
+  await expect(salvar).toBeVisible()
+  await page.getByLabel('Básico').check()
+  expect(page.erros).toEqual([])
+})

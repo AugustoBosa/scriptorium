@@ -15,6 +15,7 @@ import * as pMat from './materiais.js';
 
 const OFICINAS = { carta: 'escrita', livro: 'escrita', scroll: 'grimorio', grimorio: 'grimorio', sigilos: 'sigilos' };
 const NOMES = { carta: 'Carta', scroll: 'Scroll', grimorio: 'Grimório', livro: 'Livro', sigilos: 'Sigilos' };
+const VAZIO = { grimorio: 'Escolha uma magia na lista.', scroll: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.' };
 const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto'];
 const $ = (id) => document.getElementById(id);
 
@@ -112,6 +113,7 @@ function renderizar() {
 
   const opc = { pagina: e.paginaAtual, trajeto: e.trajeto, otimizar: e.otimizar };
   desenhar($('previa'), e.doc, opc);
+  if (e.doc.paginas.every((p) => p.camadas.every((c) => !c.tracos.length))) $('previa').insertAdjacentHTML('beforeend', `<p class="vazio">${VAZIO[e.oficina] ?? 'Nada para desenhar ainda.'}</p>`);
   $('rotulo-a').hidden = !escrita;
   $('rotulo-a').textContent = escrita ? `Variação: ${e.variacao || 'mão base'}` : '';
   $('previa-b-bloco').hidden = !docB;
@@ -194,6 +196,8 @@ const temaEfetivo = () => document.documentElement.dataset.tema ?? (matchMedia('
 function pintarTema() {
   const vela = temaEfetivo() === 'vela';
   $('tema').textContent = vela ? 'Claro' : 'Vela';
+  $('tema').setAttribute('aria-label', `Mudar para tema ${vela ? 'claro' : 'vela'}`);
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', vela ? '#1e1812' : '#f4ecd8');
 }
 if (ui.tema) document.documentElement.dataset.tema = ui.tema;
 document.body.dataset.nivel = ui.nivel === 'avancado' ? 'avancado' : 'basico';
@@ -211,7 +215,7 @@ document.querySelectorAll('input[name=nivel]').forEach((i) => i.addEventListener
   salvarUi();
 }));
 
-$('rotulo-comparar').append(' ', dica(AJUDA.comparar));
+$('rotulo-comparar').append(' ', dica(AJUDA.comparar, 'comparar'));
 $('comparar').addEventListener('change', (ev) => { atual.estado.comparar = ev.target.checked; aoMudar(); });
 $('variacao-b').addEventListener('change', (ev) => { atual.estado.variacaoB = ev.target.value; aoMudar(); });
 $('pag-ant').addEventListener('click', () => { atual.estado.paginaAtual -= 1; aoMudar(); });

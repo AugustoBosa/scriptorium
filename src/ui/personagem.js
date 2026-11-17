@@ -183,20 +183,31 @@ export function montar(elemento, estado, aoMudar) {
       ctx,
     }, aoMudar));
 
-  const labelNome = document.createElement('label');
-  labelNome.append('Nome ', inputNome, ' ', dica(AJUDA.personagem));
-
-  const labelVar = document.createElement('label');
-  labelVar.append(rotulo('variacaoSel'), ' ', dica(AJUDA.variacaoSel), ' ', selVar);
+  // "?" irmão do label (não filho): o nome acessível do campo fica só "Nome"
+  function campo(texto, entrada, ajuda) {
+    entrada.id ||= 'p-' + slug(texto);
+    const l = document.createElement('label');
+    l.htmlFor = entrada.id;
+    l.textContent = texto;
+    return [linhaBotoes(l, dica(ajuda, texto)), entrada];
+  }
+  const avancado = (...itens) => {
+    const d = document.createElement('div');
+    d.dataset.nivel = 'avancado';
+    d.append(...itens);
+    return d;
+  };
 
   elemento.append(
-    labelNome,
+    ...campo('Nome', inputNome, AJUDA.personagem),
     linhaBotoes(
       botao('Novo personagem', () => {
         estado.personagem = novoPersonagem();
         estado.variacao = 'normal';
         aoMudar();
       }),
+    ),
+    avancado(linhaBotoes(
       botao('Salvar JSON', () => {
         const url = URL.createObjectURL(new Blob([JSON.stringify(estado.personagem, null, 2)], { type: 'application/json' }));
         const a = document.createElement('a');
@@ -206,10 +217,8 @@ export function montar(elemento, estado, aoMudar) {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }),
       botao('Abrir JSON', () => inputArquivo.click()),
-    ),
-    inputArquivo,
-    titulo('Meus personagens (neste navegador)'),
-    linhaBotoes(
+    ), inputArquivo),
+    avancado(titulo('Meus personagens (neste navegador)'), linhaBotoes(
       selSalvos,
       botao('Salvar aqui', () => {
         const nome = estado.personagem.nome?.trim();
@@ -231,9 +240,9 @@ export function montar(elemento, estado, aoMudar) {
       }),
       btnAbrirSalvo,
       btnExcluir,
-    ),
-    labelVar,
-    linhaBotoes(
+    )),
+    ...campo(rotulo('variacaoSel'), selVar, AJUDA.variacaoSel),
+    avancado(linhaBotoes(
       botao('Adicionar', () => {
         const nome = prompt('Nome da variação')?.trim();
         if (!nome) return;
@@ -245,7 +254,7 @@ export function montar(elemento, estado, aoMudar) {
       }),
       btnRenomear,
       btnRemover,
-    ),
+    )),
     titulo('Identidade'), ...ctrlIdentidade.map((c) => c.el),
     titulo('Execução'), ...ctrlExecucao.map((c) => c.el),
     erro,

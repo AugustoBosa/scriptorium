@@ -91,9 +91,9 @@ export function criar() {
 
   // ---------- painel Magias ----------
   function painelMagias(raiz, aoMudar) {
-    const busca = el('input', { type: 'search', placeholder: 'Buscar por nome (pt ou en)' });
-    const nivel = el('select', {}, new Option('Todos os níveis', ''), ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => new Option(n === 0 ? 'Truques' : `${n}º nível`, n)));
-    const classe = el('select', {}, new Option('Todas as classes', ''));
+    const busca = el('input', { type: 'search', placeholder: 'Buscar por nome (pt ou en)…', ariaLabel: 'Buscar magia' });
+    const nivel = el('select', { ariaLabel: 'Nível' }, new Option('Todos os níveis', ''), ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => new Option(n === 0 ? 'Truques' : `${n}º nível`, n)));
+    const classe = el('select', { ariaLabel: 'Classe' }, new Option('Todas as classes', ''));
     const achados = el('div', { className: 'achados' });
     const lista = el('ol', { className: 'selecionadas' });
     const semDados = el('p', { hidden: true }, 'Sem dados de magias nesta cópia da página. Importe um magias.json (gerado por scripts/gerar-magias.mjs) ou crie magias em branco. ');
@@ -131,7 +131,7 @@ export function criar() {
       el('h3', {}, 'No scroll / grimório'), lista,
       el('div', { className: 'linha-botoes' },
         el('button', { type: 'button', onclick: () => adicionar(magiaVazia()) }, 'Magia em branco'),
-        el('button', { type: 'button', onclick: () => { estado.selecionadas = []; estado.atual = 0; aoMudar(); } }, 'Limpar lista')));
+        el('button', { type: 'button', onclick: () => { if (!confirm(`Limpar as ${estado.selecionadas.length} magias da lista?`)) return; estado.selecionadas = []; estado.atual = 0; aoMudar(); } }, 'Limpar lista')));
 
     let nMagias = -1;
     return () => {
@@ -178,7 +178,7 @@ export function criar() {
     const ctrls = ['nivel', 'escola', 'conc', 'ritual'].map((chave) =>
       controle(PA[chave], { ler: () => m()?.[chave] ?? PA[chave].padrao, gravar: (v) => { if (m()) m()[chave] = v; }, ctx }, aoMudar));
     form.append(
-      el('h3', {}, 'Sigilo ', dica('O sigilo codifica a magia: pontas = nível + 2, miolo = escola, anel duplo = concentração, dentes no anel = ritual, marcas no anel = componentes V, S e M.')),
+      el('h3', {}, 'Sigilo ', dica('O sigilo codifica a magia: pontas = nível + 2, miolo = escola, anel duplo = concentração, dentes no anel = ritual, marcas no anel = componentes V, S e M.', 'Sigilo')),
       ...ctrls.map((c) => c.el));
     sincs.push(...ctrls.map((c) => c.atualizar));
     raiz.append(vazio, form);
@@ -229,10 +229,10 @@ export function criar() {
       ...['seed', 'curva', 'complexidade'].map((c) => controle(PA[c], ligar(estilo, c, ctx), aoMudar)),
     ];
     raiz.append(
-      el('label', {}, 'Quem escreve ', pers, ' ', dica('Personagens salvos na página de caligrafia. Crie ou ajuste a mão lá e salve; ela aparece aqui.')),
+      el('div', { className: 'linha-campo' }, el('label', {}, 'Quem escreve ', pers), ' ', dica('Personagens salvos na página de caligrafia. Crie ou ajuste a mão lá e salve; ela aparece aqui.', 'Quem escreve')),
       el('label', {}, 'Variação ', vari),
       el('p', {}, el('a', { href: '#carta' }, 'Criar ou editar personagens')),
-      el('h3', {}, 'Escrever em alfabeto arcano ', dica('O bloco marcado sai no alfabeto inventado, sem acentos e em minúsculas. Plote também a chave para os jogadores decifrarem.')),
+      el('h3', {}, 'Escrever em alfabeto arcano ', dica('O bloco marcado sai no alfabeto inventado, sem acentos e em minúsculas. Plote também a chave para os jogadores decifrarem.', 'Alfabeto arcano')),
       ...ctrls.map((c) => c.el));
     const importar = el('input', { type: 'file', accept: '.json', hidden: true });
     importar.addEventListener('change', async () => {
@@ -317,11 +317,13 @@ export function criar() {
       desenhando.push(p);
       desenhar();
     });
-    tela.addEventListener('pointerup', () => {
+    const soltar = () => {
       if (desenhando && desenhando.length < 2) tracos.pop();
       desenhando = null;
       desenhar();
-    });
+    };
+    tela.addEventListener('pointerup', soltar);
+    tela.addEventListener('pointercancel', soltar);
     alvo.addEventListener('change', carregar);
 
     const gravar = () => {

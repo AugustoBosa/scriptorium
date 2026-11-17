@@ -1,4 +1,4 @@
-/* Scriptorium sóbrio — tokens do M15. Copiar para src/ui/tema.css (tarefa 12-B) e acrescentar os componentes.
+/* Tokens do Scriptorium (sóbrio).
    Um valor por token: light-dark() escolhe pelo color-scheme. Sem [data-tema] segue o sistema
    (prefers-color-scheme); [data-tema="claro"|"vela"] no <html> força o tema.
    ponytail: light-dark() e popover exigem Chrome 123+/Firefox 125+/Safari 17.5+; sem fallback para navegador antigo.
@@ -72,7 +72,7 @@ input:not([type=range], [type=checkbox]), select, textarea, button {
 input[type=range], input[type=checkbox] { accent-color: var(--rubrica); }
 button { padding: 0 var(--e3); cursor: pointer; }
 button.primario { background: var(--tinta); color: var(--pergaminho); border-color: var(--tinta); }
-button:disabled, button.primario:disabled { background: var(--regua); color: var(--tinta-2); border-color: var(--contorno); cursor: default; } /* tinta-2 sobre regua: 4,7 claro / 5,2 vela */
+button:disabled, button.primario:disabled { background: transparent; color: var(--tinta-2); border-style: dashed; cursor: default; } /* tinta-2 sobre pergaminho: 7,5 nos dois temas */
 :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 .erro { color: var(--rubrica); font-weight: 600; }  /* sempre com o prefixo "Erro:" no texto */
 .aviso { color: var(--aviso); }
@@ -91,10 +91,12 @@ details { border-bottom: 3px double var(--regua); padding: var(--e2) 0; }
 .erro:empty, #avisos:empty { display: none; }
 h3 { font-size: var(--t-ui); margin: var(--e4) 0 var(--e1); }
 label { display: block; margin: var(--e2) 0; }
+label::first-letter, figcaption::first-letter { text-transform: uppercase; }
 textarea, input[type=text], input[type=search] { width: 100%; max-width: 100%; padding: var(--e1) var(--e2); }
 input[type=number] { width: 6.5em; max-width: 100%; padding: 0 var(--e2); }
 select { max-width: 100%; padding: 0 var(--e2); }
 .linha-botoes { display: flex; flex-wrap: wrap; gap: var(--e2); margin: var(--e2) 0; }
+.linha-campo { display: flex; align-items: center; gap: var(--e2); }
 .rotulo { margin: 0 0 var(--e2); font-weight: 600; color: var(--tinta-2); }
 figure { margin: 0; min-width: 0; }
 
@@ -117,7 +119,7 @@ aside#painel { grid-area: painel; position: sticky; top: var(--e4); max-height: 
 section#area-previa { grid-area: previa; min-width: 0; }
 footer#exportar { grid-area: exportar; position: sticky; bottom: 0; background: var(--pergaminho); border-top: 3px double var(--regua); padding: var(--e3) var(--e4); }
 #exportar > div { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e3); }
-#exportar .controle { margin: 0; grid-template-columns: auto 12em 20px; }
+#exportar .controle { margin: 0; grid-template-columns: auto 12em 24px; }
 #exportar .resumo { white-space: nowrap; margin-right: auto; }
 #exportar details { border: 0; padding: 0; }
 .barra-previa { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e3); margin-bottom: var(--e3); }
@@ -126,6 +128,7 @@ footer#exportar { grid-area: exportar; position: sticky; bottom: 0; background: 
 #previas { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--e4); }
 #previas.comparando { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .folha { margin: 0 auto; }
+.folha .vazio { margin: 0; padding: var(--e5); text-align: center; color: var(--tinta-folha); }
 #avisos { margin: var(--e3) 0 0; padding-left: 0; list-style: none; color: var(--aviso); }
 dialog { background: var(--campo); color: var(--tinta); border: 1px solid var(--contorno); border-radius: var(--raio); max-width: 95vw; }
 dialog::backdrop { background: var(--sombra-cor); }
@@ -145,20 +148,21 @@ dialog::backdrop { background: var(--sombra-cor); }
 .tela .guia { fill: none; stroke: var(--fantasma-folha); stroke-width: calc(var(--traco) / 2); stroke-dasharray: calc(var(--traco) * 2); }
 
 /* controle de parâmetro */
-.controle { display: grid; grid-template-columns: 1fr 1.3fr 4em 20px; align-items: center; gap: var(--e2); margin: var(--e2) 0; }
+.controle { display: grid; grid-template-columns: 1fr 1.3fr 4em 24px; align-items: center; gap: var(--e2); margin: var(--e2) 0; }
 .controle > label { margin: 0; }
 .controle > input[type=range] { width: 100%; }
 .controle > input[type=number], .controle > select { grid-column: 2 / 4; width: 100%; }
 .controle > output { text-align: right; color: var(--tinta-2); font-size: var(--t-pequeno); }
 .controle > .dica { grid-column: 4; }
-.controle[data-tipo="marca"] { grid-template-columns: auto 1fr 20px; }
+.controle[data-tipo="marca"] { grid-template-columns: auto 1fr 24px; }
 .controle[data-tipo="marca"] > .dica { grid-column: 3; }
-.dica { width: 20px; height: 20px; min-height: 0; padding: 0; border-radius: 50%; font-size: var(--t-pequeno); line-height: 1; color: var(--tinta-2); }
+.dica { width: 24px; height: 24px; min-height: 0; padding: 0; border-radius: 50%; font-size: var(--t-pequeno); line-height: 1; color: var(--tinta-2); }
 
 /* popover único */
 #previa-viva { position: fixed; inset: auto; margin: 0; width: min(320px, calc(100vw - 16px)); padding: var(--e3); background: var(--campo); color: var(--tinta); border: 1px solid var(--contorno); border-radius: var(--raio); box-shadow: var(--sombra-pop); pointer-events: none; font-size: var(--t-pequeno); }
 #previa-viva .pv-cab { display: flex; justify-content: space-between; gap: var(--e2); font-size: var(--t-ui); font-weight: 600; margin-bottom: var(--e2); }
 #previa-viva .pv-cab span:last-child { font-variant-numeric: tabular-nums; color: var(--rubrica); }
+#previa-viva .pv-cab span:first-child::first-letter { text-transform: uppercase; }
 #previa-viva .pv-folha { background: var(--folha); border-radius: var(--raio); border: 2px solid transparent; }
 #previa-viva .pv-folha svg { display: block; width: 100%; height: auto; }
 #previa-viva .pv-folha.pv-sel { border-color: var(--rubrica); }
@@ -176,11 +180,20 @@ dialog::backdrop { background: var(--sombra-cor); }
 #previa-viva .pv-padrao-txt { text-align: center; color: var(--tinta-2); }
 #previa-viva .pv-ajuda { margin: var(--e2) 0 0; color: var(--tinta-2); }
 
+@media (pointer: coarse) {
+  .dica { width: 32px; height: 32px; }
+  .controle { grid-template-columns: 1fr 1.3fr 4em 32px; }
+  .controle[data-tipo="marca"] { grid-template-columns: auto 1fr 32px; }
+  #exportar .controle { grid-template-columns: auto 12em 32px; }
+}
+
 @media (max-width: 800px) {
+  header { flex-wrap: wrap; gap: var(--e2) var(--e4); padding-block: var(--e2); }
+  nav.oficinas { order: 3; flex-basis: 100%; flex-wrap: nowrap; overflow-x: auto; gap: var(--e4); margin-right: 0; }
+  #tema { margin-left: auto; }
   main { grid-template-columns: minmax(0, 1fr); grid-template-areas: "previa" "painel" "exportar"; }
   aside#painel { position: static; max-height: none; overflow: visible; }
   footer#exportar { position: static; }
-  nav.oficinas { flex-wrap: wrap; }
   #previas, #previas.comparando { grid-template-columns: minmax(0, 1fr); }
   .paginas { margin-left: 0; }
   .folha { width: calc(100% - 32px); }

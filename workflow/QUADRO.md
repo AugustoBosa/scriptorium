@@ -26,7 +26,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M18 Ornamento | FECHADO (ciclos 19–20; revisor Opus devolveu 4 bloqueantes, corrigidos e re-revisados) |
 | M19 Arcano | FECHADO (ciclos 21 e 23; revisor Opus devolveu 2 bloqueantes, corrigidos) |
 | M20 Materiais | FECHADO (ciclos 22 e 24; revisores Opus devolveram 6 bloqueantes, corrigidos e re-revisados) |
-| M21 Polimento | ABERTO |
+| M21 Polimento | FECHADO (ciclos 25–26; revisor Opus aceitou) |
 
 ## Itens do DoD comprovados
 
@@ -106,7 +106,14 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 12 | OK: M15 parte 1 (PARAMS nos 7 módulos, controle com prévia viva, tema.css, svgDocumento); 143 pass / 0 fail; goldens intactos; controle.spec 14/14; build ok. M15 segue ABERTO: falta ciclo 13 (shell + migração dos painéis) e a PARADA para aprovação |
 | 13 | OK: M15 parte 2 (shell Scriptorium, 5 oficinas, painéis migrados para controle/dica, exportação por Documento); 142 pass / 0 fail (143 menos o teste de `ajuda()` removido); goldens intactos; build ok; e2e 42/42 (smoke, controle, visual com contraste AA, claro e vela). **M15 segue ABERTO**: falta revisor e PARADA para o usuário aprovar a UI |
 
-## Retomada (2026-11-16, após M16) — LEIA ESTA PRIMEIRA
+## Retomada (2026-11-17, EXPANSÃO CONCLUÍDA) — LEIA ESTA PRIMEIRA
+
+- M13–M21 FECHADOS na branch `expansao` (sem push). `npm test` 794/0; build ok; e2e 68/68. Decisões de todos os ciclos: `workflow/ciclos/LEDGER-expansao.md`; relatórios por ciclo em `workflow/ciclos/NN/relatorio.md`.
+- **Pendências do usuário:** (1) decidir merge/push da branch `expansao` para `main`; (2) trocar a fonte do GitHub Pages para "GitHub Actions" antes do primeiro push; (3) hardware: confirmar que `M0` retoma na Mega S; P2S nunca testada (A5 não cabe na janela 207×200); calibrar no papel cinemática, fadiga, encaixe e ligações (EMSAllure/Swiss/Society).
+- **Pendências técnicas (próximo pedido):** 2-opt de blocos para a ordem de escrita (viagem 1,6–1,7× hoje); `PARES` por fonte (z da EMSSwiss); livro 2 colunas sem equilíbrio na última página; prévia viva em "Quem escreve"/"Variação" do grimório; "mostrar trajeto" otimiza a cada render; grade antiga do alfabeto passa ~10% da caixa; ogham/curvo empastam < 5 mm; habitada A/M com vinha em gravetos; Fable exige créditos (papéis dele rodaram em Opus desde o M17).
+- Ambiente: `127.0.0.1:8765` estava ocupada por processo de outra sessão; e2e rodado com config temporária `[::1]`.
+
+## Retomada (2026-11-16, após M16)
 
 - Fechados: M13 `92c9b1a`, M14 `de2b12a`, M15 `eb41202`, M16 (commit "M16: ..."). `npm test` 166/166. ~45% da expansão.
 - **Em andamento (2026-11-16):** M18: spec pronta (`workflow/ciclos/19/projeto.md`, ondas: 19-A geo → 19-B no ∥ 19-C vinha ∥ 19-D filigrana → 19-E borda ∥ 19-F capitular); 19-A ACEITA (geo.js); onda 2: 19-C vinha ACEITA (golden gravado); 19-B no ACEITA (golden gravado); 19-D filigrana ACEITA (golden gravado); onda 3: 19-E borda e 19-F capitular ACEITAS (goldens gravados). gates verdes; fichas `workflow/ciclos/19/folha-1..7.png` prontas; revisor Opus DEVOLVEU (4 bloqueantes); ciclo 20 de correção (`workflow/ciclos/20/briefs.md`): 20-A e 20-B ENTREGUES; goldens vinha+capitular regravados (560/0); fichas regeneradas; re-revisão Opus rodando; depois regravar goldens de ornamento, regenerar fichas, re-revisar — goldens de cada um gravados pelo orquestrador depois. M17: spec pronta (`workflow/ciclos/18/projeto.md`; 18-A junções ∥ 18-B cinemática → 18-C motor+PARAMS+UI ∥ 18-D testes DoD); 18-B ACEITA (cinematica.js); 18-A ACEITA (ductus.js); M17 FECHADO (commit "M17: ..."). 18-C e 18-D ACEITAS; gates verdes (554/0, build, e2e 42/42 — ver nota da porta abaixo); ficha `workflow/ciclos/18/especime.png`; revisor M17 rodando (Opus: Fable passou a exigir créditos de uso) (pacote `.superpowers/sdd/EXPANSAO/m17-review.diff`). Golden de ornamento: gravar só com `node --test --test-update-snapshots test/<arquivo>`, NUNCA `npm run golden`. Se cair: `npm test`, ver quais arquivos da onda existem e re-despachar o que faltar.
@@ -115,7 +122,8 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - Nota (2026-11-17): `127.0.0.1:8765` estava ocupada por `node recv.mjs` de outra sessão; o Vite fica em `[::1]:8765`. Se o e2e der timeout com página "ready", rodar com config temporária trocando `localhost` por `[::1]` (não versionar).
 - M19 FECHADO (commit "M19: ..."). Menores: ogham empasta < 5 mm; círculo do curvo vira borrão a 3 mm; arcano em arco ilegível (usar angular/ogham); grupo 'sigilo' em 2 módulos.
 - M20 FECHADO (commit "M20: ..."). Menores: viagem escrita 1,6–1,7× (2-opt de blocos); livro 2 colunas sem equilíbrio na última página; teste do reclamo não lê o traço; chave longe do texto; selects das notas fora da grade; Tradição de Sigilos não troca a mão.
-- **Próxima ação: M21 Polimento** (auditoria de prévias, a11y, e2e nos dois temas, desempenho A4 6 mm < 400 ms, `test/ui-smoke.md` e README, deploy). Revisor com `impeccable` + `web-design-guidelines`.
+- **M21 em andamento:** desempenho já ok (A4 6 mm: 11 ms neutra, 153 ms cheia). Auditoria pronta (`workflow/ciclos/25/auditoria.md`, 20 achados). Ciclo 25: 25-A tema/shell ACEITA, 25-B controles+painéis da mão, 25-C materiais/export/grimório ACEITA, 25-D README+ui-smoke ACEITA. 25-B ACEITA. Gates verdes (794/0, build, e2e 68/68, A4 8/148 ms). Revisor Opus M21 rodando; depois commit M21 e encerramento da expansão. Se cair: `npm test`, `git status` e re-despachar a tarefa sem entrega (seção 3 da auditoria).
+- (plano original) **M21 Polimento** (auditoria de prévias, a11y, e2e nos dois temas, desempenho A4 6 mm < 400 ms, `test/ui-smoke.md` e README, deploy). Revisor com `impeccable` + `web-design-guidelines`.
 - M18 FECHADO (commit "M18: ..."). Menores: habitada A/M com vinha em gravetos curtos soltos; vinha densidade 0,2 para em ~45% da tira; contorno de traços vizinhos se cruza.
 - Menores do M17: z da EMSSwiss sobe através da própria letra ("zinco") — precisa `PARES` por fonte; cinemática quase invisível a 10 mm (H = 0,10 baixo, calibrar no papel); Society d→i/u, Brush f→e/m/n, Swiss d/f/h→o ligam pouco e com ponte longa (rever no papel; se feio, `PARES`).
 - Ledger: `.superpowers/sdd/EXPANSAO/progress.md` (fora do git).
