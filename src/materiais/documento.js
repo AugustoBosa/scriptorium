@@ -1,8 +1,10 @@
 // Documento: papel, canetas, camadas e traços. Ponto de entrada único para o modelo de dados (M14).
 import { ROTULOS, AJUDA } from '../ajuda.js';
 import { papelMaximo } from '../maquina/perfis.js';
+import { compor } from '../layout.js';
+import { caixaDe } from '../geo.js';
 /** @typedef {[number, number][]} Traco  mm, origem no canto sup-esq do papel, y para baixo */
-/** @typedef {{id:string, caneta:string, personagem:string|null, ordem:'escrita'|'otimizada', tracos:Traco[]}} Camada */
+/** @typedef {{id:string, caneta:string, personagem:string|null, ordem:'escrita'|'otimizada', tracos:Traco[], grupos?:number[]}} Camada */
 /** @typedef {{camadas:Camada[]}} Pagina */
 /** @typedef {{largura:number, altura:number, margens:{topo:number,dir:number,base:number,esq:number}}} Papel */
 /** @typedef {{nome:string, cor:string, espessura:number}} Caneta */
@@ -31,6 +33,23 @@ export function papel(nome, { paisagem = false, margem, largura, altura } = {}) 
   return { largura: paisagem ? a : l, altura: paisagem ? l : a, margens: { topo: m, dir: m, base: m, esq: m } };
 }
 
+export const CANETAS = {
+  preta: { nome: 'preta', cor: '#1a1a1a', espessura: 0.4 },
+  vermelha: { nome: 'vermelha (rubrica)', cor: '#9b2d20', espessura: 0.4 },
+  sepia: { nome: 'sépia', cor: '#704214', espessura: 0.4 },
+  azul: { nome: 'azul', cor: '#1f3a6b', espessura: 0.4 },
+};
+
+// Escreve `texto` numa caixa {x,y,l,a}: 1ª linha de base em caixa.y + tamanho. Não encolhe; quem chama confere caixaDe.
+export function escreverEm(texto, caixa, { alinhamento = 'esquerda', tamanho }, fontes, mao) {
+  const p = { largura: 1e4, altura: 1e4, margens: { topo: 0, dir: 0, base: 0, esq: 0 } };
+  const tr = compor(texto, fontes, mao, p, { tamanho, entrelinha: 1.3 }).paginas[0];
+  const b = caixaDe(tr);
+  const dx = alinhamento === 'centro' ? caixa.x + caixa.l / 2 - (b.x + b.l / 2)
+    : alinhamento === 'direita' ? caixa.x + caixa.l - (b.x + b.l) : caixa.x - b.x;
+  return tr.map((t) => t.map(([x, y]) => [x + dx, y + caixa.y]));
+}
+
 // Ponte até os materiais migrarem (M20): embrulha Traco[][] em uma camada por página.
 export function deTracos(paginas, papelDoc, { id = 'texto', caneta = 'preta', personagem = null, ordem = 'otimizada', avisos = [] } = {}) {
   return {
@@ -50,6 +69,7 @@ export function validarDocumento(doc) {
       const onde = `página ${i + 1}, camada ${c.id}`;
       if (!doc.canetas?.[c.caneta]) erros.push(`${onde}: caneta inexistente "${c.caneta}"`);
       if (c.ordem !== 'escrita' && c.ordem !== 'otimizada') erros.push(`${onde}: ordem inválida "${c.ordem}"`);
+      if (c.grupos && !c.grupos.every((g, k) => Number.isInteger(g) && g >= 0 && g <= c.tracos.length && (k === 0 || g >= c.grupos[k - 1]))) erros.push(`${onde}: grupos fora de ordem ou do intervalo`);
       for (const [j, t] of c.tracos.entries()) {
         if (t.length < 2) erros.push(`${onde}: traço ${j + 1} com menos de 2 pontos`);
         if (!t.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))) erros.push(`${onde}: traço ${j + 1} com coordenada não finita`);

@@ -366,7 +366,7 @@ export function criar() {
     estado.pagina = folha(estado.folhaNome, estado.paisagem, estado.margem);
     let r;
     try {
-      r = comporGrimorio(estado.selecionadas, contexto(), estado.cfg, estado.pagina);
+      r = comporGrimorio(estado.selecionadas, contexto(), { ...estado.cfg, papel: estado.pagina });
       $('erro').textContent = '';
     } catch (e) {
       $('erro').textContent = `Erro ao compor: ${e.message}`;
@@ -378,7 +378,7 @@ export function criar() {
       const modo = r.modos[m.id];
       return `${m.nome}: ${modo.completo ? 'texto completo' : 'resumo'}, letra de ${modo.tamanho} mm`;
     });
-    return { paginas: r.paginas, avisos: [...linhas, ...r.avisos.map((a) => 'Aviso: ' + a)] };
+    return { ...r, avisos: [...linhas, ...r.avisos.map((a) => 'Aviso: ' + a)] };
   }
 
   const grupo = (titulo, painel, extra) => ({ titulo, ...extra, montar: (raiz, _estado, aoMudar) => painel(raiz, aoMudar) });

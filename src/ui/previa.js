@@ -3,7 +3,7 @@ import { otimizar } from '../maquina/otimizar.js';
 
 export function desenhar(el, doc, { pagina = 0, trajeto = false, otimizar: opt = true } = {}) {
   let pg = doc.paginas[pagina] ?? { camadas: [] };
-  if (trajeto && opt) pg = { ...pg, camadas: pg.camadas.map((c) => ({ ...c, tracos: otimizar(c.tracos, 0.1, { ordem: c.ordem }) })) };
+  if (trajeto && opt) pg = { ...pg, camadas: pg.camadas.map((c) => ({ ...c, tracos: otimizar(c.tracos, 0.1, { ordem: c.ordem, grupos: c.grupos }) })) };
   el.innerHTML = svgDocumento(pg, doc.papel, doc.canetas, { trajeto });
   el.style.maxWidth = `${doc.papel.largura * 4}px`; // 4 px por mm: A8 não vira cartaz
 }

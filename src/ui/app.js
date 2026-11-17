@@ -1,23 +1,21 @@
 import './tema.css';
 import { parseFonte, FONTES } from '../fonte.js';
-import { compor } from '../layout.js';
 import { PERFIS, mesclarPerfil } from '../maquina/perfis.js';
-import { papel, deTracos, PARAMS as PARAMS_DOC } from '../materiais/documento.js';
-import { resolver, novoPersonagem } from '../personagem.js';
-import { magiaVazia } from '../magia.js';
-import { sigilo, moldura, PARAMS as PARAMS_ALF } from '../arcano/alfabeto.js';
+import { papel, deTracos } from '../materiais/documento.js';
+import { novoPersonagem } from '../personagem.js';
 import { AJUDA } from '../ajuda.js';
-import { controle, ligar, dica } from './controle.js';
+import { dica } from './controle.js';
 import { desenhar, listar } from './previa.js';
 import * as pPersonagem from './personagem.js';
 import * as pFontes from './fontes.js';
 import * as pTexto from './texto.js';
 import * as pExportar from './exportar.js';
 import { criar as criarGrimorio } from './grimorio.js';
+import * as pMat from './materiais.js';
 
 const OFICINAS = { carta: 'escrita', livro: 'escrita', scroll: 'grimorio', grimorio: 'grimorio', sigilos: 'sigilos' };
 const NOMES = { carta: 'Carta', scroll: 'Scroll', grimorio: 'Grimório', livro: 'Livro', sigilos: 'Sigilos' };
-const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'variacao', 'perfilNome', 'perfil', 'otimizar', 'trajeto'];
+const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto'];
 const $ = (id) => document.getElementById(id);
 
 const lerJSON = (chave) => { try { return JSON.parse(localStorage.getItem(chave)); } catch { return null; } };
@@ -34,62 +32,51 @@ async function baixar(url) {
 function criarEscrita() {
   const estado = {
     fontes: {}, nomesFontes: FONTES, personagem: novoPersonagem(), variacao: 'normal', comparar: false, variacaoB: 'normal',
-    texto: 'Caro viajante,\n\nA neblina cobre Barovia e o castelo espera por você. Venha antes do pôr do sol.',
+    texto: 'Caro viajante,\n\nA neblina cobre {_Barovia_} e o castelo espera por você. {nota: chegar antes do anoitecer} Venha antes do pôr do sol.',
     paginaNome: 'A5', pagina: papel('A5'), opcoes: { tamanho: 6, entrelinha: 1.6, alinhamento: 'esquerda', colunas: 1 },
     perfil: structuredClone(PERFIS.megaS), perfilNome: 'megaS', otimizar: true, trajeto: false, paginaAtual: 0,
+    carta: pMat.carta0(), livro: pMat.livro0(),
   };
   try { pPersonagem.restaurar(estado); } catch { /* usa personagem novo */ }
   const salvo = lerJSON('writer.perfil');
   if (salvo && typeof salvo === 'object') { estado.perfil = mesclarPerfil(salvo); estado.perfilNome = 'personalizado'; }
-  const comVariacao = (v) => compor(estado.texto, estado.fontes, resolver(estado.personagem, v || null), estado.pagina, estado.opcoes);
   return {
     estado,
     grupos: [
       { titulo: 'Personagem', montar: pPersonagem.montar },
-      { titulo: 'Fontes', montar: pFontes.montar },
-      { titulo: 'Texto', montar: pTexto.montar },
+      { titulo: 'Texto', fechado: true, montar: pTexto.montar },
+      { titulo: 'Notas', so: 'carta', aberto: true, montar: pMat.montarCarta },
+      { titulo: 'Fontes', aberto: true, montar: pFontes.montar },
+      { titulo: 'Livro', so: 'livro', aberto: true, montar: pMat.montarLivro },
       { titulo: 'Papel e aparência', montar: pTexto.montarPapel },
       { titulo: 'Máquina', nivel: 'avancado', montar: pExportar.montar },
     ],
     entrar(oficina) { estado.opcoes.colunas = oficina === 'livro' ? (estado.colunasLivro ?? 2) : 1; },
-    compor: () => comVariacao(estado.variacao),
-    composB: () => comVariacao(estado.variacaoB),
+    compor: () => pMat.comporEscrita(estado, estado.variacao),
+    composB: () => pMat.comporEscrita(estado, estado.variacaoB),
     barra: pExportar.montarBarra,
   };
 }
 
 function criarSigilos() {
-  const estado = { papelNome: 'A6', paisagem: false, estilo: { seed: 1, curva: 0.4, complexidade: 0.5 }, perfil: structuredClone(PERFIS.megaS) };
-  const exemplo = { ...magiaVazia(), id: 'exemplo', nivel: 3, escola: 'V', comp: 'V, S, M' };
-  const P = Object.fromEntries([...PARAMS_DOC, ...PARAMS_ALF].map((p) => [p.chave, p]));
-  const ctx = () => ({ papel: estado.pagina, perfil: estado.perfil, estilo: estado.estilo, magia: exemplo });
-  const grupo = (titulo, itens) => ({
-    titulo,
-    montar(div, _e, aoMudar) {
-      const cs = itens.map(([chave, est]) => controle(P[chave], est, aoMudar));
-      div.append(...cs.map((c) => c.el));
-      return () => cs.forEach((c) => c.atualizar());
-    },
-  });
+  const estado = {
+    papelNome: 'A6', paisagem: false, largura: 148, altura: 210, estilo: { seed: 1, curva: 0.4, complexidade: 0.5 }, sig: pMat.sigilos0(),
+    personagem: novoPersonagem(), fontes: {}, perfil: structuredClone(PERFIS.megaS), perfilNome: 'megaS', otimizar: true, trajeto: false, paginaAtual: 0,
+  };
+  try { pPersonagem.restaurar(estado); } catch { /* usa personagem novo */ }
+  const salvo = lerJSON('writer.perfil');
+  if (salvo && typeof salvo === 'object') { estado.perfil = mesclarPerfil(salvo); estado.perfilNome = 'personalizado'; }
   estado.pagina = papel('A6');
   return {
     estado,
     grupos: [
-      grupo('Folha', [
-        ['papel', { ler: () => estado.papelNome, gravar: (v) => { estado.papelNome = v; }, ctx }],
-        ['paisagem', ligar(estado, 'paisagem', ctx)],
-      ]),
-      grupo('Tradição', ['seed', 'curva', 'complexidade'].map((c) => [c, ligar(estado.estilo, c, ctx)])),
+      { titulo: 'Folha', montar: pMat.montarFolha },
+      { titulo: 'Sigilos', montar: pMat.montarSigilos },
+      { titulo: 'Tradição', montar: pMat.montarTradicao },
+      { titulo: 'Máquina', nivel: 'avancado', montar: pExportar.montar },
     ],
     entrar() {},
-    compor() {
-      const p = estado.pagina = papel(estado.papelNome, { paisagem: estado.paisagem, largura: 148, altura: 210 });
-      const { topo, dir, base, esq } = p.margens;
-      const r = Math.min(p.largura - esq - dir, p.altura - topo - base) * 0.35;
-      const cx = esq + (p.largura - esq - dir) / 2, cy = topo + (p.altura - topo - base) / 2;
-      const s = sigilo(exemplo, estado.estilo.seed).map((t) => t.map(([x, y]) => [cx + x * r, cy + y * r]));
-      return { paginas: [[...moldura(p), ...s]], avisos: ['Em breve: esta oficina ainda está em construção.'] };
-    },
+    compor: () => pMat.comporDeSigilos(estado),
     barra: pExportar.montarBarra,
   };
 }
@@ -113,8 +100,9 @@ function renderizar() {
     $('erro').textContent = `Erro: ${err.message}`;
     return;
   }
-  e.doc = deTracos(r.paginas.length ? r.paginas : [[]], e.pagina, { avisos: r.avisos });
-  const docB = rB && deTracos(rB.paginas, e.pagina, { avisos: rB.avisos });
+  const emDoc = (x) => (x.paginas[0]?.camadas ? x : deTracos(x.paginas.length ? x.paginas : [[]], e.pagina, { avisos: x.avisos }));
+  e.doc = emDoc(r);
+  const docB = rB && emDoc(rB);
 
   const total = Math.max(1, r.paginas.length, rB?.paginas.length ?? 0);
   e.paginaAtual = Math.min(Math.max(0, e.paginaAtual), total - 1);
@@ -163,8 +151,9 @@ function montarVista(inst) {
     const d = document.createElement('details'), s = document.createElement('summary'), corpo = document.createElement('div');
     s.textContent = g.titulo;
     d.append(s, corpo);
-    d.open = i < 2;
+    d.open = (i < 2 && !g.fechado) || !!g.aberto;
     if (g.nivel === 'avancado') d.dataset.nivel = 'avancado';
+    if (g.so) d.dataset.so = g.so;
     $('grupos').append(d);
     v.detalhes.push(d);
     v.atualizar.push(g.montar(corpo, inst.estado, aoMudar));
@@ -188,7 +177,7 @@ async function rotear() {
   if (!vistas.has(inst)) montarVista(inst);
   for (const [i, v] of vistas) {
     v.barra.hidden = i !== inst;
-    v.detalhes.forEach((d) => { d.hidden = i !== inst; });
+    v.detalhes.forEach((d) => { d.hidden = i !== inst || (!!d.dataset.so && d.dataset.so !== id); });
   }
   atual = inst;
   document.querySelectorAll('nav.oficinas a').forEach((a) => (a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));

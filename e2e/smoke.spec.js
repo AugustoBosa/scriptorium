@@ -31,7 +31,7 @@ test('personagem salvo aparece no select de salvos', async ({ page }) => {
     localStorage.setItem('writer.personagens', JSON.stringify({ Teste: p }))
   })
   await page.goto('index.html')
-  await expect(page.locator('#painel option', { hasText: 'Teste' })).toBeAttached()
+  await expect(page.locator('#painel option', { hasText: 'Teste' }).first()).toBeAttached()
 })
 
 test('Avançado mostra parâmetros avançados; Básico os esconde', async ({ page }) => {

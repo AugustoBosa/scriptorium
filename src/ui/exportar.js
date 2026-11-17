@@ -9,6 +9,7 @@ import { controle, dica, ligar } from './controle.js';
 const PP = Object.fromEntries(PARAMS_PERFIL.map((p) => [p.chave, p]));
 const PO = Object.fromEntries(PARAMS_OTIM.map((p) => [p.chave, p]));
 const CHAVE_PERFIL = 'writer.perfil';
+const ROTULO_CAMADA = { texto: 'texto', notas: 'notas', paginacao: 'paginação', iluminura: 'iluminura', rubrica: 'rubrica (vermelha)', moldura: 'moldura', sigilo: 'sigilo' };
 
 const ctxDe = (estado) => () => ({
   fontes: estado.fontes,
@@ -24,17 +25,23 @@ function baixar(conteudo, nome, tipo) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// Página do documento com cada camada reordenada conforme a opção "otimizar".
+// Página do documento com cada camada reordenada conforme a opção "otimizar" (sem otimizar: ordem crua, sem grupos).
 function paginaOtimizada(estado, i) {
   const pag = estado.doc.paginas[i];
-  return { ...pag, camadas: pag.camadas.map((c) => ({ ...c, tracos: otimizar(c.tracos, 0.1, { ordem: estado.otimizar ? c.ordem : 'escrita' }) })) };
+  return { ...pag, camadas: pag.camadas.map((c) => ({ ...c, tracos: otimizar(c.tracos, 0.1, { ordem: estado.otimizar ? c.ordem : 'escrita', grupos: estado.otimizar ? c.grupos : undefined }) })) };
 }
 
-// G-code da página i, ou { erro } quando a máquina não pode plotar.
-function gerarGcode(estado, i) {
+// Camada escolhida na barra, se a página i tem essa camada; senão, todas (undefined).
+function escolhida(estado, i) {
+  const ids = estado.doc.paginas[i]?.camadas.map((c) => c.id) ?? [];
+  return ids.includes(estado.camada) ? [estado.camada] : undefined;
+}
+
+// G-code da página i (só `camadas`, se dadas), ou { erro } quando a máquina não pode plotar.
+function gerarGcode(estado, i, camadas) {
   try {
     const doc = estado.doc;
-    const g = gcodeDocumento(paginaOtimizada(estado, i), doc.papel, estado.perfil, { canetas: doc.canetas });
+    const g = gcodeDocumento(paginaOtimizada(estado, i), doc.papel, estado.perfil, { canetas: doc.canetas, camadas });
     if (estado.perfil.experimental && g.avisos.some((a) => a.includes('fora da janela'))) {
       return { g, erro: 'Perfil experimental: há traços fora da janela da máquina.' };
     }
@@ -121,14 +128,22 @@ export function montarBarra(elemento, estado, aoMudar) {
     b.addEventListener('click', aoClicar);
     return b;
   };
-  const nome = (i, ext) => `${estado.oficina ?? 'escrita'}-p${i + 1}.${ext}`;
-  const baixarSvg = (i) => baixar(svgDocumento(paginaOtimizada(estado, i), estado.doc.papel, estado.doc.canetas), nome(i, 'svg'), 'image/svg+xml');
+  // Nome com a camada só quando a exportação é de uma camada (ex.: carta-p1-notas.svg).
+  const nome = (i, ext, camadas) => `${estado.oficina ?? 'escrita'}-p${i + 1}${camadas ? `-${camadas[0]}` : ''}.${ext}`;
+  const baixarSvg = (i, camadas) => baixar(svgDocumento(paginaOtimizada(estado, i), estado.doc.papel, estado.doc.canetas, { camadas }), nome(i, 'svg', camadas), 'image/svg+xml');
 
-  const bSvg = botao('Baixar SVG', () => baixarSvg(estado.paginaAtual));
+  // Camada: select com as camadas da página atual; "todas" = sem filtro. Os botões "Todas as páginas" exportam todas as camadas.
+  const camada = document.createElement('select');
+  camada.addEventListener('change', () => { estado.camada = camada.value; aoMudar(); });
+  const rotuloCamada = document.createElement('label');
+  rotuloCamada.append('Camada ', camada);
+
+  const bSvg = botao('Baixar SVG', () => baixarSvg(estado.paginaAtual, escolhida(estado, estado.paginaAtual)));
   const bGcode = botao('Baixar G-code', () => {
-    const r = gerarGcode(estado, estado.paginaAtual);
+    const cam = escolhida(estado, estado.paginaAtual);
+    const r = gerarGcode(estado, estado.paginaAtual, cam);
     if (r.erro) { erro.textContent = r.erro; return; }
-    baixar(r.g.texto, nome(estado.paginaAtual, 'gcode'), 'text/plain');
+    baixar(r.g.texto, nome(estado.paginaAtual, 'gcode', cam), 'text/plain');
   }, 'primario');
   const bTodosSvg = botao('Todos os SVG', () => estado.doc.paginas.forEach((_, i) => baixarSvg(i)));
   const bTodosGcode = botao('Todos os G-code', () => {
@@ -142,17 +157,23 @@ export function montarBarra(elemento, estado, aoMudar) {
   sumario.textContent = 'Todas as páginas';
   todas.append(sumario, bTodosSvg, bTodosGcode);
 
-  elemento.replaceChildren(seletor.el, resumo, erro, bSvg, bGcode, todas);
+  elemento.replaceChildren(seletor.el, rotuloCamada, resumo, erro, bSvg, bGcode, todas);
 
   return function atualizar() {
     seletor.atualizar();
     const doc = estado.doc;
+    const ids = doc?.paginas[estado.paginaAtual]?.camadas.map((c) => c.id) ?? [];
+    if (camada.dataset.ids !== ids.join('|')) {
+      camada.replaceChildren(new Option('todas', 'todas'), ...ids.map((v) => new Option(ROTULO_CAMADA[v] ?? v, v)));
+      camada.dataset.ids = ids.join('|');
+    }
+    camada.value = ids.includes(estado.camada) ? estado.camada : 'todas';
     const vazio = !doc || !doc.paginas.some((p) => p.camadas.some((c) => c.tracos.length));
     bSvg.disabled = bTodosSvg.disabled = vazio;
     let bloqueado = vazio, texto = vazio && doc ? 'Nada para plotar ainda' : '—';
     erro.textContent = '';
     if (!vazio) {
-      const r = gerarGcode(estado, estado.paginaAtual);
+      const r = gerarGcode(estado, estado.paginaAtual, escolhida(estado, estado.paginaAtual));
       if (r.g) texto = `${r.g.nTracos} traços · ${(r.g.comprimento / 1000).toFixed(1).replace('.', ',')} m`;
       if (r.erro) { erro.textContent = r.erro; bloqueado = true; }
     }

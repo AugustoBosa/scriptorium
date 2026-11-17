@@ -5,7 +5,7 @@ import { NEUTRA } from '../src/motor/mao.js';
 import { compor, PAGINAS } from '../src/layout.js';
 import { normalizar } from '../src/magia.js';
 import { gerarAlfabeto, sigilo } from '../src/arcano/alfabeto.js';
-import { comporGrimorio, folha } from '../src/materiais/scroll.js';
+import { paginasGrimorio as comporGrimorio, folha } from '../src/materiais/scroll.js';
 import { gcode } from '../src/maquina/gcode.js';
 import { otimizar } from '../src/maquina/otimizar.js';
 

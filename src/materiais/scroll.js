@@ -3,7 +3,7 @@ import { compor } from '../layout.js';
 import { glifo } from '../motor/mao.js';
 import { blocos } from '../magia.js';
 import { cifrar, sigilo, moldura, LETRAS } from '../arcano/alfabeto.js';
-import { PAPEIS, papel } from './documento.js';
+import { PAPEIS, papel, CANETAS } from './documento.js';
 
 // [largura, altura, margem] em mm.
 export const FOLHAS = Object.fromEntries(['A5', 'A6', 'A7', 'A8'].map((n) => [n, PAPEIS[n]]));
@@ -18,6 +18,9 @@ export const CFG_PADRAO = {
   porPagina: true,        // true = um scroll por página; false = grimório, as magias fluem
   chave: false,           // acrescenta a página com a chave do alfabeto
 };
+
+// ponytail: WeakSet por identidade em vez de reestruturar; vale enquanto os traços não forem copiados no caminho.
+const SIGILO = new WeakSet(), MOLDURA = new WeakSet();
 
 // ctx = { fontes (inclui 'arcano'), mao, maoArcana, sigilos: { id: traços desenhados à mão }, seed }
 // Devolve { pags: [traços por página], fim } começando em `topo` na primeira página.
@@ -47,7 +50,9 @@ function comporMagia(m, ctx, cfg, pagina, topo, { tamanho, completo, sigilo: com
     if (y + d > limite && y > margens.topo) { pags.push([]); y = margens.topo; }
     const cx = margens.esq + W / 2, cy = y + d / 2;
     const tr = ctx.sigilos?.[m.id] ?? sigilo(m, ctx.seed);
-    pags[pags.length - 1].push(...tr.map((t) => t.map(([x, yy]) => [cx + (x * d) / 2, cy + (yy * d) / 2])));
+    const pos = tr.map((t) => t.map(([x, yy]) => [cx + (x * d) / 2, cy + (yy * d) / 2]));
+    for (const t of pos) SIGILO.add(t);
+    pags[pags.length - 1].push(...pos);
     y += d + tamanho * 0.5;
   }
   bloco('ficha', tamanho, 'esquerda');
@@ -91,7 +96,7 @@ function chave(ctx, cfg, pagina) {
 }
 
 // Devolve { paginas: [traços], avisos, modos: { id: { tamanho, completo, sigilo, cabe } } }.
-export function comporGrimorio(magias, ctx, cfgParcial, pagina) {
+export function paginasGrimorio(magias, ctx, cfgParcial, pagina) {
   const cfg = { ...CFG_PADRAO, ...cfgParcial, cifrar: { ...CFG_PADRAO.cifrar, ...cfgParcial?.cifrar } };
   const { margens } = pagina;
   const paginas = [];
@@ -115,9 +120,28 @@ export function comporGrimorio(magias, ctx, cfgParcial, pagina) {
     y = r.fim;
   }
   if (cfg.chave) paginas.push(...chave(ctx, cfg, pagina));
-  if (cfg.moldura) for (const p of paginas) p.push(...moldura(pagina));
+  if (cfg.moldura) for (const p of paginas) { const m = moldura(pagina); for (const t of m) MOLDURA.add(t); p.push(...m); }
   return { paginas, avisos: [...new Set(avisos)], modos };
 }
+
+// Grimório como Documento: 3 camadas por página (texto, moldura, sigilo em caneta vermelha). cfg.papel obrigatório.
+export function comporGrimorio(magias, ctx, cfg) {
+  const r = paginasGrimorio(magias, ctx, cfg, cfg.papel);
+  const vermelha = cfg.rubrica === false ? 'preta' : 'vermelha';
+  const camada = (id, caneta, p, f) => ({ id, caneta, personagem: null, ordem: 'otimizada', tracos: p.filter(f) });
+  return {
+    papel: cfg.papel,
+    canetas: { preta: CANETAS.preta, ...(vermelha === 'vermelha' && { vermelha: CANETAS.vermelha }) },
+    paginas: r.paginas.map((p) => ({ camadas: [
+      camada('texto', 'preta', p, (t) => !SIGILO.has(t) && !MOLDURA.has(t)),
+      camada('moldura', 'preta', p, (t) => MOLDURA.has(t)),
+      camada('sigilo', vermelha, p, (t) => SIGILO.has(t)),
+    ] })),
+    avisos: r.avisos,
+    modos: r.modos,
+  };
+}
+export const comporScroll = (magias, ctx, cfg) => comporGrimorio(magias, ctx, { ...cfg, porPagina: true });
 
 // Parâmetros editáveis. Prévia: papel (retângulo em mm) com o que o parâmetro desenha, ou a escrita de uma palavra.
 const ret = (l, a) => [[0, 0], [l, 0], [l, a], [0, a], [0, 0]];

@@ -1,0 +1,31 @@
+[carta anotada A5] páginas=1 validar=ok
+[conector linha] páginas=1 validar=ok
+[conector chave] páginas=1 validar=ok
+[conector seta] páginas=1 validar=ok
+folha 1 gravada: 300x240 mm
+[espontâneo espontâneo 0] páginas=1 validar=ok
+[espontâneo espontâneo 0,5] páginas=1 validar=ok
+[espontâneo espontâneo 1] páginas=1 validar=ok
+[espontâneo diário (margem esq.)] páginas=1 validar=ok
+folha 2 gravada: 470x290 mm
+[livro 1 coluna, lombarda, vinha] páginas=4 validar=ok
+[livro 2 colunas, habitada] páginas=3 validar=ok
+folha 3 gravada: 520x370 mm
+[sigilos selo] páginas=1 validar=ok
+[sigilos sigilo] páginas=1 validar=ok
+[sigilos circulo] páginas=1 validar=ok
+folha 4 gravada: 490x260 mm
+[grimório A6] páginas=1 validar=ok
+--- viagem e trocas ---
+viagem no ar (mm), partindo de (0,0). escrita = otimizar(ordem escrita, grupos); otimizada = otimizar() padrão.
+material p#  traços  crua    escrita   otimizada  escrita÷otim  trocas(preta→vermelha)
+carta p1        351    1541      1397        807          1,73 ACIMA 1,5×  1
+livro 1c p1     849    2574      2263       1365          1,66 ACIMA 1,5×  1
+livro 1c p2     897    2671      2330       1397          1,67 ACIMA 1,5×  1
+livro 1c p3     903    2676      2364       1427          1,66 ACIMA 1,5×  1
+livro 1c p4     130     386       351        228          1,54 ACIMA 1,5×  1
+livro 2c p1    1033    3230      2808       1704          1,65 ACIMA 1,5×  1
+livro 2c p2    1050    3302      2843       1765          1,61 ACIMA 1,5×  1
+livro 2c p3     696    2191      1874       1157          1,62 ACIMA 1,5×  1
+grimório p1       -       -         -          -             -  trocas 1
+folha 5 gravada: 470x244.6 mm

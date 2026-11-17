@@ -11,8 +11,30 @@ export function viagem(tracos) {
   return total;
 }
 
+// Escrita com grupos: blocos de palavra, guloso pela 1ª ponta mais perto; nunca inverte nem reordena dentro do bloco.
+// ponytail: só guloso; 2-opt de blocos sem inversão se a viagem pesar
+function blocosEscrita(tracos, grupos) {
+  const cortes = [0, ...grupos, tracos.length];
+  const rest = [];
+  for (let i = 0; i < cortes.length - 1; i++) {
+    const b = tracos.slice(cortes[i], cortes[i + 1]).filter(valido).map((t) => t.map((p) => [...p]));
+    if (b.length) rest.push(b);
+  }
+  const saida = [];
+  let pos = [0, 0];
+  while (rest.length) {
+    let m = 0;
+    rest.forEach((b, i) => { if (dist(pos, b[0][0]) < dist(pos, rest[m][0][0])) m = i; });
+    const [b] = rest.splice(m, 1);
+    saida.push(...b);
+    pos = b[b.length - 1].at(-1);
+  }
+  return saida;
+}
+
 // ponytail: guloso + 2-opt; completo até 2000 traços, janela de 50 acima (custo O(n²): 2465 traços ~2 s, 7600 ~30 s, travaria a prévia); até 5 passadas; Or-opt se a viagem ainda pesar
-export function otimizar(tracos, tol = 0.1, { janela, ordem = 'otimizada' } = {}) {
+export function otimizar(tracos, tol = 0.1, { janela, ordem = 'otimizada', grupos } = {}) {
+  if (ordem === 'escrita' && grupos) return blocosEscrita(tracos, grupos);
   if (ordem === 'escrita') return tracos.filter(valido).map((t) => t.map((p) => [...p]));
   const restantes = tracos.filter(valido).map((t) => t.map((p) => [...p]));
   let seq = [];

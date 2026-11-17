@@ -76,6 +76,7 @@ export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, 
   for (const camada of pagina.camadas.filter((k) => !camadas || camadas.includes(k.id))) {
     const validos = camada.tracos.filter(valido);
     if (!validos.length) continue;
+    const id = String(camada.id).replace(/[\r\n]/g, ' ');
     const nome = (canetas[camada.caneta]?.nome ?? camada.caneta).replace(/[\r\n]/g, ' ');
     if (anterior !== null && camada.caneta !== anterior) {
       texto += `G0 Z${e.z} F${fZ}\nG0 X${e.x.toFixed(3)} Y${e.y.toFixed(3)} F${fViagem}\n`;
@@ -83,10 +84,10 @@ export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, 
       trocas++;
     }
     anterior = camada.caneta;
-    texto += `; camada ${camada.id} caneta ${nome}\n`;
+    texto += `; camada ${id} caneta ${nome}\n`;
     validos.forEach((t, i) => {
       const maq = t.map(([x, y]) => [j.x0 + perfil.offsetX + x, j.y0 + perfil.offsetY + (papel.altura - y)]);
-      if (maq.some(([x, y]) => x < j.x0 || x > j.x1 || y < j.y0 || y > j.y1)) avisos.push(`camada ${camada.id}: traço ${i + 1} fora da janela`);
+      if (maq.some(([x, y]) => x < j.x0 || x > j.x1 || y < j.y0 || y > j.y1)) avisos.push(`camada ${id}: traço ${i + 1} fora da janela`);
       const [ini, ...resto] = maq;
       texto += `G0 X${ini[0].toFixed(3)} Y${ini[1].toFixed(3)} F${fViagem}\nG1 Z${zEscrita} F${fZ}\n`;
       for (const [x, y] of resto) texto += `G1 X${x.toFixed(3)} Y${y.toFixed(3)} F${fDesenho}\n`;

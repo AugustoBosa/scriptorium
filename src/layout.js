@@ -48,6 +48,7 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
 
   const r = rng(mao.seed + '|tremor');
   const paginas = [[]];
+  const grupos = [[]]; // por página: índice do 1º traço de cada palavra (mesma ordem das âncoras)
   const ancoras = [];
   // opcoes.topo: onde a primeira página começa (blocos empilhados); as seguintes voltam à margem.
   const cur = { pag: 0, col: 0, k: 0, topo: opcoes.topo ?? margens.topo };
@@ -60,7 +61,7 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
     cur.k = 0;
     if (++cur.col === cols.length) {
       cur.col = 0; cur.pag++; cans *= 0.5; cur.topo = margens.topo; fimPag = -Infinity;
-      paginas.push([]);
+      paginas.push([]); grupos.push([]);
     }
     return true;
   };
@@ -99,6 +100,7 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
     if (alinhamento === 'centro') x += (v.W - L.w) / 2;
     L.pals.forEach((w, i) => {
       if (i > 0) x += espaco + extra;
+      grupos[v.pag].push(pag.length);
       ancoras.push({ pagina: v.pag, coluna: v.col, linha: v.k, indice: w.indice, texto: w.texto, x, y: v.y, l: w.largura });
       const dyW = w.dy + w.F * 0.25 * tamanho * (x - v.x0) / v.W; // base ondulante; fadiga faz a linha cair
       const ponto = ([px, py]) => {
@@ -167,7 +169,7 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
 
   // fim: linha de base da última linha escrita (a maior entre as colunas da última página).
   const fim = cur.k > 0 ? Math.max(fimPag, base(cur.k - 1)) : (fimPag > -Infinity ? fimPag : cur.topo);
-  return { paginas, avisos, fim, ancoras };
+  return { paginas, avisos, fim, ancoras, grupos };
 }
 
 const FOLHA_AMOSTRA = { largura: 60, altura: 40, margens: { topo: 2, dir: 2, base: 2, esq: 2 } };

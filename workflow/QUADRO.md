@@ -25,7 +25,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M17 Motor II: ductus | FECHADO (ciclo 18; revisor Opus aceitou com PARES v/w) |
 | M18 Ornamento | FECHADO (ciclos 19–20; revisor Opus devolveu 4 bloqueantes, corrigidos e re-revisados) |
 | M19 Arcano | FECHADO (ciclos 21 e 23; revisor Opus devolveu 2 bloqueantes, corrigidos) |
-| M20 Materiais | ABERTO |
+| M20 Materiais | FECHADO (ciclos 22 e 24; revisores Opus devolveram 6 bloqueantes, corrigidos e re-revisados) |
 | M21 Polimento | ABERTO |
 
 ## Itens do DoD comprovados
@@ -114,7 +114,8 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - Menores do M16: encaixe em EMSBird só abre avanço (~8% mais largo; conferir EMSAllure no papel); fadiga sempre chega ao máximo no fim do texto (calibrar no papel).
 - Nota (2026-11-17): `127.0.0.1:8765` estava ocupada por `node recv.mjs` de outra sessão; o Vite fica em `[::1]:8765`. Se o e2e der timeout com página "ready", rodar com config temporária trocando `localhost` por `[::1]` (não versionar).
 - M19 FECHADO (commit "M19: ..."). Menores: ogham empasta < 5 mm; círculo do curvo vira borrão a 3 mm; arcano em arco ilegível (usar angular/ogham); grupo 'sigilo' em 2 módulos.
-- M20 (Materiais): conselheiro Opus escrevendo `workflow/ciclos/22/projeto.md` (em paralelo ao fechamento do M19). Se cair: conferir seções 1–9; senão re-despachar.
+- M20 FECHADO (commit "M20: ..."). Menores: viagem escrita 1,6–1,7× (2-opt de blocos); livro 2 colunas sem equilíbrio na última página; teste do reclamo não lê o traço; chave longe do texto; selects das notas fora da grade; Tradição de Sigilos não troca a mão.
+- **Próxima ação: M21 Polimento** (auditoria de prévias, a11y, e2e nos dois temas, desempenho A4 6 mm < 400 ms, `test/ui-smoke.md` e README, deploy). Revisor com `impeccable` + `web-design-guidelines`.
 - M18 FECHADO (commit "M18: ..."). Menores: habitada A/M com vinha em gravetos curtos soltos; vinha densidade 0,2 para em ~45% da tira; contorno de traços vizinhos se cruza.
 - Menores do M17: z da EMSSwiss sobe através da própria letra ("zinco") — precisa `PARES` por fonte; cinemática quase invisível a 10 mm (H = 0,10 baixo, calibrar no papel); Society d→i/u, Brush f→e/m/n, Swiss d/f/h→o ligam pouco e com ponte longa (rever no papel; se feio, `PARES`).
 - Ledger: `.superpowers/sdd/EXPANSAO/progress.md` (fora do git).
