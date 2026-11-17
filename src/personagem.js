@@ -13,7 +13,7 @@ export function resolver(p, variacao) {
 }
 
 // Chaves que personagens antigos podem não ter (a mão é completada com NEUTRA ao compor).
-const OPCIONAIS = ['alternativas', 'contexto', 'arremate', 'ondulacao', 'deriva', 'ritmo', 'fadiga'];
+const OPCIONAIS = ['alternativas', 'contexto', 'arremate', 'ondulacao', 'deriva', 'ritmo', 'fadiga', 'ligadura', 'adiamento', 'fluidez', 'ultrapassagem', 'retoque'];
 
 // Lista de erros de um personagem; vazia = ok. Não verifica se a fonte existe em disco.
 export function validar(p) {

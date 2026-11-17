@@ -113,3 +113,13 @@ test('validar: faixas das chaves novas e variação de identidade', () => {
   assert.deepEqual(validar({ ...ok, variacoes: { ...ok.variacoes, cansada: { fadiga: 0.5 } } }), []);
   assert.ok(validar({ ...ok, variacoes: { ...ok.variacoes, v: { alternativas: 3 } } }).some((e) => /identidade/.test(e)));
 });
+
+test('validar: 5 chaves do ductus são opcionais, faixa [0,1], variação de identidade recusada', () => {
+  const ok = strahdLike();
+  for (const k of ['ligadura', 'adiamento', 'fluidez', 'ultrapassagem', 'retoque']) delete ok.mao[k];
+  assert.deepEqual(validar(ok), []);
+  const com = (k, v) => validar({ ...strahdLike(), mao: { ...strahdLike().mao, [k]: v } });
+  assert.ok(com('ligadura', 2).length >= 1);
+  assert.deepEqual(validar({ ...strahdLike(), variacoes: { v: { fluidez: 0.5 } } }), []);
+  assert.ok(validar({ ...strahdLike(), variacoes: { v: { ligadura: 1 } } }).some((e) => /identidade/.test(e)));
+});

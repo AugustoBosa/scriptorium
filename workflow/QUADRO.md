@@ -22,7 +22,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M14 Documento, máquinas, papel | FECHADO (ciclo 11; gates verdes; revisor Fable aceitou sem bloqueante) |
 | M15 Identidade + oficinas (PARADA para aprovação do usuário) | FECHADO (aprovado pelo usuário em 2026-11-16 com "continue"; ciclos 12–14; gates verdes; revisor devolveu 3 bloqueantes, corrigidos no ciclo 14) |
 | M16 Motor I: contexto | FECHADO (ciclos 15–17; revisor devolveu 1 bloqueante, corrigido no 17) |
-| M17 Motor II: ductus | ABERTO |
+| M17 Motor II: ductus | FECHADO (ciclo 18; revisor Opus aceitou com PARES v/w) |
 | M18 Ornamento | ABERTO |
 | M19 Arcano | ABERTO |
 | M20 Materiais | ABERTO |
@@ -109,9 +109,11 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 ## Retomada (2026-11-16, após M16) — LEIA ESTA PRIMEIRA
 
 - Fechados: M13 `92c9b1a`, M14 `de2b12a`, M15 `eb41202`, M16 (commit "M16: ..."). `npm test` 166/166. ~45% da expansão.
-- **Próxima ação:** M17 (Motor II: ductus — junções, adiamento de pingos/cortes, cinemática, retoques). Conselheiro Fable (tabela de junção + spike de cinemática) → spec em `workflow/ciclos/18/projeto.md`. Trilha de ornamento (M18/M19) pode intercalar (pastas disjuntas: `src/ornamento/`, `src/arcano/`).
+- **Em andamento (2026-11-16):** M18: spec pronta (`workflow/ciclos/19/projeto.md`, ondas: 19-A geo → 19-B no ∥ 19-C vinha ∥ 19-D filigrana → 19-E borda ∥ 19-F capitular); 19-A ACEITA (geo.js); onda 2: 19-C vinha ACEITA (golden gravado); 19-B no ACEITA (golden gravado); 19-D filigrana ACEITA (golden gravado); onda 3: 19-E borda e 19-F capitular ACEITAS (goldens gravados). gates verdes; fichas `workflow/ciclos/19/folha-1..7.png` prontas; revisor Opus M18 rodando (pacote `.superpowers/sdd/EXPANSAO/m18-review.diff`) — goldens de cada um gravados pelo orquestrador depois. M17: spec pronta (`workflow/ciclos/18/projeto.md`; 18-A junções ∥ 18-B cinemática → 18-C motor+PARAMS+UI ∥ 18-D testes DoD); 18-B ACEITA (cinematica.js); 18-A ACEITA (ductus.js); M17 FECHADO (commit "M17: ..."). 18-C e 18-D ACEITAS; gates verdes (554/0, build, e2e 42/42 — ver nota da porta abaixo); ficha `workflow/ciclos/18/especime.png`; revisor M17 rodando (Opus: Fable passou a exigir créditos de uso) (pacote `.superpowers/sdd/EXPANSAO/m17-review.diff`). Golden de ornamento: gravar só com `node --test --test-update-snapshots test/<arquivo>`, NUNCA `npm run golden`. Se cair: `npm test`, ver quais arquivos da onda existem e re-despachar o que faltar.
 - M16 entregou: `src/motor/contexto.js` (variante, deformar, encaixe, arrematar), `src/motor/escrita.js` (`escreverPalavra`), `ruido1d`, 7 params novos neutros (alternativas, contexto, arremate, ondulacao, deriva, ritmo, fadiga) com prévia; goldens `golden.test.mjs` + `golden-layout.test.mjs` intactos. Ficha: `workflow/ciclos/16/especime.png`.
 - Menores do M16: encaixe em EMSBird só abre avanço (~8% mais largo; conferir EMSAllure no papel); fadiga sempre chega ao máximo no fim do texto (calibrar no papel).
+- Nota (2026-11-17): `127.0.0.1:8765` estava ocupada por `node recv.mjs` de outra sessão; o Vite fica em `[::1]:8765`. Se o e2e der timeout com página "ready", rodar com config temporária trocando `localhost` por `[::1]` (não versionar).
+- Menores do M17: z da EMSSwiss sobe através da própria letra ("zinco") — precisa `PARES` por fonte; cinemática quase invisível a 10 mm (H = 0,10 baixo, calibrar no papel); Society d→i/u, Brush f→e/m/n, Swiss d/f/h→o ligam pouco e com ponte longa (rever no papel; se feio, `PARES`).
 - Ledger: `.superpowers/sdd/EXPANSAO/progress.md` (fora do git).
 
 ## Retomada (ciclo 13 aceito)

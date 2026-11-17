@@ -5,8 +5,8 @@ import { PARAMS } from '../motor/mao.js';
 import { amostra } from '../layout.js';
 
 const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
-const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate'];
-const CHAVES_EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo', 'ondulacao', 'deriva', 'ritmo', 'fadiga'];
+const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate', 'ligadura', 'adiamento'];
+const CHAVES_EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo', 'ondulacao', 'deriva', 'ritmo', 'fadiga', 'fluidez', 'ultrapassagem', 'retoque'];
 
 function slug(nome) {
   return (nome || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()

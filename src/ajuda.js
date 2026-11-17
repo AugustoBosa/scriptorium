@@ -53,6 +53,11 @@ export const AJUDA = {
   deriva: 'Deixa o tamanho e a inclinação das letras mudarem aos poucos ao longo do texto, e a margem esquerda andar de linha em linha.',
   ritmo: 'Distância, em milímetros, que a ondulação e a deriva levam para mudar. Valor baixo: mudança rápida e nervosa. Valor alto: mudança lenta.',
   fadiga: 'Cansaço da mão: quanto mais texto escrito, mais tremor e desleixo e mais a linha cai. Descansa um pouco a cada parágrafo e a cada página.',
+  ligadura: 'Liga uma letra à seguinte sem levantar a caneta. Só funciona em fonte cursiva. Com 1, a palavra sai num traço só sempre que as letras permitem.',
+  adiamento: 'Em palavra ligada, deixa pingos, acentos e o corte do t para depois da palavra inteira, como quem escreve com pressa. Com pressa alta, o pingo cai fora do lugar e pode virar um tracinho.',
+  fluidez: 'Arredonda os cantos do traço, como a mão que não para em cada curva. Não age em letra menor que 3 mm.',
+  ultrapassagem: 'Faz o traço passar um pouco do ponto nas curvas fechadas, como a mão que vai rápido demais. Não age em letra menor que 3 mm.',
+  retoque: 'De vez em quando a mão repassa um trecho da letra ou começa o traço com um ganchinho. No máximo, cerca de 3 letras em cada 100.',
   importarTxt: 'Carrega um arquivo .txt (até 200 KB) no lugar do texto atual.',
 };
 
@@ -110,6 +115,11 @@ export const ROTULOS = {
   deriva: 'deriva',
   ritmo: 'ritmo',
   fadiga: 'cansaço',
+  ligadura: 'ligação',
+  adiamento: 'pingos no fim',
+  fluidez: 'fluidez',
+  ultrapassagem: 'ultrapassagem',
+  retoque: 'retoques',
 };
 
 export function rotulo(chave) {

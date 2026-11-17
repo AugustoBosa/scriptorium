@@ -101,16 +101,22 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
       if (i > 0) x += espaco + extra;
       ancoras.push({ pagina: v.pag, coluna: v.col, linha: v.k, indice: w.indice, texto: w.texto, x, y: v.y, l: w.largura });
       const dyW = w.dy + w.F * 0.25 * tamanho * (x - v.x0) / v.W; // base ondulante; fadiga faz a linha cair
-      for (const g of w.glifos) {
-        for (const t of g.tracos) {
-          if (t.length === 0) continue;
-          pag.push(t.map(([px, py]) => {
-            const tx = (r() - 0.5) * 2 * w.tremor;
-            const ty = (r() - 0.5) * 2 * w.tremor;
-            return [x + px * w.s + tx + py * w.s * w.tan, v.y - py * w.s + ty + dyW];
-          }));
+      const ponto = ([px, py]) => {
+        const tx = (r() - 0.5) * 2 * w.tremor;
+        const ty = (r() - 0.5) * 2 * w.tremor;
+        return [x + px * w.s + tx + py * w.s * w.tan, v.y - py * w.s + ty + dyW];
+      };
+      if (w.tracos) {
+        for (const t of w.tracos) if (t.length > 0) pag.push(t.map(ponto));
+        x += w.largura;
+      } else {
+        for (const g of w.glifos) {
+          for (const t of g.tracos) {
+            if (t.length === 0) continue;
+            pag.push(t.map(ponto));
+          }
+          x += g.adv * w.s;
         }
-        x += g.adv * w.s;
       }
     });
     cur.k++;
@@ -148,7 +154,7 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
       [...p].forEach((ch, i) => {
         const a = { largura: w.glifos[i].adv * w.s, glifos: [w.glifos[i]] };
         if (atual && atual.w + a.largura > atual.v.W) { fecha(atual, false); atual = null; }
-        if (!atual) atual = { pals: [{ ...w, texto: '', largura: 0, glifos: [] }], w: 0, v: vaga() };
+        if (!atual) atual = { pals: [{ ...w, tracos: undefined, texto: '', largura: 0, glifos: [] }], w: 0, v: vaga() };
         const q = atual.pals[0];
         q.texto += ch; q.largura += a.largura; q.glifos.push(...a.glifos);
         atual.w += a.largura;
