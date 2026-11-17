@@ -1,6 +1,7 @@
 // Escrita arcana: alfabeto cifrado gerado por seed, sigilo por magia e moldura. Tudo em traço único.
 import { rng, hash } from '../rng.js';
 import { ESCOLAS } from '../magia.js';
+import { arco, reamostrar, dist } from '../geo.js';
 
 export const LETRAS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 export const CAIXA = { largura: 500, altura: 700 }; // caixa de uma letra, em unidades da fonte (y para cima)
@@ -59,14 +60,70 @@ function letra(r, estilo) {
   return { tracos, assinatura: [...usados].sort().join(';') };
 }
 
+// Formas novas (estilo.forma). Cada uma recebe o rng próprio da letra; todas cabem em [0,500]×[0,700] por construção.
+const embaralhar = (lista, r) => {
+  const a = [...lista];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+};
+const FORMAS = {
+  angular(r, e) { // haste reta com galhos retos
+    const x = [100, 250, 400][Math.floor(r() * 3)];
+    const cs = COLS.filter((c) => c !== x);
+    const galhos = [];
+    const n = 1 + Math.floor(r() * (1 + Math.round(2 * e.complexidade)));
+    for (let i = 0; i < n; i++) galhos.push([[x, LINS[Math.floor(r() * 4)]], [cs[Math.floor(r() * cs.length)], LINS[Math.floor(r() * 4)]]]);
+    return { tracos: [[[x, 0], [x, 700]], ...galhos], assinatura: [x, ...galhos.map((g) => g.flat().join(',')).sort()].join(';') };
+  },
+  curvo(r, e) { // arcos em torno de (250, 350 ± 117)
+    const tracos = [], partes = [];
+    const n = 1 + Math.floor(r() * (1 + Math.round(2 * e.complexidade)));
+    for (let i = 0; i < n; i++) {
+      const cy = 350 + 117 * (Math.floor(r() * 3) - 1);
+      const raio = Math.min([120, 180, 240][Math.floor(r() * 3)], cy, 700 - cy); // ponytail: raio encolhido para o círculo caber na caixa
+      const a0 = Math.floor(r() * 8) * Math.PI / 4, ap = (Math.PI / 2) * (1 + Math.floor(r() * 3));
+      tracos.push(arco(250, cy, raio, a0, a0 + ap, 10));
+      partes.push([cy, raio, a0, ap].join(','));
+    }
+    if (r() < 0.3) { const cy = LINS[1 + Math.floor(r() * 2)]; tracos.push(circulo(250, cy, 40, 8)); partes.push(`o${cy}`); }
+    return { tracos, assinatura: partes.sort().join(';') };
+  },
+  ogham(r, e, ch, perm) { // entalhes numa haste; o código da letra é a posição na permutação da seed
+    const q = perm.indexOf(ch), g = Math.floor(q / 5) % 4;
+    const tracos = [[[250, 0], [250, 700]]];
+    for (let j = 0; j < (q % 5) + 1; j++) {
+      const y = 150 + 110 * j;
+      tracos.push([[[250, y], [430, y]], [[70, y], [250, y]], [[110, y - 60], [390, y + 60]], [[190, y], [310, y]]][g]);
+    }
+    if (q >= 20) tracos.push([[180, 700], [320, 700]]);
+    return { tracos, assinatura: String(q) };
+  },
+  pontilhado(r, e) { // esqueleto da grade reto e para dentro (inset de 6), trocado por pontos de 12 u
+    const sk = letra(r, { ...e, curva: 0 }), tracos = [];
+    for (const t0 of sk.tracos) {
+      const t1 = t0.map(([x, y]) => [6 + (x * 488) / 500, 6 + (y * 688) / 700]);
+      const L = t1.slice(1).reduce((q, p, i) => q + dist(t1[i], p), 0); // passo >= 200 u (0,057 mm por mm de altura): pontos a >= 0,8 mm em 3,5 mm
+      const t = reamostrar(t1, (L / Math.max(1, Math.floor(L / 200))) * (1 + 1e-9));
+      t.forEach(([x, y], i) => {
+        const [ax, ay] = t[Math.max(0, i - 1)], [bx, by] = t[Math.min(t.length - 1, i + 1)];
+        const d = dist([ax, ay], [bx, by]) || 1, ux = ((bx - ax) / d) * 6, uy = ((by - ay) / d) * 6;
+        tracos.push([[x - ux, y - uy], [x + ux, y + uy]]);
+      });
+    }
+    return { tracos, assinatura: sk.assinatura };
+  },
+};
+
 // Fonte no mesmo formato de parseFonte. `letras` = desenhos feitos à mão que substituem os gerados.
 export function gerarAlfabeto(estilo = {}, letras = {}) {
   const e = { seed: 1, curva: 0.4, complexidade: 0.5, ...estilo };
+  const forma = e.forma ?? 'grade';
+  const perm = forma === 'ogham' ? embaralhar([...LETRAS], rng(`${e.seed}|ogham`)) : null;
   const glifos = { ' ': { adv: 450, tracos: [] }, '.': { adv: 350, tracos: [[[100, 0], [100, 120]]] } };
   const vistas = new Set();
   for (const ch of LETRAS) {
     let g, n = 0;
-    do g = letra(rng(`${e.seed}|${ch}|${n}`), e); while (vistas.has(g.assinatura) && ++n < 20);
+    do g = forma === 'grade' ? letra(rng(`${e.seed}|${ch}|${n}`), e) : FORMAS[forma](rng(`${e.seed}|${forma}|${ch}|${n}`), e, ch, perm); while (vistas.has(g.assinatura) && ++n < 20);
     vistas.add(g.assinatura);
     glifos[ch] = { adv: 680, tracos: letras[ch] ?? g.tracos };
   }
@@ -152,4 +209,6 @@ export const PARAMS = [
     opcoes: Object.entries(ESCOLAS).map(([valor, rotulo]) => ({ valor, rotulo })), previa: sig('escola') },
   { chave: 'conc', grupo: 'sigilo', nivel: 'basico', tipo: 'marca', padrao: false, rotulo: 'concentração', ajuda: 'Magia que exige concentração. No sigilo, ganha um segundo anel por dentro do círculo.', previa: sig('conc') },
   { chave: 'ritual', grupo: 'sigilo', nivel: 'basico', tipo: 'marca', padrao: false, rotulo: 'ritual', ajuda: 'Magia que pode ser lançada como ritual. No sigilo, ganha dentes em volta do círculo.', previa: sig('ritual') },
+  { chave: 'forma', grupo: 'tradicao', nivel: 'basico', tipo: 'opcao', padrao: 'grade', rotulo: 'forma das letras', ajuda: 'Como as letras arcanas são desenhadas: grade (padrão), angular (haste com galhos retos), curvo (arcos), ogham (entalhes numa haste) ou pontilhado (grade em pontos).',
+    opcoes: ['grade', 'angular', 'curvo', 'ogham', 'pontilhado'].map((valor) => ({ valor, rotulo: valor })), previa: letras('forma') },
 ];
