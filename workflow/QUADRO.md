@@ -108,7 +108,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 12 | OK: M15 parte 1 (PARAMS nos 7 módulos, controle com prévia viva, tema.css, svgDocumento); 143 pass / 0 fail; goldens intactos; controle.spec 14/14; build ok. M15 segue ABERTO: falta ciclo 13 (shell + migração dos painéis) e a PARADA para aprovação |
 | 13 | OK: M15 parte 2 (shell Scriptorium, 5 oficinas, painéis migrados para controle/dica, exportação por Documento); 142 pass / 0 fail (143 menos o teste de `ajuda()` removido); goldens intactos; build ok; e2e 42/42 (smoke, controle, visual com contraste AA, claro e vela). **M15 segue ABERTO**: falta revisor e PARADA para o usuário aprovar a UI |
 
-## Retomada (2026-11-17, M22 em andamento) — LEIA ESTA PRIMEIRA
+## Retomada (2026-11-18, M22 e M23 publicados) — LEIA ESTA PRIMEIRA
 
 - Pedido do usuário: (1) home page com acesso a todas as oficinas e aos personagens; (2) aba dedicada só a personagens (criar, editar, controlar); (3) renomear o projeto para Scriptorium — GitHub `scriptorium` (minúsculo; o link do Pages muda para https://augustobosa.github.io/scriptorium/) e nomes dentro do projeto (package.json, títulos, README, remote). A pasta local NÃO muda.
 - Laço: conselheiro Opus (impeccable + frontend-design) → `workflow/ciclos/27/projeto.md` → workers → gates (test, build, e2e via [::1]) → revisor com capturas → commit → `gh repo rename scriptorium` + remote + push → conferir Pages no link novo.
@@ -116,7 +116,8 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - Atenção (2026-11-18): `src/magia.js`, `grimorios/`, `src/ornamento/tempo.js` são de OUTRA sessão (Grimório Non Presto) — não incluir nos commits do M22/M23; stage por caminho.
 - M22 FECHADO (commit "M22: ..."). Menores: ordem de Tab na aba Personagens; "Novo personagem" duplicado no editor; "+ Novo" da home sem confirmar.
 - M23 FECHADO (commit "M23: ..."). Menores: downloads da mesa ignoram "Camada"; botão Mesa no Básico; borda de encosto manual; faixas intermediárias; M0 entre passadas.
-- **Agora:** rename do repositório no GitHub para `scriptorium` + `git remote set-url` + push; conferir https://augustobosa.github.io/scriptorium/#inicio.
+- Publicado em 2026-11-18: repositório renomeado para `AugustoBosa/scriptorium` (remote atualizado), push de `06ea312`, Pages verde em https://augustobosa.github.io/scriptorium/ (o link antigo `/3dprinter_plotter/` agora dá 404).
+- Pendências do usuário: testar a imposição na máquina (rodar a passada 1 com a caneta levantada para conferir a posição; conferir `G0 X0 Y0` = canto frente-esquerda).
 
 ## Retomada (2026-11-17, EXPANSÃO CONCLUÍDA)
 
