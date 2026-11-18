@@ -8,7 +8,7 @@ const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
 const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate', 'ligadura', 'adiamento'];
 const CHAVES_EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo', 'ondulacao', 'deriva', 'ritmo', 'fadiga', 'fluidez', 'ultrapassagem', 'retoque'];
 
-function slug(nome) {
+export function slug(nome) {
   return (nome || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'personagem';
 }
@@ -34,7 +34,7 @@ export function restaurar(estado) {
   } catch {}
 }
 
-export function montar(elemento, estado, aoMudar) {
+export function montar(elemento, estado, aoMudar, { galeria = false } = {}) {
   const erro = document.createElement('p');
   erro.className = 'erro';
 
@@ -185,7 +185,7 @@ export function montar(elemento, estado, aoMudar) {
 
   // "?" irmão do label (não filho): o nome acessível do campo fica só "Nome"
   function campo(texto, entrada, ajuda) {
-    entrada.id ||= 'p-' + slug(texto);
+    entrada.id ||= (galeria ? 'pg-' : 'p-') + slug(texto); // prefixo próprio: o painel das oficinas também existe no DOM
     const l = document.createElement('label');
     l.htmlFor = entrada.id;
     l.textContent = texto;
@@ -207,7 +207,7 @@ export function montar(elemento, estado, aoMudar) {
         aoMudar();
       }),
     ),
-    avancado(linhaBotoes(
+    ...galeria ? [] : [avancado(linhaBotoes(
       botao('Salvar JSON', () => {
         const url = URL.createObjectURL(new Blob([JSON.stringify(estado.personagem, null, 2)], { type: 'application/json' }));
         const a = document.createElement('a');
@@ -240,7 +240,7 @@ export function montar(elemento, estado, aoMudar) {
       }),
       btnAbrirSalvo,
       btnExcluir,
-    )),
+    ))],
     ...campo(rotulo('variacaoSel'), selVar, AJUDA.variacaoSel),
     avancado(linhaBotoes(
       botao('Adicionar', () => {

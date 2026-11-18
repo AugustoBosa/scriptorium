@@ -12,9 +12,12 @@ import * as pTexto from './texto.js';
 import * as pExportar from './exportar.js';
 import { criar as criarGrimorio } from './grimorio.js';
 import * as pMat from './materiais.js';
+import { montar as montarInicio } from './inicio.js';
+import { montar as montarPersonagens } from './personagens.js';
 
 const OFICINAS = { carta: 'escrita', livro: 'escrita', scroll: 'grimorio', grimorio: 'grimorio', sigilos: 'sigilos' };
-const NOMES = { carta: 'Carta', scroll: 'Scroll', grimorio: 'Grimório', livro: 'Livro', sigilos: 'Sigilos' };
+const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens };
+const NOMES = { inicio: 'Início', personagens: 'Personagens', carta: 'Carta', scroll: 'Scroll', grimorio: 'Grimório', livro: 'Livro', sigilos: 'Sigilos' };
 const VAZIO = { grimorio: 'Escolha uma magia na lista.', scroll: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.' };
 const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto'];
 const $ = (id) => document.getElementById(id);
@@ -85,7 +88,8 @@ function criarSigilos() {
 const FABRICAS = { escrita: criarEscrita, grimorio: criarGrimorio, sigilos: criarSigilos };
 const insts = {}; // nome → instância
 const vistas = new Map(); // instância → { detalhes, barra, atualizar: [] }
-let atual = null, fontesCarregadas = null, ticket = 0;
+let atual = null, fontesCarregadas = null, ticket = 0, vindoDePagina = false;
+const paginasAtualizar = {}; // id → atualizar() da página, montada uma vez
 
 // ---- render ----
 function renderizar() {
@@ -112,7 +116,7 @@ function renderizar() {
   $('pag-prox').disabled = e.paginaAtual >= total - 1;
 
   const opc = { pagina: e.paginaAtual, trajeto: e.trajeto, otimizar: e.otimizar };
-  desenhar($('previa'), e.doc, opc);
+  desenhar($('previa'), e.doc, opc); // M23: ramo "Mesa" entra aqui
   if (e.doc.paginas.every((p) => p.camadas.every((c) => !c.tracos.length))) $('previa').insertAdjacentHTML('beforeend', `<p class="vazio">${VAZIO[e.oficina] ?? 'Nada para desenhar ainda.'}</p>`);
   $('rotulo-a').hidden = !escrita;
   $('rotulo-a').textContent = escrita ? `Variação: ${e.variacao || 'mão base'}` : '';
@@ -168,10 +172,24 @@ function montarVista(inst) {
 async function rotear() {
   if (!fontesCarregadas) return;
   const id = location.hash.slice(1), minha = ++ticket;
-  if (!OFICINAS[id]) { location.replace('#carta'); return; }
+  if (!OFICINAS[id] && !PAGINAS[id]) { location.replace('#inicio'); return; }
+  const marcar = () => {
+    document.querySelectorAll('nav.oficinas a').forEach((a) => (a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
+    document.title = `Scriptorium — ${NOMES[id]}`;
+  };
+  document.querySelector('main').hidden = !!PAGINAS[id];
+  for (const p in PAGINAS) $('vista-' + p).hidden = p !== id;
+  if (PAGINAS[id]) {
+    paginasAtualizar[id] ??= PAGINAS[id]($('vista-' + id), { fontes: fontesCarregadas });
+    paginasAtualizar[id]();
+    marcar();
+    vindoDePagina = true;
+    return;
+  }
   const nome = OFICINAS[id];
   const inst = insts[nome] ??= FABRICAS[nome]();
   if (atual && atual !== inst) for (const c of COMPARTILHADAS) if (c in atual.estado) inst.estado[c] = atual.estado[c]; // ponytail: cópia na troca; store único se duas oficinas ficarem visíveis juntas
+  if (vindoDePagina) { try { pPersonagem.restaurar(inst.estado); } catch { /* mantém o personagem atual */ } vindoDePagina = false; }
   if (!atual) { inst.estado.fontes = fontesCarregadas; inst.estado.nomesFontes = FONTES; }
   inst.estado.oficina = id;
   await inst.entrar(id);
@@ -182,8 +200,7 @@ async function rotear() {
     v.detalhes.forEach((d) => { d.hidden = i !== inst || (!!d.dataset.so && d.dataset.so !== id); });
   }
   atual = inst;
-  document.querySelectorAll('nav.oficinas a').forEach((a) => (a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
-  document.title = `Scriptorium — ${NOMES[id]}`;
+  marcar();
   $('rotulo-comparar').hidden = nome !== 'escrita';
   inst.estado.paginaAtual = 0;
   if (nome !== 'escrita') inst.estado.comparar = false;

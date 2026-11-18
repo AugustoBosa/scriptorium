@@ -229,9 +229,9 @@ export function criar() {
       ...['seed', 'curva', 'complexidade'].map((c) => controle(PA[c], ligar(estilo, c, ctx), aoMudar)),
     ];
     raiz.append(
-      el('div', { className: 'linha-campo' }, el('label', {}, 'Quem escreve ', pers), ' ', dica('Personagens salvos na página de caligrafia. Crie ou ajuste a mão lá e salve; ela aparece aqui.', 'Quem escreve')),
+      el('div', { className: 'linha-campo' }, el('label', {}, 'Quem escreve ', pers), ' ', dica('Personagens salvos na aba Personagens.', 'Quem escreve')),
       el('label', {}, 'Variação ', vari),
-      el('p', {}, el('a', { href: '#carta' }, 'Criar ou editar personagens')),
+      el('p', {}, el('a', { href: '#personagens' }, 'Criar ou editar personagens')),
       el('h3', {}, 'Escrever em alfabeto arcano ', dica('O bloco marcado sai no alfabeto inventado, sem acentos e em minúsculas. Plote também a chave para os jogadores decifrarem.', 'Alfabeto arcano')),
       ...ctrls.map((c) => c.el));
     const importar = el('input', { type: 'file', accept: '.json', hidden: true });

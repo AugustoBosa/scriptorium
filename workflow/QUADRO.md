@@ -26,6 +26,8 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M18 Ornamento | FECHADO (ciclos 19–20; revisor Opus devolveu 4 bloqueantes, corrigidos e re-revisados) |
 | M19 Arcano | FECHADO (ciclos 21 e 23; revisor Opus devolveu 2 bloqueantes, corrigidos) |
 | M20 Materiais | FECHADO (ciclos 22 e 24; revisores Opus devolveram 6 bloqueantes, corrigidos e re-revisados) |
+| M22 Home + aba Personagens + nome Scriptorium | FECHADO (ciclo 27; revisor devolveu 1, corrigido) |
+| M23 Imposição e mesa (folha na bandeja, passadas, simulação) | ABERTO (ciclo 28) |
 | M21 Polimento | FECHADO (ciclos 25–26; revisor Opus aceitou) |
 
 ## Itens do DoD comprovados
@@ -106,7 +108,16 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 12 | OK: M15 parte 1 (PARAMS nos 7 módulos, controle com prévia viva, tema.css, svgDocumento); 143 pass / 0 fail; goldens intactos; controle.spec 14/14; build ok. M15 segue ABERTO: falta ciclo 13 (shell + migração dos painéis) e a PARADA para aprovação |
 | 13 | OK: M15 parte 2 (shell Scriptorium, 5 oficinas, painéis migrados para controle/dica, exportação por Documento); 142 pass / 0 fail (143 menos o teste de `ajuda()` removido); goldens intactos; build ok; e2e 42/42 (smoke, controle, visual com contraste AA, claro e vela). **M15 segue ABERTO**: falta revisor e PARADA para o usuário aprovar a UI |
 
-## Retomada (2026-11-17, EXPANSÃO CONCLUÍDA) — LEIA ESTA PRIMEIRA
+## Retomada (2026-11-17, M22 em andamento) — LEIA ESTA PRIMEIRA
+
+- Pedido do usuário: (1) home page com acesso a todas as oficinas e aos personagens; (2) aba dedicada só a personagens (criar, editar, controlar); (3) renomear o projeto para Scriptorium — GitHub `scriptorium` (minúsculo; o link do Pages muda para https://augustobosa.github.io/scriptorium/) e nomes dentro do projeto (package.json, títulos, README, remote). A pasta local NÃO muda.
+- Laço: conselheiro Opus (impeccable + frontend-design) → `workflow/ciclos/27/projeto.md` → workers → gates (test, build, e2e via [::1]) → revisor com capturas → commit → `gh repo rename scriptorium` + remote + push → conferir Pages no link novo.
+- M23 (pedido novo): imposição de páginas na folha física, posição/direção da folha na mesa, 2ª passada, simulação na prévia (Página | Mesa), modo agrupar ou um arquivo por página (mesma folha). Plano aprovado: `workflow/ciclos/28/plano-m22-m23.md` (gcode.js não muda; `src/maquina/imposicao.js` + `src/ui/mesa.js` novos; ligação em app.js só depois do commit do M22).
+- Atenção (2026-11-18): `src/magia.js`, `grimorios/`, `src/ornamento/tempo.js` são de OUTRA sessão (Grimório Non Presto) — não incluir nos commits do M22/M23; stage por caminho.
+- M22 FECHADO (commit "M22: ..."). Menores: ordem de Tab na aba Personagens; "Novo personagem" duplicado no editor; "+ Novo" da home sem confirmar.
+- **Agora: M23** — T1 `imposicao.js` e T2 `mesa.js` prontos (não commitados); falta T3 (ligar painel e seletor Página|Mesa em app.js, export em exportar.js), gates, revisor, commit; depois rename no GitHub.
+
+## Retomada (2026-11-17, EXPANSÃO CONCLUÍDA)
 
 - M13–M21 FECHADOS. Merge fast-forward de `expansao` em `main` (`11b263e`) e push feitos em 2026-11-17; Pages publicado via Actions e verificado (https://augustobosa.github.io/3dprinter_plotter/). `npm test` 794/0; build ok; e2e 68/68. Decisões de todos os ciclos: `workflow/ciclos/LEDGER-expansao.md`; relatórios por ciclo em `workflow/ciclos/NN/relatorio.md`.
 - **Pendências do usuário:** hardware: confirmar que `M0` retoma na Mega S; P2S nunca testada (A5 não cabe na janela 207×200); calibrar no papel cinemática, fadiga, encaixe e ligações (EMSAllure/Swiss/Society).

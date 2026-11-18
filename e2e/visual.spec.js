@@ -4,7 +4,7 @@ const OFICINAS = ['carta', 'scroll', 'grimorio', 'livro', 'sigilos']
 
 async function abrir(page, id) {
   await page.goto('index.html#' + id)
-  await page.waitForSelector('#previa svg')
+  await page.waitForSelector(['inicio', 'personagens'].includes(id) ? '.pagina:not([hidden]) svg' : '#previa svg')
   await page.evaluate(() => document.fonts.ready)
 }
 
@@ -21,6 +21,32 @@ for (const id of OFICINAS) {
     await foto(page, testInfo, id)
   })
 }
+
+const SALVOS = () => {
+  const m = { base: [{ fonte: 'EMSDelight', peso: 1 }], inclinacao: 0, largura: 1, altura: 1, espacamento: 0, espacoPalavra: 0, idio: 0, pressa: 0, capricho: 1, tremor: 0, queda: 0, compressao: 1, variacao: 0, desleixo: 0, seed: 1 }
+  localStorage.setItem('writer.personagens', JSON.stringify({ Elara: { nome: 'Elara', mao: m, variacoes: { normal: {} } }, Bram: { nome: 'Bram', mao: { ...m, seed: 7 }, variacoes: { normal: {} } } }))
+}
+
+test('captura inicio', async ({ page }, testInfo) => {
+  await page.addInitScript(SALVOS)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await abrir(page, 'inicio')
+  await foto(page, testInfo, 'inicio')
+})
+
+test('captura inicio-mobile', async ({ page }, testInfo) => {
+  await page.addInitScript(SALVOS)
+  await page.setViewportSize({ width: 375, height: 812 })
+  await abrir(page, 'inicio')
+  await foto(page, testInfo, 'inicio-mobile', true)
+})
+
+test('captura personagens', async ({ page }, testInfo) => {
+  await page.addInitScript(SALVOS)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await abrir(page, 'personagens')
+  await foto(page, testInfo, 'personagens')
+})
 
 test('captura avançado com popover aberto', async ({ page }, testInfo) => {
   await abrir(page, 'carta')
@@ -48,7 +74,7 @@ function medir() {
   const visivel = el => !el.closest('[hidden], .so-leitor') && el.getClientRects().length > 0
   const fundo = el => { for (let e = el; e; e = e.parentElement) { const c = rgb(getComputedStyle(e).backgroundColor); if (c.length >= 3 && (c[3] ?? 1) === 1) return c } return [255, 255, 255] }
   const falhas = []
-  const texto = ['h1', 'nav.oficinas a', 'summary', '.controle label', '.controle output', 'button', 'select', '#pag-info', '#avisos li', 'h3', '.rotulo', 'label', '#previa-viva .pv-ajuda']
+  const texto = ['h1', 'nav.oficinas a', 'summary', '.controle label', '.controle output', 'button', 'select', '#pag-info', '#avisos li', 'h3', '.rotulo', 'label', '#previa-viva .pv-ajuda', '.pagina h2', '.pagina p', '.pagina a', '.pagina .marca']
   for (const sel of texto) for (const el of document.querySelectorAll(sel)) {
     if (!visivel(el)) continue
     const r = razao(rgb(getComputedStyle(el).color), fundo(el))
@@ -76,6 +102,16 @@ for (const id of OFICINAS) {
     const falhas = await page.evaluate(medir) // com o popover aberto
     await page.keyboard.press('Tab')
     falhas.push(...(await page.evaluate(medir)).filter(f => f.includes('outline')))
+    expect(falhas, falhas.join('\n')).toEqual([])
+  })
+}
+
+for (const id of ['inicio', 'personagens']) for (const tema of ['claro', 'vela']) {
+  test(`contraste AA em ${id} (${tema})`, async ({ page }) => {
+    await page.addInitScript(SALVOS)
+    await page.addInitScript(t => localStorage.setItem('writer.ui', JSON.stringify({ tema: t })), tema)
+    await abrir(page, id)
+    const falhas = await page.evaluate(medir)
     expect(falhas, falhas.join('\n')).toEqual([])
   })
 }

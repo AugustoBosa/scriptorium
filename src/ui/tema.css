@@ -61,6 +61,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--mesa); color: var(--tinta); font: var(--t-ui)/var(--linha) var(--fonte-ui); }
+a { color: var(--rubrica); text-underline-offset: .15em; }
 h1, nav.oficinas a, summary { font-family: var(--fonte-titulo); font-weight: 500; }
 h1 { margin: 0; font-size: var(--t-titulo); letter-spacing: .01em; }
 summary { font-size: var(--t-grupo); font-variant-caps: small-caps; letter-spacing: .04em; color: var(--rubrica); cursor: pointer; }
@@ -79,7 +80,7 @@ button:disabled, button.primario:disabled { background: transparent; color: var(
 .so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Básico/Avançado: o nível mora no <body data-nivel>; controles e grupos avançados somem no básico */
-body[data-nivel="basico"] [data-nivel="avancado"] { display: none; }
+body[data-nivel="basico"] main [data-nivel="avancado"] { display: none; }
 
 /* assinatura: pauta dupla de escriba separando os grupos do painel */
 details { border-bottom: 3px double var(--regua); padding: var(--e2) 0; }
@@ -104,6 +105,7 @@ figure { margin: 0; min-width: 0; }
 header { display: flex; align-items: center; gap: var(--e5); min-height: 56px; padding: 0 var(--e4); background: var(--pergaminho); border-bottom: 3px double var(--regua); }
 nav.oficinas { display: flex; gap: var(--e4); margin-right: auto; }
 nav.oficinas a { font-size: var(--t-grupo); color: var(--tinta); text-decoration: none; padding: var(--e1) 0; border-bottom: 2px solid transparent; }
+nav.oficinas a.sep { margin-left: var(--e3); padding-left: var(--e4); border-left: 1px solid var(--regua); }
 nav.oficinas a:hover { border-bottom-color: var(--regua); }
 nav.oficinas a[aria-current="page"] { color: var(--rubrica); border-bottom-color: var(--rubrica); }
 #tema { min-width: var(--alvo); }
@@ -114,6 +116,7 @@ nav.oficinas a[aria-current="page"] { color: var(--rubrica); border-bottom-color
 #nivel input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 
 /* shell */
+.pagina { padding: var(--e4); }
 main { display: grid; grid-template-columns: var(--painel) minmax(0, 1fr); grid-template-areas: "painel previa" "painel exportar"; gap: var(--e4); padding: var(--e4); align-items: start; }
 aside#painel { grid-area: painel; position: sticky; top: var(--e4); max-height: calc(100vh - 56px - 2 * var(--e4)); overflow-y: auto; background: var(--pergaminho); border: 1px solid var(--regua); border-radius: var(--raio); padding: 0 var(--e3); }
 section#area-previa { grid-area: previa; min-width: 0; }
@@ -189,7 +192,7 @@ dialog::backdrop { background: var(--sombra-cor); }
 
 @media (max-width: 800px) {
   header { flex-wrap: wrap; gap: var(--e2) var(--e4); padding-block: var(--e2); }
-  nav.oficinas { order: 3; flex-basis: 100%; flex-wrap: nowrap; overflow-x: auto; gap: var(--e4); margin-right: 0; }
+  nav.oficinas { order: 3; flex-basis: 100%; flex-wrap: wrap; gap: var(--e2) var(--e4); margin-right: 0; }
   #tema { margin-left: auto; }
   main { grid-template-columns: minmax(0, 1fr); grid-template-areas: "previa" "painel" "exportar"; }
   aside#painel { position: static; max-height: none; overflow: visible; }

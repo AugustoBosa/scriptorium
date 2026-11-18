@@ -1,0 +1,20 @@
+/* aba Personagens: mesa (espécime + galeria) e editor à direita no desktop; só tokens de tema.css */
+.pers { display: grid; grid-template-columns: var(--painel) minmax(0, 1fr); gap: var(--e4); align-items: start; }
+.pers-editor { order: -1; position: sticky; top: var(--e4); max-height: calc(100vh - 56px - 2 * var(--e4)); overflow-y: auto; background: var(--pergaminho); border: 1px solid var(--regua); border-radius: var(--raio); padding: 0 var(--e3); }
+.pers-mesa { min-width: 0; }
+.pers-folha { max-width: 720px; margin: 0; }
+.pers-estado { margin: var(--e3) 0 0; }
+.pers-mesa h2 { display: flex; align-items: center; gap: var(--e3); margin: var(--e5) 0 var(--e3); font: 500 var(--t-grupo)/var(--linha) var(--fonte-titulo); font-variant-caps: small-caps; letter-spacing: .04em; color: var(--rubrica); }
+.pers-mesa h2::after { content: ""; flex: 1; border-top: 3px double var(--regua); }
+.pers-galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--e4); }
+.pers-cartao { display: flex; flex-direction: column; gap: var(--e2); min-width: 0; padding: var(--e3); background: var(--pergaminho); border: 1px solid var(--regua); border-radius: var(--raio); }
+.pers-cartao:hover { border-color: var(--contorno); }
+.pers-cartao .nome { font: 500 var(--t-grupo)/var(--linha) var(--fonte-titulo); color: var(--tinta); overflow-wrap: anywhere; }
+.pers-cartao .marca { font-size: var(--t-pequeno); font-variant-caps: small-caps; letter-spacing: .04em; color: var(--rubrica); }
+.pers-cartao .linha-botoes { margin: 0; }
+.pers-vazio { grid-column: 1 / -1; margin: 0; color: var(--tinta-2); }
+
+@media (max-width: 800px) {
+  .pers { grid-template-columns: minmax(0, 1fr); }
+  .pers-editor { order: 2; position: static; max-height: none; overflow: visible; }
+}

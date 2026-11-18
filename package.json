@@ -1,7 +1,7 @@
 {
-  "name": "caligrafia-plotter",
+  "name": "scriptorium",
   "version": "1.0.0",
-  "description": "Gerador de caligrafia de traço único para uma impressora 3D (Anycubic i3 Mega S) adaptada como plotter de caneta.",
+  "description": "Scriptorium: caligrafia de traço único para plotter de caneta (Anycubic i3 Mega S adaptada).",
   "scripts": {
     "test": "node --test",
     "dev": "vite --port 8765 --strictPort",
@@ -12,16 +12,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AugustoBosa/3dprinter_plotter.git"
+    "url": "git+https://github.com/AugustoBosa/scriptorium.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/AugustoBosa/3dprinter_plotter/issues"
+    "url": "https://github.com/AugustoBosa/scriptorium/issues"
   },
-  "homepage": "https://github.com/AugustoBosa/3dprinter_plotter#readme",
+  "homepage": "https://augustobosa.github.io/scriptorium/",
   "private": true,
   "devDependencies": {
     "@playwright/test": "^1.65.1",

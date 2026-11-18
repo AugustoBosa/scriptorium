@@ -78,6 +78,20 @@ Roda sob demanda. Não entra no `npm test`. Rode depois de mexer em `src/ui/*.js
 
 1. A 375 px de largura, o cabeçalho cabe numa linha e o menu de oficinas rola na horizontal sem cortar "Vela".
 
+## Início (`#inicio`)
+
+1. Abra `http://localhost:8765/` sem hash: a URL vira `#inicio` e aparecem as 5 oficinas, cada uma com miniatura de folha.
+2. Clique em cada cartão de oficina: a rota certa abre e a prévia mostra a folha.
+3. Com um personagem salvo, "Usar" muda a linha "Mão atual" e as miniaturas são reescritas com a mão nova.
+4. Sem personagens salvos, aparece "Nenhum personagem salvo ainda." e o cartão "+ Novo personagem".
+
+## Personagens (`#personagens`)
+
+1. Clique em "+ Novo personagem", dê um nome e "Salvar na galeria": o cartão aparece na galeria.
+2. Em um cartão, "Duplicar" cria "X (cópia)"; "Renomear" com nome repetido mostra o erro; "Excluir" pede confirmação.
+3. "Importar JSON" aceita um personagem válido e mostra a lista de erros de um inválido.
+4. Em "Usar", vá para `#carta`: o campo Nome do painel mostra o personagem escolhido.
+
 ## Referência de desempenho (ciclo 25, auditoria)
 
 A4 com margem de 6 mm: composição neutra (mão neutra) 8 ms, composição cheia (tudo no máximo) 148 ms. Meta: abaixo de 400 ms. Meça de novo se mexer em `compor` ou no layout.

@@ -1,5 +1,7 @@
 # Scriptorium
 
+Publicado em https://augustobosa.github.io/scriptorium/
+
 Caligrafia de traço único para plotter de caneta. O app gera a letra com uma mão procedural e determinística (mesma seed, mesmo resultado), monta a página e exporta SVG e G-code.
 
 - **Mão própria por personagem**: fontes de traço único misturadas e mutadas, com variação por ocorrência, encaixe, ligaduras, deriva lenta e cinemática da caneta.
@@ -8,11 +10,11 @@ Caligrafia de traço único para plotter de caneta. O app gera a letra com uma m
 
 ## Oficinas
 
-Cada oficina é uma rota do `index.html`: `#carta`, `#scroll`, `#grimorio`, `#livro`, `#sigilos`.
+Cada oficina é uma rota do `index.html`: `#carta`, `#scroll`, `#grimorio`, `#livro`, `#sigilos`. A rota padrão é `#inicio` (home: oficinas e personagens); `#personagens` cria, edita e escolhe a mão em uso.
 
 - **Carta** (`#carta`): carta, anotação ou diário. Marcações no texto: `{nota: ...}`, `{~errado~>certo}`, `{_sublinhar_}`, `{o:circular}`. As notas vão para uma camada própria (margem, risco, sublinhado, laço), com caneta e personagem próprios.
 - **Scroll** (`#scroll`): uma magia de D&D por folha, em A5, A6, A7 ou A8.
-- **Grimório** (`#grimorio`): magias em sequência, na mesma folha. Quem escreve é um personagem salvo na Carta. O bloco marcado sai em alfabeto arcano, com chave opcional. O sigilo de cada magia codifica nível, escola, concentração, ritual e componentes.
+- **Grimório** (`#grimorio`): magias em sequência, na mesma folha. Quem escreve é um personagem salvo na aba Personagens. O bloco marcado sai em alfabeto arcano, com chave opcional. O sigilo de cada magia codifica nível, escola, concentração, ritual e componentes.
 - **Livro** (`#livro`): colunas, título corrente, numeração, reclamo, rubrica, capitular e borda. Usa o mesmo texto da Carta.
 - **Sigilos** (`#sigilos`): cada frase vira um selo, um sigilo (método kamea, roda ou fusão) ou um círculo, com legenda. Os sigilos ficam em grade numa folha.
 
@@ -22,6 +24,7 @@ Cada oficina é uma rota do `index.html`: `#carta`, `#scroll`, `#grimorio`, `#li
 
 - **Básico / Avançado**: o básico mostra o essencial; o avançado mostra os ajustes finos e a máquina.
 - **Prévia viva**: cada controle mostra uma amostra ao passar o mouse ou focar. Os controles de valor têm régua e escala de 10 mm.
+- **Personagens**: galeria com espécime; a mão em uso vale para todas as oficinas.
 - **Temas**: claro e vela (escuro).
 - **Salvos no navegador** (localStorage): personagens (`writer.personagens`), perfil de máquina (`writer.perfil`) e preferências de tema e nível (`writer.ui`). Nada vai para servidor.
 - **Trajeto**: "mostrar trajeto" na prévia mostra a viagem no ar, início, fim e ordem de cada traço.

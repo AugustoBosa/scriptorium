@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { resolver, validar, novoPersonagem, ajustarVariacao } from '../src/personagem.js';
+import { resolver, validar, novoPersonagem, ajustarVariacao, nomeLivre, renomearSalvo } from '../src/personagem.js';
 import { NEUTRA, IDENTIDADE, glifo } from '../src/motor/mao.js';
 import { parseFonte } from '../src/fonte.js';
 
@@ -122,4 +122,21 @@ test('validar: 5 chaves do ductus são opcionais, faixa [0,1], variação de ide
   assert.ok(com('ligadura', 2).length >= 1);
   assert.deepEqual(validar({ ...strahdLike(), variacoes: { v: { fluidez: 0.5 } } }), []);
   assert.ok(validar({ ...strahdLike(), variacoes: { v: { ligadura: 1 } } }).some((e) => /identidade/.test(e)));
+});
+
+test('nomeLivre devolve base ou base N', () => {
+  assert.equal(nomeLivre(['a'], 'b'), 'b');
+  assert.equal(nomeLivre(['a', 'a 2'], 'a'), 'a 3');
+  assert.equal(nomeLivre(['a', 'a 2', 'a 3'], 'a'), 'a 4');
+});
+
+test('renomearSalvo preserva ordem, ajusta nome e valida', () => {
+  const salvos = { A: { nome: 'A', x: 1 }, B: { nome: 'B' }, C: { nome: 'C' } };
+  const r = renomearSalvo(salvos, 'B', 'Z');
+  assert.deepEqual(Object.keys(r), ['A', 'Z', 'C']);
+  assert.equal(r.Z.nome, 'Z');
+  assert.equal(salvos.B.nome, 'B');
+  assert.throws(() => renomearSalvo(salvos, 'B', ''), /vazio/);
+  assert.throws(() => renomearSalvo(salvos, 'B', 'A'), /já existe/);
+  assert.throws(() => renomearSalvo(salvos, 'Q', 'Y'), /não encontrado/);
 });

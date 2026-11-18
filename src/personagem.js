@@ -74,3 +74,18 @@ export function ajustarVariacao(p, variacao, chave, valor) {
   if (valor === p.mao[chave]) delete extra[chave];
   else extra[chave] = valor;
 }
+
+// Primeiro nome livre: `base`, `base 2`, `base 3`…
+export function nomeLivre(nomes, base) {
+  let nome = base;
+  for (let i = 2; nomes.includes(nome); i++) nome = `${base} ${i}`;
+  return nome;
+}
+
+// Objeto novo com a chave `de` trocada por `para` (ordem preservada) e p.nome = para.
+export function renomearSalvo(salvos, de, para) {
+  if (!para) throw new Error('nome vazio');
+  if (!Object.hasOwn(salvos, de)) throw new Error('personagem não encontrado: ' + de);
+  if (Object.hasOwn(salvos, para)) throw new Error('já existe um personagem com esse nome');
+  return Object.fromEntries(Object.entries(salvos).map(([k, p]) => (k === de ? [para, { ...p, nome: para }] : [k, p])));
+}

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="theme-color" content="#f4ecd8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scriptorium — caligrafia para plotter</title>
+<title>Scriptorium</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
@@ -12,11 +12,13 @@
 <body data-nivel="basico">
 <header>
   <h1>Scriptorium</h1>
-  <nav class="oficinas" aria-label="Oficinas">
-    <a href="#carta">Carta</a><a href="#scroll">Scroll</a><a href="#grimorio">Grimório</a><a href="#livro">Livro</a><a href="#sigilos">Sigilos</a>
+  <nav class="oficinas" aria-label="Seções">
+    <a href="#inicio">Início</a><a href="#carta">Carta</a><a href="#scroll">Scroll</a><a href="#grimorio">Grimório</a><a href="#livro">Livro</a><a href="#sigilos">Sigilos</a><a href="#personagens" class="sep">Personagens</a>
   </nav>
   <button id="tema" type="button">Vela</button>
 </header>
+<section id="vista-inicio" class="pagina" hidden></section>
+<section id="vista-personagens" class="pagina" hidden></section>
 <main>
   <aside id="painel" aria-label="Parâmetros">
     <div id="nivel" role="radiogroup" aria-label="Nível">
