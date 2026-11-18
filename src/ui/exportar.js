@@ -5,6 +5,7 @@ import { amostra } from '../layout.js';
 import { resolver } from '../personagem.js';
 import { AJUDA, rotulo } from '../ajuda.js';
 import { controle, dica, ligar } from './controle.js';
+import { resumoMesa } from './mesa.js';
 
 const PP = Object.fromEntries(PARAMS_PERFIL.map((p) => [p.chave, p]));
 const PO = Object.fromEntries(PARAMS_OTIM.map((p) => [p.chave, p]));
@@ -37,18 +38,17 @@ function escolhida(estado, i) {
   return ids.includes(estado.camada) ? [estado.camada] : undefined;
 }
 
-// G-code da página i (só `camadas`, se dadas), ou { erro } quando a máquina não pode plotar.
+// G-code da página i (só `camadas`, se dadas); { erro } é aviso, e com `bloqueia` a máquina não pode plotar.
 // rapido: página crua, sem 2-opt (a barra só precisa de contagem, comprimento aproximado e avisos).
 function gerarGcode(estado, i, camadas, rapido = false) {
   try {
     const doc = estado.doc;
     const g = gcodeDocumento(rapido ? doc.paginas[i] : paginaOtimizada(estado, i), doc.papel, estado.perfil, { canetas: doc.canetas, camadas });
-    if (estado.perfil.experimental && g.avisos.some((a) => a.includes('fora da janela'))) {
-      return { g, erro: 'Perfil experimental: há traços fora da janela da máquina.' };
-    }
+    const fora = g.avisos.find((a) => a.includes('fora da janela'));
+    if (fora) return estado.perfil.experimental ? { g, bloqueia: true, erro: 'Perfil experimental: há traços fora da janela da máquina.' } : { g, erro: fora };
     return { g };
   } catch (e) {
-    return { erro: `Erro: ${e.message}` };
+    return { bloqueia: true, erro: `Erro: ${e.message}` };
   }
 }
 
@@ -150,14 +150,16 @@ export function montarBarra(elemento, estado, aoMudar) {
   const bGcode = botao('Baixar G-code', () => {
     const cam = escolhida(estado, estado.paginaAtual);
     const r = gerarGcode(estado, estado.paginaAtual, cam);
-    if (r.erro) { erro.textContent = r.erro; return; }
+    erro.textContent = r.erro ?? '';
+    if (r.bloqueia) return;
     baixar(r.g.texto, nome(estado.paginaAtual, 'gcode', cam), 'text/plain');
   }, 'primario');
   const bTodosSvg = botao('Todos os SVG', () => estado.doc.paginas.forEach((_, i) => baixarSvg(i)));
   const bTodosGcode = botao('Todos os G-code', () => {
     const rs = estado.doc.paginas.map((_, i) => gerarGcode(estado, i));
-    const falha = rs.findIndex((r) => r.erro);
+    const falha = rs.findIndex((r) => r.bloqueia);
     if (falha >= 0) { erro.textContent = `Página ${falha + 1}: ${rs[falha].erro}`; return; }
+    erro.textContent = rs.map((r, i) => r.erro && `Página ${i + 1}: ${r.erro}`).filter(Boolean)[0] ?? '';
     rs.forEach((r, i) => baixar(r.g.texto, nome(i, 'gcode'), 'text/plain'));
   });
   const todas = document.createElement('details');
@@ -183,7 +185,10 @@ export function montarBarra(elemento, estado, aoMudar) {
     if (!vazio) {
       const r = gerarGcode(estado, estado.paginaAtual, escolhida(estado, estado.paginaAtual), true);
       if (r.g) texto = `${r.g.nTracos} traços · ≈ ${(r.g.comprimento / 1000).toFixed(1).replace('.', ',')} m`;
-      if (r.erro) { erro.textContent = r.erro; bloqueado = true; }
+      if (r.erro) erro.textContent = r.erro;
+      if (r.bloqueia) bloqueado = true;
+      const mesa = resumoMesa(estado);
+      if (mesa) texto += ` · ${mesa}`;
     }
     resumo.textContent = texto;
     bGcode.disabled = bTodosGcode.disabled = bloqueado;

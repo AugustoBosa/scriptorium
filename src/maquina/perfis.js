@@ -34,7 +34,7 @@ export function mesclarPerfil(salvo) {
   return { ...structuredClone(megaS), ...salvo, estaciona: { ...megaS.estaciona, ...salvo?.estaciona }, janela: salvo?.janela ?? null, nome: 'personalizado' };
 }
 
-const janelaDe = (perfil) => perfil.janela ?? { x0: 0, y0: 0, x1: perfil.mesaX, y1: perfil.mesaY };
+export const janelaDe = (perfil) => perfil.janela ?? { x0: 0, y0: 0, x1: perfil.mesaX, y1: perfil.mesaY };
 
 export function papelMaximo(perfil) {
   const j = janelaDe(perfil);

@@ -27,7 +27,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | M19 Arcano | FECHADO (ciclos 21 e 23; revisor Opus devolveu 2 bloqueantes, corrigidos) |
 | M20 Materiais | FECHADO (ciclos 22 e 24; revisores Opus devolveram 6 bloqueantes, corrigidos e re-revisados) |
 | M22 Home + aba Personagens + nome Scriptorium | FECHADO (ciclo 27; revisor devolveu 1, corrigido) |
-| M23 Imposição e mesa (folha na bandeja, passadas, simulação) | ABERTO (ciclo 28) |
+| M23 Imposição e mesa (folha na bandeja, passadas, simulação) | FECHADO (ciclos 28–29; revisor devolveu 1, corrigido) |
 | M21 Polimento | FECHADO (ciclos 25–26; revisor Opus aceitou) |
 
 ## Itens do DoD comprovados
@@ -115,7 +115,8 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - M23 (pedido novo): imposição de páginas na folha física, posição/direção da folha na mesa, 2ª passada, simulação na prévia (Página | Mesa), modo agrupar ou um arquivo por página (mesma folha). Plano aprovado: `workflow/ciclos/28/plano-m22-m23.md` (gcode.js não muda; `src/maquina/imposicao.js` + `src/ui/mesa.js` novos; ligação em app.js só depois do commit do M22).
 - Atenção (2026-11-18): `src/magia.js`, `grimorios/`, `src/ornamento/tempo.js` são de OUTRA sessão (Grimório Non Presto) — não incluir nos commits do M22/M23; stage por caminho.
 - M22 FECHADO (commit "M22: ..."). Menores: ordem de Tab na aba Personagens; "Novo personagem" duplicado no editor; "+ Novo" da home sem confirmar.
-- **Agora: M23** — T1 `imposicao.js` e T2 `mesa.js` prontos (não commitados); falta T3 (ligar painel e seletor Página|Mesa em app.js, export em exportar.js), gates, revisor, commit; depois rename no GitHub.
+- M23 FECHADO (commit "M23: ..."). Menores: downloads da mesa ignoram "Camada"; botão Mesa no Básico; borda de encosto manual; faixas intermediárias; M0 entre passadas.
+- **Agora:** rename do repositório no GitHub para `scriptorium` + `git remote set-url` + push; conferir https://augustobosa.github.io/scriptorium/#inicio.
 
 ## Retomada (2026-11-17, EXPANSÃO CONCLUÍDA)
 

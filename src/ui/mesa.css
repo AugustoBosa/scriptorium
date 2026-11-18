@@ -1,0 +1,22 @@
+.mesa { display: grid; gap: var(--e3); padding: var(--e3); }
+.folha .mesa svg { display: block; width: auto; height: min(46vh, 420px); max-width: 100%; max-height: min(46vh, 420px); margin-inline: auto; background: var(--mesa); border: 1px solid var(--contorno); border-radius: var(--raio); }
+.mesa-barra { display: flex; flex-wrap: wrap; gap: var(--e2); align-items: center; }
+.mesa-instrucao { margin: 0; color: var(--tinta); font-size: var(--t-ui); line-height: var(--linha); }
+.mesa-aviso { margin: 0; color: var(--aviso); font-size: var(--t-pequeno); }
+.mesa-erro { margin: 0; color: var(--rubrica); }
+.mesa .m-contorno { fill: var(--campo); stroke: var(--contorno); stroke-width: .6; }
+.mesa .m-janela { fill: none; stroke: var(--tinta-2); stroke-width: .5; stroke-dasharray: 3 2; }
+.mesa .m-folha { fill: var(--folha); fill-opacity: .55; stroke: var(--tinta-2); stroke-width: .5; }
+.mesa .m-ref { stroke: var(--rubrica); stroke-width: 2; fill: none; }
+.mesa .m-slot { fill: none; stroke-width: .6; }
+.mesa .m-fora { opacity: .35; stroke-dasharray: 2 2; }
+.mesa .m-traco { fill: none; stroke-width: .35; }
+.mesa .m-txt { font: 600 9px var(--fonte-ui); fill: var(--tinta); stroke: var(--campo); stroke-width: 2.5px; paint-order: stroke; }
+
+.vista-previa { display: inline-flex; gap: var(--e1, 4px); }
+.vista-previa button[aria-pressed="true"] { background: var(--tinta); color: var(--pergaminho); }
+.mesa p, .mesa label { color: var(--tinta-folha); }
+.mesa select, .mesa button { color: var(--tinta-folha); background: var(--folha); border: 1px solid #85714f; }
+.mesa button.primario { background: var(--tinta-folha); color: var(--folha); }
+.mesa .m-fora-mesa { fill: url(#m-hach); fill-opacity: .6; stroke: var(--tinta-2); stroke-width: .5; stroke-dasharray: 3 2; }
+.mesa .m-mesa-borda { fill: none; stroke: var(--tinta); stroke-width: 1.2; }

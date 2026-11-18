@@ -74,7 +74,7 @@ function medir() {
   const visivel = el => !el.closest('[hidden], .so-leitor') && el.getClientRects().length > 0
   const fundo = el => { for (let e = el; e; e = e.parentElement) { const c = rgb(getComputedStyle(e).backgroundColor); if (c.length >= 3 && (c[3] ?? 1) === 1) return c } return [255, 255, 255] }
   const falhas = []
-  const texto = ['h1', 'nav.oficinas a', 'summary', '.controle label', '.controle output', 'button', 'select', '#pag-info', '#avisos li', 'h3', '.rotulo', 'label', '#previa-viva .pv-ajuda', '.pagina h2', '.pagina p', '.pagina a', '.pagina .marca']
+  const texto = ['h1', 'nav.oficinas a', 'summary', '.controle label', '.controle output', 'button', 'select', '#pag-info', '#avisos li', 'h3', '.rotulo', 'label', '#previa-viva .pv-ajuda', '.pagina h2', '.pagina p', '.pagina a', '.pagina .marca', '.mesa p', '.mesa .m-txt']
   for (const sel of texto) for (const el of document.querySelectorAll(sel)) {
     if (!visivel(el)) continue
     const r = razao(rgb(getComputedStyle(el).color), fundo(el))
@@ -113,5 +113,33 @@ for (const id of ['inicio', 'personagens']) for (const tema of ['claro', 'vela']
     await abrir(page, id)
     const falhas = await page.evaluate(medir)
     expect(falhas, falhas.join('\n')).toEqual([])
+  })
+}
+
+// Vista Mesa (M23): captura e contraste, claro e vela.
+for (const tema of ['claro', 'vela']) {
+  const abrirMesa = async page => {
+    await page.addInitScript(t => {
+      localStorage.setItem('writer.ui', JSON.stringify({ tema: t, vista: 'mesa' }))
+      localStorage.setItem('writer.mesa', JSON.stringify({ ligada: true, folha: 'A4' }))
+    }, tema)
+    await page.goto('index.html#carta')
+    await page.waitForSelector('.mesa svg')
+    await page.evaluate(() => document.fonts.ready)
+    // conteúdo longo em A6: 4 páginas numa folha A4 (2 passadas, 2 páginas cada)
+    await page.locator('#grupos details', { hasText: /^Texto|^Papel e aparência/ }).evaluateAll(ds => ds.forEach(d => { d.open = true }))
+    await page.getByRole('combobox', { name: 'formato', exact: true }).selectOption({ label: 'A6' })
+    await page.locator('#grupos textarea').first().fill(('A neblina cobre a aldeia e o castelo espera por você. '.repeat(8) + '\n\n').repeat(6))
+    await expect(page.locator('.mesa svg [data-slot]')).toHaveCount(4)
+  }
+  test(`captura mesa (${tema})`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await abrirMesa(page)
+    await foto(page, testInfo, `mesa-${tema}`)
+  })
+  test(`contraste AA na mesa (${tema})`, async ({ page }) => {
+    await abrirMesa(page)
+    const falhas = await page.evaluate(medir)
+    expect(falhas, falhas.join(', ')).toEqual([])
   })
 }

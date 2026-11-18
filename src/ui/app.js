@@ -12,6 +12,7 @@ import * as pTexto from './texto.js';
 import * as pExportar from './exportar.js';
 import { criar as criarGrimorio } from './grimorio.js';
 import * as pMat from './materiais.js';
+import { montar as montarMesa, desenharMesa } from './mesa.js';
 import { montar as montarInicio } from './inicio.js';
 import { montar as montarPersonagens } from './personagens.js';
 
@@ -19,7 +20,7 @@ const OFICINAS = { carta: 'escrita', livro: 'escrita', scroll: 'grimorio', grimo
 const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens };
 const NOMES = { inicio: 'Início', personagens: 'Personagens', carta: 'Carta', scroll: 'Scroll', grimorio: 'Grimório', livro: 'Livro', sigilos: 'Sigilos' };
 const VAZIO = { grimorio: 'Escolha uma magia na lista.', scroll: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.' };
-const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto'];
+const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto', 'mesa'];
 const $ = (id) => document.getElementById(id);
 
 const lerJSON = (chave) => { try { return JSON.parse(localStorage.getItem(chave)); } catch { return null; } };
@@ -116,13 +117,17 @@ function renderizar() {
   $('pag-prox').disabled = e.paginaAtual >= total - 1;
 
   const opc = { pagina: e.paginaAtual, trajeto: e.trajeto, otimizar: e.otimizar };
-  desenhar($('previa'), e.doc, opc); // M23: ramo "Mesa" entra aqui
-  if (e.doc.paginas.every((p) => p.camadas.every((c) => !c.tracos.length))) $('previa').insertAdjacentHTML('beforeend', `<p class="vazio">${VAZIO[e.oficina] ?? 'Nada para desenhar ainda.'}</p>`);
+  const mesa = ui.vista === 'mesa';
+  document.querySelector('.paginas').hidden = mesa;
+  $('vista-pagina').setAttribute('aria-pressed', String(!mesa));
+  $('vista-mesa').setAttribute('aria-pressed', String(mesa));
+  if (mesa) desenharMesa($('previa'), e); else desenhar($('previa'), e.doc, opc);
+  if (!mesa && e.doc.paginas.every((p) => p.camadas.every((c) => !c.tracos.length))) $('previa').insertAdjacentHTML('beforeend', `<p class="vazio">${VAZIO[e.oficina] ?? 'Nada para desenhar ainda.'}</p>`);
   $('rotulo-a').hidden = !escrita;
   $('rotulo-a').textContent = escrita ? `Variação: ${e.variacao || 'mão base'}` : '';
-  $('previa-b-bloco').hidden = !docB;
+  $('previa-b-bloco').hidden = !docB || mesa;
   $('previas').classList.toggle('comparando', !!docB);
-  if (docB) {
+  if (docB && !mesa) {
     desenhar($('previa-b'), docB, opc);
     $('rotulo-b').textContent = `Variação: ${e.variacaoB || 'mão base'}`;
   }
@@ -153,7 +158,7 @@ function aoMudar() {
 // ---- roteamento ----
 function montarVista(inst) {
   const v = { detalhes: [], atualizar: [], barra: document.createElement('div') };
-  inst.grupos.forEach((g, i) => {
+  inst.grupos.flatMap((g) => (g.titulo === 'Máquina' ? [g, { titulo: 'Mesa e folha', nivel: 'avancado', montar: montarMesa }] : [g])).forEach((g, i) => {
     const d = document.createElement('details'), s = document.createElement('summary'), corpo = document.createElement('div');
     s.textContent = g.titulo;
     d.append(s, corpo);
@@ -207,6 +212,8 @@ async function rotear() {
   $('comparar').checked = !!inst.estado.comparar;
   renderizar();
 }
+
+for (const v of ['pagina', 'mesa']) $('vista-' + v).addEventListener('click', () => { ui.vista = v; salvarUi(); aoMudar(); });
 
 // ---- nível e tema ----
 const temaEfetivo = () => document.documentElement.dataset.tema ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'vela' : 'claro');
