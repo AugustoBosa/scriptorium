@@ -87,3 +87,24 @@ Auditoria M21 pronta (20 achados: 1 P0 livro imprime marcação; 10 P1; 9 P2). C
 25-B: complete. Gates M21: ver saída.
 Gates M21: 794/0, build, e2e 68/68 (dois temas), A4 8/148 ms. Revisor Opus M21 despachado.
 Revisor M21: ACEITA (17/20 resolvidos, 3 parciais, 2 regressões menores). Ciclo 26 (26-A haiku): regressões menores + ui-smoke.
+M22 início (base 68d5f01): home + aba personagens + rename scriptorium. Ruling do usuário: GitHub 'scriptorium' minúsculo; nomes internos, pasta não muda.
+Plano M22+M23 aprovado (usuário: 'continue'); copiado em workflow/ciclos/28/plano-m22-m23.md. Decisões do usuário M23: 2ª passada; referência canto OU medida escolhida na hora; qualquer folha×página; um-por-página = mesma folha; simulação na área da prévia. Despachados: conselheiro M22, T1 imposicao.
+M22 spec gravada (ciclos/27/projeto.md, copiada do plano do conselheiro). T0 especime.js gravado pelo orquestrador (código da spec §5). Despachando T1–T4 do M22.
+M23-T1: complete (imposicao.js: girar/impor/paraMesa/aPassada/instrucao; 11 testes; 805/0; janelaDe exportado em perfis.js). A6 em A4 Mega S: 2 passadas [2,3]@0° e [0,1]@180°. M23-T2 despachado.
+M22-T4: complete (package.json/lock name scriptorium, URLs; README; ui-smoke).
+M22-T2: entregue (inicio.js/css, e2e/inicio.spec.js); build/e2e aguardam T1 (personagens.js) e T3.
+2026-11-18 09:33 M22-T1 e T3 caíram por limite (reset 21:20 de 17/11); M23-T2 entregue (mesa.js/css, e2e/mesa.spec.js; 807/0; build ok). Retomando T1/T3.
+Retomados M22-T1 e T3 (2026-11-18 09:33). ATENÇÃO: src/magia.js, grimorios/, src/ornamento/tempo.js são de OUTRA sessão (Grimório Non Presto) — não entram nos commits M22/M23 (stage por caminho).
+M22-T1: complete (personagens.js/css, nomeLivre/renomearSalvo, galeria em personagem.js; 807/0; e2e próprio 12/12).
+M22-T3: complete (rotas #inicio/#personagens, nav, restaurar, gancho M23; 810/0, build ok; e2e 112/124 — 8 mesa.spec (M23 não ligado, esperado) + 4 contraste borda do botão novo em inicio.css → devolvido ao T2).
+Gate M22: 810/0, build ok, e2e 116/116 (sem mesa), contraste ok. Links da home em azul padrão (sem tema) → p/ revisor. Revisor Opus M22 despachado.
+M22: complete (commit; checagem em cópia limpa).
+Checagem em cópia limpa do M22: 20 falhas só por falta de node_modules (hachure-fill) — ambiente, não código; CI faz npm ci. M23-T3 despachado (sonnet: integração).
+M23-T3: código pronto (app.js, index.html, exportar.js, mesa.*, e2e); 810/0, build ok; aguardando e2e do worker. test/tempo.test.mjs é da OUTRA sessão — fora do commit M23.
+M23-T3 entregue (e2e 132/132), mas captura da vista Mesa: SVG enorme/cortado, instrução coberta, botão azul → devolvido ao worker com correção exata.
+M23 vista Mesa round 2: folha fora da mesa cortada, 'topo' invertido vs instrução, slots sem número/sem páginas → devolvido.
+M23 vista Mesa round 2 OK (balanço visível, topo coerente, slots numerados). Revisor Opus M23 despachado.
+M23 Revisor: DEVOLVE (1) — giro absoluto ambíguo em 4 passadas; download da mesa sem avisos/trava experimental. Ciclo 29 (29-A sonnet) + menores de texto (sobra vs mesa, borda na frente, G0 X0 Y0, folha N, aviso de estrutura).
+M23: complete (06ea312). Repo renomeado p/ AugustoBosa/scriptorium; Pages https://augustobosa.github.io/scriptorium/ verificado (200).
+Ciclo 30 (pendências menores da mesa) despachado: 30-A sonnet.
+Ciclo 30: complete (815/0, e2e 140, geo 0 fora).

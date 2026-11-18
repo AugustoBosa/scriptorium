@@ -125,3 +125,24 @@ test('origem tras-direita inverte as palavras do topo', () => {
   const i = impor({ perfil: mega, folha: A('A4'), pagina: A('A6') });
   assert.match(instrucao(i, 1, { origem: 'tras-direita' }), /topo para trás/);
 });
+
+test('encosto: curta = auto em A6/A4; longa usa só 90/270 e sai 0 fora; A3 curta só 0/180', () => {
+  const a = impor({ perfil: mega, folha: A('A4'), pagina: A('A6') });
+  assert.deepEqual(impor({ perfil: mega, folha: A('A4'), pagina: A('A6'), referencia: { encosto: 'curta' } }), a);
+  const l = impor({ perfil: mega, folha: A('A4'), pagina: A('A6'), referencia: { encosto: 'longa' } });
+  assert.ok(l.passadas.every((p) => p.rot % 180 === 90));
+  assert.match(instrucao(l, 0), /borda longa/);
+  const j = l.janela;
+  l.passadas.forEach((_, k) => {
+    const { pagina, papel: pp } = aPassada(l.slots.map(() => pag(105, 148)), l, k, mega, A('A6'));
+    const g = gcodeDocumento(pagina, pp, mega);
+    assert.ok(xy(g.texto).filter(([x, y]) => !(x === mega.estaciona.x && y === mega.estaciona.y)).every(([x, y]) => x >= j.x0 - 1e-3 && x <= j.x1 + 1e-3 && y >= j.y0 - 1e-3 && y <= j.y1 + 1e-3));
+  });
+  const c = impor({ perfil: mega, folha: A('A3'), pagina: A('A6'), referencia: { encosto: 'curta' } });
+  assert.ok(c.passadas.every((p) => p.rot % 180 === 0));
+  assert.match(instrucao(c, 0), /borda curta/);
+});
+
+test('encosto sem rotação possível: erro claro', () => {
+  assert.throws(() => impor({ perfil: mega, folha: { largura: 300, altura: 300 }, pagina: A('A6'), referencia: { encosto: 'curta' } }), /borda curta encostada, nenhuma página cabe/);
+});

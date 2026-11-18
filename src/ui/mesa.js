@@ -7,13 +7,14 @@ import { PAPEIS, papel } from '../materiais/documento.js';
 import { controle } from './controle.js';
 
 const CHAVE = 'writer.mesa';
-const PADRAO = { ligada: false, folha: 'A4', paisagem: false, largura: 210, altura: 297, canto: 'auto', dx: 0, dy: 0, modo: 'agrupar', espaco: 0, origem: 'frente-esquerda' };
+const PADRAO = { ligada: false, folha: 'A4', paisagem: false, largura: 210, altura: 297, canto: 'auto', encosto: 'auto', dx: 0, dy: 0, modo: 'agrupar', espaco: 0, origem: 'frente-esquerda' };
 const CORES = ['var(--foco)', 'var(--rubrica)', 'var(--aviso)', 'var(--tinta-2)'];
 const NS = 'http://www.w3.org/2000/svg';
 const op = (o) => Object.entries(o).map(([valor, rotulo]) => ({ valor, rotulo }));
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 const sv = (tag, a = {}, pai) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); pai?.append(e); return e; };
 
+const BASICO = ['ligada', 'folha', 'paisagem', 'largura', 'altura', 'modo'];
 const DEFS = [
   { chave: 'ligada', rotulo: 'imposição na mesa', tipo: 'marca', ajuda: 'Liga a imposição: várias páginas numa folha maior, plotada em passadas. Desligada, cada página sai como sempre.' },
   { chave: 'folha', rotulo: 'folha', tipo: 'opcao', opcoes: op({ ...Object.fromEntries(Object.keys(PAPEIS).map((n) => [n, n])), personalizado: 'personalizado' }), ajuda: 'Tamanho da folha física que você prende na mesa.' },
@@ -21,12 +22,13 @@ const DEFS = [
   { chave: 'largura', rotulo: 'largura da folha', tipo: 'numero', min: 20, max: 1000, passo: 1, unidade: 'mm', ajuda: 'Largura da folha personalizada.' },
   { chave: 'altura', rotulo: 'altura da folha', tipo: 'numero', min: 20, max: 1000, passo: 1, unidade: 'mm', ajuda: 'Altura da folha personalizada.' },
   { chave: 'canto', rotulo: 'canto de referência', tipo: 'opcao', opcoes: op({ auto: 'automático', x0y0: 'frente-esquerda', x1y0: 'frente-direita', x0y1: 'trás-esquerda', x1y1: 'trás-direita' }), ajuda: 'Canto da janela da máquina onde a folha encosta (ou de onde você mede). Automático: o canto mais próximo da janela.' },
+  { chave: 'encosto', rotulo: 'borda que encosta', tipo: 'opcao', opcoes: op({ auto: 'automática', curta: 'curta', longa: 'longa' }), ajuda: 'Qual borda da folha você encosta na frente da mesa. Automática: o programa escolhe a que cobre mais páginas.' },
   { chave: 'dx', rotulo: 'distância horizontal', tipo: 'numero', min: 0, max: 500, passo: 0.5, unidade: 'mm', ajuda: 'Distância da borda lateral da folha ao canto de referência. 0 = encostada.' },
   { chave: 'dy', rotulo: 'distância vertical', tipo: 'numero', min: 0, max: 500, passo: 0.5, unidade: 'mm', ajuda: 'Distância da borda frontal/traseira da folha ao canto de referência. 0 = encostada.' },
   { chave: 'modo', rotulo: 'arquivos', tipo: 'opcao', opcoes: op({ agrupar: 'um por passada', pagina: 'um por página' }), ajuda: 'Um arquivo por passada (todas as páginas dela juntas) ou um arquivo por página, com a mesma folha parada.' },
   { chave: 'espaco', rotulo: 'espaço entre páginas', tipo: 'numero', min: 0, max: 50, passo: 0.5, unidade: 'mm', ajuda: 'Vão entre as páginas na folha.' },
   { chave: 'origem', rotulo: 'origem X0 Y0', tipo: 'opcao', opcoes: op({ 'frente-esquerda': 'frente-esquerda', 'frente-direita': 'frente-direita', 'tras-esquerda': 'trás-esquerda', 'tras-direita': 'trás-direita' }), ajuda: 'Canto físico da mesa onde fica X0 Y0 (só muda as palavras da instrução). Confira mandando G0 X0 Y0.' },
-].map((d) => ({ nivel: 'basico', ...d }));
+].map((d) => ({ nivel: BASICO.includes(d.chave) ? 'basico' : 'avancado', ...d }));
 
 function carregar() {
   try { return { ...PADRAO, ...JSON.parse(localStorage.getItem(CHAVE)) }; } catch { return { ...PADRAO }; }
@@ -52,11 +54,11 @@ function plano(estado) {
   const m = mesaDe(estado), doc = estado.doc;
   if (!doc) return { erro: 'Sem documento.' };
   try {
-    const imp = impor({ perfil: estado.perfil, folha: folhaDe(m), pagina: doc.papel, referencia: { canto: m.canto, dx: m.dx, dy: m.dy }, espaco: m.espaco });
+    const imp = impor({ perfil: estado.perfil, folha: folhaDe(m), pagina: doc.papel, referencia: { canto: m.canto, encosto: m.encosto, dx: m.dx, dy: m.dy }, espaco: m.espaco });
     const nFolhas = Math.max(1, Math.ceil(doc.paginas.length / imp.porFolha));
     const passos = [];
     for (let f = 0; f < nFolhas; f++) imp.passadas.forEach((_, k) => passos.push({ f, k }));
-    return { m, doc, imp, nFolhas, passos };
+    return { m, doc, estado, imp, nFolhas, passos };
   } catch (e) { return { erro: e.message }; }
 }
 
@@ -69,16 +71,20 @@ export function resumoMesa(estado) {
 
 const otim = (estado, pag) => ({ ...pag, camadas: pag.camadas.map((c) => ({ ...c, tracos: otimizar(c.tracos, 0.1, { ordem: estado.otimizar ? c.ordem : 'escrita', grupos: estado.otimizar ? c.grupos : undefined }) })) });
 const nomeFolha = (m) => (m.folha === 'personalizado' ? `${m.largura}×${m.altura} mm` : m.folha);
+// camada escolhida na barra de exportar, se alguma página do documento a tem; senão, todas (undefined)
+const camadaDe = (p) => (p.doc.paginas.some((x) => x.camadas.some((c) => c.id === p.estado.camada)) ? p.estado.camada : undefined);
 const pg = (p, f, i) => f * p.imp.porFolha + i; // índice da página do slot i na folha f
 
 const MSG_EXP = 'Perfil experimental: há traços fora da janela da máquina.';
 // G-code de uma passada (só o slot `so`, se dado), com a instrução como comentário no topo; { texto, fora } (fora = 1º aviso "fora da janela").
 // rapido: páginas cruas, sem 2-opt (só para conferir avisos na vista).
 function gcodePassada(estado, p, f, k, so, rapido = false) {
-  const { doc, imp, m } = p;
+  const { doc, imp, m } = p, cam = camadaDe(p);
   const pags = imp.slots.map((_, i) => {
     const pag = doc.paginas[pg(p, f, i)];
-    return pag && (so == null || so === i) ? (rapido ? pag : otim(estado, pag)) : undefined;
+    if (!pag || (so != null && so !== i)) return undefined;
+    const so1 = cam ? { ...pag, camadas: pag.camadas.filter((c) => c.id === cam) } : pag;
+    return rapido ? so1 : otim(estado, so1);
   });
   const { pagina, papel: pp } = aPassada(pags, imp, k, estado.perfil, doc.papel);
   const g = gcodeDocumento(pagina, pp, estado.perfil, { canetas: doc.canetas });
@@ -94,10 +100,10 @@ function baixar(conteudo, nome) {
 
 // arquivos de uma passada: [nome, gerar()]; um (agrupar) ou um por slot com página (pagina)
 function arquivos(estado, p, f, k) {
-  const of = estado.oficina ?? 'escrita';
-  if (p.m.modo !== 'pagina') return [[`${of}-f${f + 1}-pa${k + 1}.gcode`, () => gcodePassada(estado, p, f, k)]];
+  const cam = camadaDe(p), of = estado.oficina ?? 'escrita', sf = cam ? `-${cam}` : '';
+  if (p.m.modo !== 'pagina') return [[`${of}-f${f + 1}-pa${k + 1}${sf}.gcode`, () => gcodePassada(estado, p, f, k)]];
   return p.imp.passadas[k].slots.filter((i) => p.doc.paginas[pg(p, f, i)])
-    .map((i) => [`${of}-p${pg(p, f, i) + 1}-f${f + 1}-pa${k + 1}.gcode`, () => gcodePassada(estado, p, f, k, i)]);
+    .map((i) => [`${of}-p${pg(p, f, i) + 1}-f${f + 1}-pa${k + 1}${sf}.gcode`, () => gcodePassada(estado, p, f, k, i)]);
 }
 
 export function desenharMesa(elemento, estado) {
@@ -105,7 +111,7 @@ export function desenharMesa(elemento, estado) {
   elemento.replaceChildren(raiz);
   elemento.style.maxWidth = ''; // `desenhar` da página deixa largura×4
   const m = mesaDe(estado);
-  if (!m.ligada) { raiz.append(el('p', 'mesa-aviso', 'Imposição desligada. Ligue "imposição na mesa" no painel "Mesa e folha" (se o painel não estiver visível, mude para Avançado e abra Mesa e folha).')); return; }
+  if (!m.ligada) { raiz.append(el('p', 'mesa-aviso', 'Imposição desligada. Ligue "imposição na mesa" no painel "Mesa e folha".')); return; }
   const p = plano(estado);
   if (p.erro) { raiz.append(el('p', 'mesa-erro', p.erro)); return; }
   const { imp, passos } = p, perfil = estado.perfil;

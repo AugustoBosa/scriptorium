@@ -158,7 +158,7 @@ function aoMudar() {
 // ---- roteamento ----
 function montarVista(inst) {
   const v = { detalhes: [], atualizar: [], barra: document.createElement('div') };
-  inst.grupos.flatMap((g) => (g.titulo === 'Máquina' ? [g, { titulo: 'Mesa e folha', nivel: 'avancado', montar: montarMesa }] : [g])).forEach((g, i) => {
+  inst.grupos.flatMap((g) => (g.titulo === 'Máquina' ? [g, { titulo: 'Mesa e folha', nivel: 'basico', montar: montarMesa }] : [g])).forEach((g, i) => {
     const d = document.createElement('details'), s = document.createElement('summary'), corpo = document.createElement('div');
     s.textContent = g.titulo;
     d.append(s, corpo);

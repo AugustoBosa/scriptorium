@@ -72,3 +72,24 @@ test('offsetX com perfil experimental: traço fora da janela: erro e nenhum arqu
   expect(baixou).toBe(false)
   await expect(page.locator('.mesa .mesa-erro')).toHaveText('Perfil experimental: há traços fora da janela da máquina.')
 })
+
+test('camada "notas" escolhida: "Baixar esta passada" gera …-notas.gcode (passada 2) sem a camada texto', async ({ page }) => {
+  await page.getByRole('button', { name: 'Página', exact: true }).click()
+  await page.getByText('Texto', { exact: true }).click()
+  const idx = await page.$$eval('#painel textarea', ts => ts.findIndex(t => t.value.includes('Caro viajante')))
+  await page.locator('#painel textarea').nth(idx).fill('Caro {_viajante_},\n\nA neblina cobre Barovia.')
+  await page.getByRole('button', { name: 'Mesa', exact: true }).click()
+  await page.getByRole('combobox', { name: 'Camada', exact: true }).selectOption('notas')
+  await page.getByRole('combobox', { name: 'Passada' }).selectOption({ index: 1 }) // a carta (página 1) está no slot da passada 2
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Baixar esta passada', exact: true }).click()])
+  expect(dl.suggestedFilename()).toBe('carta-f1-pa2-notas.gcode')
+  const texto = await readFile(await dl.path(), 'utf8')
+  expect(texto).toContain('; camada notas')
+  expect(texto).not.toContain('; camada texto')
+})
+
+test('"borda que encosta" persiste em writer.mesa e muda a instrução (longa)', async ({ page }) => {
+  await page.getByRole('combobox', { name: 'borda que encosta', exact: true }).selectOption('longa')
+  await expect(page.locator('.mesa-instrucao')).toContainText('borda longa')
+  expect((await page.evaluate(() => JSON.parse(localStorage.getItem('writer.mesa')))).encosto).toBe('longa')
+})

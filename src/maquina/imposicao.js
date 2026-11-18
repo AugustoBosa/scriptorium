@@ -21,7 +21,7 @@ const daFolha = (folha, p, pt) => {
 export function impor({ perfil, folha, pagina, referencia = {}, espaco = 0 }) {
   const j = janelaDe(perfil), jw = j.x1 - j.x0, jh = j.y1 - j.y0;
   const { largura: W, altura: H } = folha, { largura: pw, altura: ph } = pagina, g = espaco;
-  const { dx = 0, dy = 0 } = referencia;
+  const { dx = 0, dy = 0, encosto = 'auto' } = referencia;
   if (!cabe(pw, ph, jw, jh) && !cabe(ph, pw, jw, jh)) throw new Error(`página ${pw}×${ph} mm maior que a janela útil ${jw}×${jh} mm do perfil ${perfil.nome}`);
   if (!cabe(pw, ph, W, H) && !cabe(ph, pw, W, H)) throw new Error(`página ${pw}×${ph} mm maior que a folha ${W}×${H} mm`);
 
@@ -34,6 +34,8 @@ export function impor({ perfil, folha, pagina, referencia = {}, espaco = 0 }) {
     const [w, h] = rot % 180 ? [H, W] : [W, H];
     return { rot, caixa: { x: canto[1] === '1' ? j.x1 - dx - w : j.x0 + dx, y: canto[3] === '1' ? j.y1 - dy - h : j.y0 + dy, w, h } };
   };
+  // encosto 'curta'|'longa': só as rotações em que essa borda da folha cai na "frente" (mesma regra de `instrucao`)
+  const rots = ROTS.filter((rot) => { const { w, h } = posicao(rot).caixa; return encosto === 'auto' || (w < h ? 'curta' : 'longa') === encosto; });
   const cobre = (p, c) => [[c.x, c.y], [c.x + c.w, c.y], [c.x, c.y + c.h], [c.x + c.w, c.y + c.h]]
     .every((q) => { const [X, Y] = daFolha(folha, p, q); return X >= j.x0 - EPS && X <= j.x1 + EPS && Y >= j.y0 - EPS && Y <= j.y1 + EPS; });
 
@@ -48,7 +50,7 @@ export function impor({ perfil, folha, pagina, referencia = {}, espaco = 0 }) {
     const falta = new Set(cel.keys()), passadas = [];
     for (;;) {
       let melhor = null;
-      for (const rot of ROTS) {
+      for (const rot of rots) {
         const p = posicao(rot), ids = [...falta].filter((i) => cobre(p, cel[i]));
         if (ids.length > (melhor?.ids.length ?? 0)) melhor = { ...p, ids };
       }
@@ -61,6 +63,7 @@ export function impor({ perfil, folha, pagina, referencia = {}, espaco = 0 }) {
   // ponytail: grade uniforme com a página toda em 0 ou toda em 90; sem mistura de orientações na mesma folha
   const melhor = [0, 90].map(plano).filter(Boolean)
     .reduce((a, b) => (!a || b.cobertos > a.cobertos || (b.cobertos === a.cobertos && b.passadas.length < a.passadas.length) ? b : a), null);
+  if (!melhor?.cobertos && encosto !== 'auto') throw new Error(`com a borda ${encosto} encostada, nenhuma página cabe na janela; use 'auto' ou '${encosto === 'longa' ? 'curta' : 'longa'}'`);
   if (!melhor?.cobertos) throw new Error(`nenhum slot da página ${pw}×${ph} mm é alcançável na janela ${jw}×${jh} mm com a folha ${W}×${H} mm`);
 
   const vivos = [...melhor.cel.keys()].filter((i) => !melhor.falta.has(i));

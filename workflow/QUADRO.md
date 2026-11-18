@@ -117,6 +117,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - M22 FECHADO (commit "M22: ..."). Menores: ordem de Tab na aba Personagens; "Novo personagem" duplicado no editor; "+ Novo" da home sem confirmar.
 - M23 FECHADO (commit "M23: ..."). Menores: downloads da mesa ignoram "Camada"; botão Mesa no Básico; borda de encosto manual; faixas intermediárias; M0 entre passadas.
 - Publicado em 2026-11-18: repositório renomeado para `AugustoBosa/scriptorium` (remote atualizado), push de `06ea312`, Pages verde em https://augustobosa.github.io/scriptorium/ (o link antigo `/3dprinter_plotter/` agora dá 404).
+- Ciclo 30 FECHADO (2026-11-18): downloads da mesa respeitam "Camada"; painel Mesa e folha no Básico (essencial); escolha da borda que encosta (auto|curta|longa). Pendências da mesa que restam (fora do escopo): faixas intermediárias, `M0` entre passadas.
 - Pendências do usuário: testar a imposição na máquina (rodar a passada 1 com a caneta levantada para conferir a posição; conferir `G0 X0 Y0` = canto frente-esquerda).
 
 ## Retomada (2026-11-17, EXPANSÃO CONCLUÍDA)
