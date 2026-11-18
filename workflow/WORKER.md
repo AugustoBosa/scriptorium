@@ -1,6 +1,6 @@
 # Protocolo do worker
 
-Você executa UMA tarefa do projeto de caligrafia para plotter. Raiz: `C:\Users\augus\Desktop\augusto\projects\3dprinter_plotter`.
+Você executa UMA tarefa do projeto de caligrafia para plotter. Raiz: `C:\Users\augus\Desktop\augusto\projects\scriptorium`.
 
 Regras:
 1. Crie/edite só os arquivos listados no seu brief. Não toque `workflow/`, `arquivo/`, `fontes/`. Não faça commit. Não instale pacotes.

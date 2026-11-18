@@ -108,3 +108,4 @@ M23 Revisor: DEVOLVE (1) — giro absoluto ambíguo em 4 passadas; download da m
 M23: complete (06ea312). Repo renomeado p/ AugustoBosa/scriptorium; Pages https://augustobosa.github.io/scriptorium/ verificado (200).
 Ciclo 30 (pendências menores da mesa) despachado: 30-A sonnet.
 Ciclo 30: complete (815/0, e2e 140, geo 0 fora).
+2026-11-18 fim de sessão: registros finais; protocolos com raiz nova (scriptorium); geo-check.mjs versionado; memória copiada p/ ~/.claude/projects/C--Users-augus-Desktop-augusto-projects-scriptorium. Usuário vai renomear a pasta.

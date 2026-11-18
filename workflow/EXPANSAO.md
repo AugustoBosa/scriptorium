@@ -1,6 +1,6 @@
 # Expansão "Scriptorium" — workflow multiagente (M13–M21)
 
-Documento autocontido para executar numa sessão nova do Claude Code. Raiz: `C:\Users\augus\Desktop\augusto\projects\3dprinter_plotter`. Branch: `expansao`. Idioma: pt-BR em tudo.
+Documento autocontido para executar numa sessão nova do Claude Code. Raiz: `C:\Users\augus\Desktop\augusto\projects\scriptorium` (antes `3dprinter_plotter`). Branch: `main` (a `expansao` já foi mesclada e apagada). Idioma: pt-BR em tudo.
 
 ---
 

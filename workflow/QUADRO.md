@@ -108,7 +108,58 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 | 12 | OK: M15 parte 1 (PARAMS nos 7 módulos, controle com prévia viva, tema.css, svgDocumento); 143 pass / 0 fail; goldens intactos; controle.spec 14/14; build ok. M15 segue ABERTO: falta ciclo 13 (shell + migração dos painéis) e a PARADA para aprovação |
 | 13 | OK: M15 parte 2 (shell Scriptorium, 5 oficinas, painéis migrados para controle/dica, exportação por Documento); 142 pass / 0 fail (143 menos o teste de `ajuda()` removido); goldens intactos; build ok; e2e 42/42 (smoke, controle, visual com contraste AA, claro e vela). **M15 segue ABERTO**: falta revisor e PARADA para o usuário aprovar a UI |
 
-## Retomada (2026-11-18, M22 e M23 publicados) — LEIA ESTA PRIMEIRA
+## Retomada (2026-11-18, sessão encerrada; pasta será renomeada) — LEIA ESTA PRIMEIRA
+
+**Estado:**
+- Tudo o que foi pedido até aqui está FEITO e PUBLICADO.
+- `main` = `origin/main` (GitHub `AugustoBosa/scriptorium`).
+- Pages: https://augustobosa.github.io/scriptorium/ (responde 200).
+- Último commit de produto: `41b38a0` (pendências da mesa).
+- Testes: `npm test` 815/0; e2e 140/140; geometria da mesa com 0 pontos fora em 24 casos (`node workflow/ciclos/28/geo-check.mjs`).
+
+**Pasta local:** o usuário vai renomear `C:\Users\augus\Desktop\augusto\projects\3dprinter_plotter` para `C:\Users\augus\Desktop\augusto\projects\scriptorium`.
+- Já está tudo ajustado para o rename:
+  - a raiz em `workflow/EXPANSAO.md`, `GERENTE.md` e `WORKER.md`;
+  - o script de geometria, que agora usa caminho relativo (`workflow/ciclos/28/geo-check.mjs`);
+  - a memória do Claude, copiada para a pasta do caminho novo (`~/.claude/projects/C--Users-augus-Desktop-augusto-projects-scriptorium/`).
+- Depois do rename, rodar `npm test` e `npm run build`. O `node_modules` vai junto com a pasta; se algo falhar, `npm ci`.
+
+**Próxima sessão = testes na máquina (roteiro):**
+1. `npm run dev` e abrir http://localhost:8765/#inicio.
+   - Se a porta 127.0.0.1:8765 estiver ocupada por outro processo, usar http://[::1]:8765/.
+   - O e2e roda com uma config temporária que troca `localhost` por `[::1]`.
+2. Na Mega S, mandar `G0 X0 Y0` e confirmar que a caneta vai ao canto **frente-esquerda**. Se não for, ajustar "origem" no painel Mesa e folha (isso só muda o texto da instrução).
+3. Teste da imposição:
+   - Carta → página A6 → painel **Mesa e folha** → imposição ligada, folha A4 → botão **Mesa**.
+   - Ler a instrução da passada 1 e baixar a passada 1.
+   - Rodar com a caneta LEVANTADA (Z alto) para conferir a posição; depois rodar com a caneta.
+4. Conferir se o `M0` (troca de caneta: notas em vermelho) retoma na tela da Mega S.
+5. Calibrar no papel:
+   - tamanho e legibilidade;
+   - cinemática (`fluidez`);
+   - fadiga;
+   - ligações (EMSAllure, Swiss, Society);
+   - arremate.
+6. Anotar aqui o que precisa de ajuste → novo marco.
+
+**Arquivos de OUTRA sessão (Grimório Non Presto):**
+- `src/magia.js` (modificado), `grimorios/`, `src/ornamento/tempo.js`, `test/tempo.test.mjs`.
+- Não fazem parte deste trabalho e estão sem commit.
+- Não incluir em commits deste fluxo sem falar com o usuário.
+
+**Pendências opcionais (próximo pedido):**
+- Mesa: faixas intermediárias; `M0` entre passadas.
+- Motor: 2-opt de blocos (a ordem de escrita viaja 1,6 a 1,7× mais); `PARES` por fonte (z da EMSSwiss).
+- Livro: 2 colunas sem equilíbrio na última página.
+- Grimório: prévia viva em "Quem escreve" e "Variação".
+- Fable exige créditos: os papéis dele rodaram em Opus.
+
+**Registros:**
+- Decisões: `workflow/ciclos/LEDGER-expansao.md`.
+- Relatórios por ciclo: `workflow/ciclos/NN/relatorio.md`.
+- Plano do M22 e do M23: `workflow/ciclos/28/plano-m22-m23.md`.
+
+## Retomada (2026-11-18, M22 e M23 publicados)
 
 - Pedido do usuário: (1) home page com acesso a todas as oficinas e aos personagens; (2) aba dedicada só a personagens (criar, editar, controlar); (3) renomear o projeto para Scriptorium — GitHub `scriptorium` (minúsculo; o link do Pages muda para https://augustobosa.github.io/scriptorium/) e nomes dentro do projeto (package.json, títulos, README, remote). A pasta local NÃO muda.
 - Laço: conselheiro Opus (impeccable + frontend-design) → `workflow/ciclos/27/projeto.md` → workers → gates (test, build, e2e via [::1]) → revisor com capturas → commit → `gh repo rename scriptorium` + remote + push → conferir Pages no link novo.
