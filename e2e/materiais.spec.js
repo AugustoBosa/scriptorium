@@ -70,3 +70,12 @@ test('livro: marcação da Carta não vira texto literal', async ({ page }) => {
   expect(await page.locator('#previa').innerHTML()).not.toContain('{')
   await expect(page.locator('#avisos')).not.toContainText('{')
 })
+
+test('livro: nota do exemplo aparece na camada notas e o painel muda a posição dela no texto', async ({ page }) => {
+  await abrir(page, 'livro')
+  await expect.poll(() => page.locator('#previa g[data-camada="notas"] path').count()).toBeGreaterThan(0)
+  const sel = page.locator('#grupos details:not([hidden]) .posicoes select').first()
+  await sel.selectOption('esquerda')
+  await expect.poll(() => page.locator('#painel textarea').evaluateAll((ts) => ts.some((t) => t.value.includes('{nota@esquerda:')))).toBe(true)
+  await expect(page.locator('#previa .alca-nota').first()).toBeAttached()
+})

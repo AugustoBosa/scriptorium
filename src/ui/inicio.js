@@ -7,7 +7,6 @@ import { comporCarta } from '../materiais/carta.js';
 import { comporLivro } from '../materiais/livro.js';
 import { comporGrimorio } from '../materiais/scroll.js';
 import { comporSigilos } from '../materiais/sigilos.js';
-import { parsearNotas } from '../materiais/notas.js';
 import { EXEMPLOS } from '../materiais/exemplos.js';
 import { gerarAlfabeto } from '../arcano/alfabeto.js';
 import { magiaVazia } from '../magia.js';
@@ -21,7 +20,7 @@ const OFICINAS = [
   ['carta', 'Carta', 'Cartas, anotações e diários. Notas na margem, palavras riscadas e sublinhadas, numa segunda caneta.',
     (ctx) => comporCarta(EXEMPLOS.anotacao, ctx, { papel: papel('A7'), tamanho: 3.5, tipo: 'anotacao' })],
   ['livro', 'Livro', 'Páginas de livro em colunas, com título corrente, número de página, capitular e borda.',
-    (ctx) => comporLivro(parsearNotas(EXEMPLOS.livro).limpo, ctx, { papel: papel('A7'), tamanho: 2.5, entrelinha: 1.5, colunas: 1, titulo: 'Os sete copistas',
+    (ctx) => comporLivro(EXEMPLOS.livro, ctx, { papel: papel('A7'), tamanho: 2.5, entrelinha: 1.5, colunas: 1, titulo: 'Os sete copistas',
       capitular: { estilo: 'lombarda', linhas: 3 }, borda: { estilo: 'linhas', largura: 4 } })],
   ['magias', 'Magias', 'Magias de D&D em pergaminhos avulsos ou num grimório corrido, com sigilo, moldura e alfabeto arcano.',
     (ctx) => comporGrimorio([MAGIA], { ...ctx, fontes: { ...ctx.fontes, arcano: gerarAlfabeto({ seed: 1, curva: 0.4, complexidade: 0.5 }) },

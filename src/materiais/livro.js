@@ -4,10 +4,12 @@ import { caixaDe } from '../geo.js';
 import { capitular, caixaCapitular, PARAMS as PARAMS_CAP } from '../ornamento/capitular.js';
 import { borda, miolo, PARAMS as PARAMS_BORDA } from '../ornamento/borda.js';
 import { escreverEm, CANETAS } from './documento.js';
+import { parsearNotas, comporNotas } from './notas.js';
 
 const D = {
   tamanho: 5, entrelinha: 1.5, alinhamento: 'justificado', colunas: 1, titulo: '', inicio: 1, numeracao: true, reclamo: true,
   cabecalhoNaPrimeira: false, capitular: null, borda: null, rubrica: true, seed: 1,
+  conector: 'seta', espontaneo: 0, canetaNotas: 'vermelha',
 };
 
 // Plano de texto de cada página (puro): número, cabeçalho corrente e reclamo (1ª palavra da página seguinte).
@@ -52,8 +54,11 @@ function desenhar(p, G, ctx, avisos, i) {
   return out;
 }
 
-export function comporLivro(texto, ctx, cfg) {
+// texto aceita a marcação das notas ({nota…}, {~…~>…}, {_…_}, {o:…}): as notas saem soltas, perto da palavra, ligadas por seta.
+export function comporLivro(bruto, ctx, cfg) {
   const c = { ...D, ...cfg };
+  const { limpo: texto, marcas, avisos: avisosMarca } = parsearNotas(bruto);
+  marcas.filter((m) => m.tipo === 'nota').forEach((m, k) => { m.ordem = k; });
   if (c.colunas !== 1 && c.colunas !== 2) throw new Error('livro: 1 ou 2 colunas');
   const { papel, tamanho, entrelinha, seed } = c, G = geometria(papel, c), avisos = [];
   const caneta = c.rubrica ? 'vermelha' : 'preta';
@@ -74,20 +79,33 @@ export function comporLivro(texto, ctx, cfg) {
   const papelTexto = { largura: papel.largura, altura: papel.altura,
     margens: { topo: G.texto.y, esq: G.texto.x, dir: papel.largura - G.texto.x - G.texto.l, base: papel.altura - G.texto.y - G.texto.a } };
   const r = compor(corpo, ctx.fontes, ctx.mao, papelTexto, { tamanho, entrelinha, alinhamento: c.alinhamento, colunas: c.colunas, vaoColunas: c.vaoColunas, obstaculos });
-  avisos.unshift(...r.avisos.filter((a) => !a.startsWith('tolerancia')));
+  avisos.unshift(...r.avisos.filter((a) => !a.startsWith('tolerancia')), ...avisosMarca);
+  // a capitular tira a 1ª letra: se ela era uma palavra inteira, os índices das marcas andam uma palavra
+  const conta = (s) => s.split(/\s+/).filter(Boolean).length, desl = conta(texto) - conta(corpo);
+  for (const m of marcas) { m.ini = Math.max(0, m.ini - desl); m.fim = Math.max(0, m.fim - desl); }
+  const pagDe = (ind) => r.ancoras.find((a) => a.indice === ind)?.pagina ?? 0;
 
   const plano = paginacao(r, c);
   const paginas = r.paginas.map((tracos, i) => {
     const d = desenhar(plano[i], G, ctx, avisos, i);
     const ilum = c.borda ? borda(G.util, c.borda, `${seed}|livro|borda`) : [];
-    return { camadas: [
+    const ancoras = r.ancoras.filter((a) => a.pagina === i);
+    const daPagina = marcas.filter((m) => (m.tipo === 'nota' || m.tipo === 'correcao' ? pagDe(m.ini) === i : ancoras.some((a) => a.indice >= m.ini && a.indice <= m.fim)));
+    const n = comporNotas(daPagina, { pagina: i, tracos, grupos: r.grupos[i], ancoras, papel, coluna: { x: G.texto.x, l: G.texto.l }, faixa: null, calha: null, tamanho,
+      ocupado: [...d.paginacao, ...ilum, ...(i === 0 ? cap : []), ...d.cabecalho] }, { ...ctx, maoNotas: ctx.maoNotas ?? ctx.mao },
+    { conector: c.conector, espontaneo: c.espontaneo, seed: `${seed}|livro` });
+    avisos.push(...n.avisos);
+    return { notas: n.notas, camadas: [
       { id: 'texto', caneta: 'preta', personagem, ordem: 'escrita', grupos: r.grupos[i], tracos },
       { id: 'paginacao', caneta: 'preta', personagem, ordem: 'otimizada', tracos: d.paginacao },
       { id: 'iluminura', caneta: 'preta', personagem: null, ordem: 'otimizada', tracos: ilum },
       { id: 'rubrica', caneta, personagem, ordem: 'otimizada', tracos: [...(i === 0 ? cap : []), ...d.cabecalho] },
+      { id: 'notas', caneta: c.canetaNotas, personagem: ctx.personagens?.notas ?? personagem, ordem: 'otimizada', tracos: n.tracos },
     ] };
   });
-  return { papel, canetas: { preta: CANETAS.preta, ...(c.rubrica && { vermelha: CANETAS.vermelha }) }, paginas, avisos };
+  const comNotas = paginas.some((p) => p.camadas.at(-1).tracos.length); // sem notas, a caneta das notas não entra (nada de troca à toa)
+  if (!comNotas) for (const p of paginas) p.camadas.at(-1).caneta = 'preta';
+  return { papel, canetas: { preta: CANETAS.preta, ...(c.rubrica && { vermelha: CANETAS.vermelha }), ...(comNotas && { [c.canetaNotas]: CANETAS[c.canetaNotas] }) }, paginas, avisos };
 }
 
 // Prévias: folha A6 com pautas e o elemento.

@@ -7,6 +7,8 @@ import { EXEMPLOS, trocarExemplo, aplicarVisual } from '../materiais/exemplos.js
 import { AJUDA } from '../ajuda.js';
 import { dica } from './controle.js';
 import { desenhar, listar } from './previa.js';
+import { ligarArrasto } from './arrastar.js';
+import { posicionarNota } from '../materiais/notas.js';
 import * as pPersonagem from './personagem.js';
 import * as pFontes from './fontes.js';
 import * as pTexto from './texto.js';
@@ -54,7 +56,7 @@ function criarEscrita() {
       { titulo: 'Fontes', montar: pFontes.montar },
       { titulo: 'Texto', fechado: true, montar: pTexto.montar },
       { titulo: 'Papel e aparência', montar: pTexto.montarPapel },
-      { titulo: 'Notas', so: 'carta', aberto: true, montar: pMat.montarCarta },
+      { titulo: 'Notas', aberto: true, montar: pMat.montarCarta },
       { titulo: 'Livro', so: 'livro', aberto: true, montar: pMat.montarLivro },
       { titulo: 'Máquina', nivel: 'avancado', montar: pExportar.montar },
     ],
@@ -132,6 +134,7 @@ function renderizar() {
   $('vista-pagina').setAttribute('aria-pressed', String(!mesa));
   $('vista-mesa').setAttribute('aria-pressed', String(mesa));
   if (mesa) desenharMesa($('previa'), e); else desenhar($('previa'), e.doc, opc);
+  if (!mesa && typeof e.texto === 'string') ligarArrasto($('previa'), e.doc.paginas[e.paginaAtual]?.notas, (k, pos) => { e.texto = posicionarNota(e.texto, k, pos); aoMudar(); });
   if (!mesa && e.doc.paginas.every((p) => p.camadas.every((c) => !c.tracos.length))) $('previa').insertAdjacentHTML('beforeend', `<p class="vazio">${VAZIO[e.oficina] ?? 'Nada para desenhar ainda.'}</p>`);
   $('rotulo-a').hidden = !escrita;
   $('rotulo-a').textContent = escrita ? `Variação: ${e.variacao || 'mão base'}` : '';

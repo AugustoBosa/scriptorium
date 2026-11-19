@@ -22,8 +22,10 @@ export function parsearNotas(texto) {
     const f = texto.indexOf('}', i), c = f < 0 ? '' : texto.slice(i + 1, f);
     let m;
     if (f < 0) avisos.push(`marca sem fechamento: "${resumo(texto.slice(i))}"`);
-    else if ((m = /^nota:([\s\S]*)$/.exec(c)) && m[1].trim()) {
-      marcas.push({ tipo: 'nota', ini: Math.max(0, contar(limpo) - 1), fim: Math.max(0, contar(limpo) - 1), texto: m[1].trim() });
+    else if ((m = /^nota(?:@([^:]*))?:([\s\S]*)$/.exec(c)) && m[2].trim()) {
+      const pos = lerPos(m[1]);
+      if (m[1] != null && !pos) avisos.push(`posição de nota desconhecida: "${m[1]}" (use esquerda, direita, acima, abaixo ou x,y em mm)`);
+      marcas.push({ tipo: 'nota', ini: Math.max(0, contar(limpo) - 1), fim: Math.max(0, contar(limpo) - 1), texto: m[2].trim(), ...(pos && { pos }) });
       i = f + 1;
       if (limpo.endsWith(' ') && texto[i] === ' ') i++;
       continue;
@@ -37,6 +39,23 @@ export function parsearNotas(texto) {
   return { limpo, marcas, avisos };
 }
 const intervalo = (limpo, trecho) => ({ ini: contar(limpo + /^\s*/.exec(trecho)[0] + 'x') - 1, fim: 0 });
+
+// Posição de uma nota: lado ('esquerda' | 'direita' | 'acima' | 'abaixo') ou canto superior esquerdo { x, y } em mm.
+export const LADOS = ['esquerda', 'direita', 'acima', 'abaixo'];
+function lerPos(s) {
+  if (s == null) return null;
+  const t = s.trim();
+  if (LADOS.includes(t)) return { lado: t };
+  const m = /^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/.exec(t);
+  return m ? { x: Number(m[1]), y: Number(m[2]) } : null;
+}
+const escreverPos = (pos) => (!pos ? '' : pos.lado ? '@' + pos.lado : `@${+pos.x.toFixed(1)},${+pos.y.toFixed(1)}`);
+
+// Reescreve a posição da k-ésima {nota…} do texto (null = automática). Fora do intervalo: texto igual.
+export function posicionarNota(texto, k, pos) {
+  let n = -1;
+  return texto.replace(/\{nota(@[^:}]*)?:/g, (todo) => (++n === k ? `{nota${escreverPos(pos)}:` : todo));
+}
 
 // Caixa de cada palavra (bloco de traços [g_k, g_k+1)); null se a palavra não tem traço.
 export function caixasPalavras(tracos, grupos) {
@@ -93,16 +112,17 @@ export function conectar(tipo, g) {
 const mover = (trs, dx, dy) => trs.map((t) => t.map(([x, y]) => [x + dx, y + dy]));
 const caixasSeg = (trs) => trs.flatMap((t) => t.slice(1).map((p, i) => caixaDe([[t[i], p]])));
 
-// base = { pagina, tracos, grupos, ancoras (desta página), papel, coluna:{x,l}, faixa:{x,y,l,a}|null, calha:{x,l}|null, tamanho }
-// cfg = { tamanhoNotas, conector, espontaneo, seed }; ctx = { fontes, mao, maoNotas }. → { tracos, avisos }
+// base = { pagina, tracos, grupos, ancoras (desta página), papel, coluna:{x,l}, faixa:{x,y,l,a}|null, calha:{x,l}|null, tamanho, ocupado? }
+// ocupado = traços de outras camadas (paginação, borda, capitular) que as notas também não podem tocar.
+// cfg = { tamanhoNotas, conector, espontaneo, seed }; ctx = { fontes, mao, maoNotas }. → { tracos, avisos, notas }
 export function comporNotas(marcas, base, ctx, cfg = {}) {
-  const { pagina, tracos, grupos, ancoras, papel, coluna, faixa, calha, tamanho } = base;
+  const { pagina, tracos, grupos, ancoras, papel, coluna, faixa, calha, tamanho, ocupado = [] } = base;
   const seed = cfg.seed ?? 1, tn = cfg.tamanhoNotas ?? 0.6 * tamanho, esp = cfg.espontaneo ?? 0;
   const maoN = ctx.maoNotas ?? ctx.mao;
   const rr = (chave) => rng(`${seed}|notas|${pagina}|${chave}`);
   const caixas = caixasPalavras(tracos, grupos);
   const palavras = ancoras.map((a, k) => ({ ...a, k, c: caixas[k] })).filter((p) => p.c);
-  const saida = [], avisos = [], colocados = [], marcadas = new Set();
+  const saida = [], avisos = [], colocados = caixasSeg(ocupado), marcadas = new Set();
   const alvos = (m) => palavras.filter((p) => p.indice >= m.ini && p.indice <= m.fim);
   const livre = (trs, ks = []) => !sobrepoe(trs, [...caixas.filter((c, k) => c && !ks.includes(k)), ...colocados], VAO);
   const pôr = (trs, regs = [caixaDe(trs)]) => { saida.push(...trs); colocados.push(...regs); };
@@ -184,15 +204,66 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
     }
   }
 
-  // 3. notas marginais por y da âncora
+  // 3. notas: na faixa de margem quando há e a nota não pede posição; senão no lugar livre mais perto, ligada por seta
   for (const m of marcas.filter((x) => x.tipo === 'nota')) {
     const p = palavras.find((q) => q.indice === m.ini);
-    if (p) fila.push({ p, texto: m.texto });
+    if (p) fila.push({ p, texto: m.texto, pos: m.pos, ordem: m.ordem });
   }
   fila.sort((a, b) => a.p.y - b.p.y);
+  const notas = []; // { ordem, caixa } das notas soltas: a interface arrasta por aqui
+  const solta = ({ p, texto, pos, ordem }) => {
+    const larg = Math.max(15, Math.min(45, 0.3 * papel.largura)), borda = 3;
+    const r = compor(texto, ctx.fontes, maoN, { largura: larg, altura: papel.altura, margens: { topo: 0, dir: 0, base: 0, esq: 0 } }, { tamanho: tn, entrelinha: 1.3 });
+    const tr0 = r.paginas[0], b0 = caixaDe(tr0);
+    if (!tr0.length) return;
+    const em = (x, y) => mover(tr0, x - b0.x, y - b0.y);
+    const caixaEm = (x, y) => ({ x, y, l: b0.l, a: b0.a });
+    let alvo = null;
+    if (pos?.x != null) alvo = { x: pos.x, y: pos.y };
+    else {
+      const c = p.c, lw = linha(p), G = 1.5, ocupa = [...caixas.filter(Boolean), ...colocados];
+      const xe = Math.min(c.x, ...lw.map((q) => q.c.x)), xd = Math.max(c.x + c.l, ...lw.map((q) => q.c.x + q.c.l));
+      const cyN = c.y + c.a / 2 - b0.a / 2, cxN = c.x + c.l / 2 - b0.l / 2;
+      const passos = (n, d) => Array.from({ length: 2 * n + 1 }, (_, i) => (i % 2 ? -1 : 1) * Math.ceil(i / 2) * d); // 0, d, -d, 2d…
+      const lados = { // [x, y] de partida e para onde andar procurando espaço
+        direita: (k, j) => [xd + G + 2 * j, cyN + k], esquerda: (k, j) => [xe - G - b0.l - 2 * j, cyN + k],
+        acima: (k, j) => [cxN + k, c.y - G - b0.a - 2 * j], abaixo: (k, j) => [cxN + k, c.y + c.a + G + 2 * j],
+      };
+      const livreCaixa = (q) => q.x >= borda && q.y >= borda && q.x + q.l <= papel.largura - borda && q.y + q.a <= papel.altura - borda
+        && !ocupa.some((o) => q.x < o.x + o.l + VAO && o.x < q.x + q.l + VAO && q.y < o.y + o.a + VAO && o.y < q.y + q.a + VAO);
+      let melhor = Infinity;
+      for (const lado of pos?.lado ? [pos.lado] : LADOS) {
+        for (const j of [0, 1, 2, 4, 8]) for (const k of passos(15, 2)) {
+          const [x, y] = lados[lado](k, j), q = caixaEm(x, y);
+          if (!livreCaixa(q)) continue;
+          const d = Math.hypot(x + b0.l / 2 - (c.x + c.l / 2), y + b0.a / 2 - (c.y + c.a / 2));
+          if (d < melhor) { melhor = d; alvo = { x, y }; }
+          break; // o primeiro livre de cada desvio já é o mais perto nessa direção
+        }
+      }
+    }
+    if (!alvo) { avisos.push(`nota descartada: sem espaço livre perto da palavra: "${resumo(texto)}"`); return; }
+    const tr = em(alvo.x, alvo.y), b = caixaEm(alvo.x, alvo.y);
+    if (pos?.x == null && !livre(tr)) { avisos.push(`nota descartada: tocaria texto ou outra nota: "${resumo(texto)}"`); return; }
+    pôr(tr, [b]);
+    if (ordem != null) notas.push({ ordem, caixa: b });
+    // seta da nota até a palavra: reta; se cruzar texto, tenta cotovelo horizontal-vertical e vertical-horizontal
+    const c = p.c, perto = (cx, cy, q, f) => [Math.min(Math.max(cx, q.x - f), q.x + q.l + f), Math.min(Math.max(cy, q.y - f), q.y + q.a + f)];
+    const fim = perto(b.x + b.l / 2, b.y + b.a / 2, c, VAO + amp + 0.3), ini = perto(fim[0], fim[1], b, VAO);
+    const seta = (pts) => {
+      const [u, v] = pts.at(-2), [px, py] = pts.at(-1), L = Math.hypot(px - u, py - v) || 1, ux = (px - u) / L, uy = (py - v) / L, a = 1.2;
+      return [pts, [[px, py], [px - a * (ux * 0.87 - uy * 0.5), py - a * (uy * 0.87 + ux * 0.5)]], [[px, py], [px - a * (ux * 0.87 + uy * 0.5), py - a * (uy * 0.87 - ux * 0.5)]]];
+    };
+    for (const pts of [[ini, fim], [ini, [fim[0], ini[1]], fim], [ini, [ini[0], fim[1]], fim]]) {
+      const cons = limpar(seta(pts)), jit = cons.map((t, i) => mao(t, `n${p.k}|${i}`));
+      if (cons.length && livre(jit, [p.k])) { pôr(jit, caixasSeg(cons)); return; }
+    }
+    avisos.push(`conector descartado: cruzaria texto ou outra nota: "${resumo(texto)}"`);
+  };
   let fimNota = -Infinity;
-  for (const { p, texto } of fila) {
-    if (!faixa) { avisos.push(`nota descartada (sem margem para notas): "${resumo(texto)}"`); continue; }
+  for (const item of fila) {
+    const { p, texto } = item;
+    if (!faixa || item.pos) { solta(item); continue; }
     const y = Math.max(p.y - tamanho, faixa.y, fimNota + VAO + 0.5 * tn);
     const pf = { largura: papel.largura, altura: papel.altura, margens: { topo: faixa.y, dir: papel.largura - faixa.x - faixa.l, base: papel.altura - faixa.y - faixa.a, esq: faixa.x } };
     const r = compor(texto, ctx.fontes, maoN, pf, { tamanho: tn, entrelinha: 1.3, topo: y });
@@ -223,6 +294,9 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
     const fim = palavras.length ? Math.max(...palavras.map((p) => p.c.y + p.c.a)) : papel.margens.topo;
     const calhaR = calha && { ...calha, y: papel.margens.topo, a: papel.altura - papel.margens.topo - papel.margens.base };
     const abaixo = { x: coluna.x, y: fim, l: coluna.l, a: papel.altura - papel.margens.base - fim };
+    // sem faixa de notas (livro, carta sem margem): as margens laterais do papel recebem os rabiscos
+    const ytopo = papel.margens.topo, alt = papel.altura - papel.margens.topo - papel.margens.base, fd = coluna.x + coluna.l + 1;
+    const laterais = faixa ? [] : [{ x: 3, y: ytopo, l: coluna.x - 4, a: alt }, { x: fd, y: ytopo, l: papel.largura - 3 - fd, a: alt }].filter((q) => q.l >= 4);
     let cm = 0; // contador de itens com mão
     const colocar = (item, regs) => {
       const b = caixaDe(item);
@@ -241,20 +315,20 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
         const p = livres[Math.floor(r() * livres.length)];
         if (p) { const t = [sublinhado(p, `e${i}`)]; if (livre(t, [p.k])) pôr(t); }
       } else if (u < 0.5) {
-        const reg = calha ?? faixa, p = palavras[Math.floor(r() * palavras.length)];
+        const reg = calha ?? faixa ?? laterais[0], p = palavras[Math.floor(r() * palavras.length)];
         if (reg && p) {
           const [cx, cy, a] = [reg.x + reg.l / 2, p.y - 0.3 * tamanho, 0.8];
           const t = [0, 1, 2].map((j) => { const th = (j * Math.PI) / 3 + Math.PI / 6; return mao([[cx - a * Math.cos(th), cy - a * Math.sin(th)], [cx + a * Math.cos(th), cy + a * Math.sin(th)]], `a${i}|${j}`); });
           if (livre(t)) pôr(t);
         }
-      } else if (u < 0.65) colocar(escreverEm('?', { x: 0, y: 0, l: 0, a: 0 }, { tamanho: tn }, ctx.fontes, maoN), [calhaR, faixa].filter(Boolean));
+      } else if (u < 0.65) colocar(escreverEm('?', { x: 0, y: 0, l: 0, a: 0 }, { tamanho: tn }, ctx.fontes, maoN), [calhaR, faixa, ...laterais].filter(Boolean));
       else {
         const lado = 5 + 3 * r(), tipo = ['espiral', 'estrela', 'caixa', 'flor'][Math.floor(r() * 4)];
-        colocar(rabisco(tipo, { x: 0, y: 0, l: lado, a: lado }, `${seed}|${pagina}|${i}`), [faixa, abaixo, calhaR].filter(Boolean));
+        colocar(rabisco(tipo, { x: 0, y: 0, l: lado, a: lado }, `${seed}|${pagina}|${i}`), [faixa, abaixo, calhaR, ...laterais].filter(Boolean));
       }
     }
   }
-  return { tracos: saida, avisos };
+  return { tracos: saida, avisos, notas };
 }
 
 // Prévias. ctx.escrever(mao, texto, opcoes) = traços de uma folha de amostra 60×40.

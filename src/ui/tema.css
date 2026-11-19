@@ -214,3 +214,8 @@ dialog::backdrop { background: var(--sombra-cor); }
   .paginas { margin-left: 0; }
   .folha { width: calc(100% - 32px); }
 }
+
+/* alça de arrastar nota solta na prévia (svg em mm) */
+.alca-nota { fill: transparent; stroke: var(--foco); stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-dasharray: 4 3; cursor: grab; opacity: 0; transition: opacity .15s; }
+#previa:hover .alca-nota, .alca-nota:focus, .alca-nota.arrastando { opacity: 1; }
+.alca-nota.arrastando { cursor: grabbing; }

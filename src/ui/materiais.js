@@ -4,7 +4,7 @@ import { amostra } from '../layout.js';
 import { CANETAS } from '../materiais/documento.js';
 import { comporCarta, PRESETS, PARAMS as PARAMS_CARTA } from '../materiais/carta.js';
 import { trocarExemplo, aplicarVisual } from '../materiais/exemplos.js';
-import { parsearNotas, PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
+import { parsearNotas, posicionarNota, LADOS, PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
 import { comporLivro, PARAMS as PARAMS_LIVRO } from '../materiais/livro.js';
 import { comporSigilos, PARAMS as PARAMS_SIG } from '../materiais/sigilos.js';
 import { PARAMS as PARAMS_METODO } from '../arcano/sigilo.js';
@@ -63,17 +63,16 @@ function juntar(div, itens, extras = []) {
 export function comporEscrita(estado, variacao) {
   const o = estado.opcoes, mao = resolver(estado.personagem, variacao || null);
   const base = { papel: estado.pagina, tamanho: o.tamanho, entrelinha: o.entrelinha, alinhamento: o.alinhamento };
-  if (estado.oficina === 'livro') {
-    const l = estado.livro, nenhuma = (v, extra) => (v === 'nenhuma' ? null : { estilo: v, ...extra });
-    const { limpo, avisos } = parsearNotas(estado.texto); // a marcação da Carta não vale no Livro: só o texto limpo
-    const r = comporLivro(limpo, { fontes: estado.fontes, mao, personagens: { texto: estado.personagem.nome } }, {
-      ...base, colunas: o.colunas, titulo: l.titulo, inicio: l.inicio, numeracao: l.numeracao, reclamo: l.reclamo, rubrica: l.rubrica,
-      capitular: nenhuma(l.capitularLivro, { linhas: 3 }), borda: nenhuma(l.bordaLivro, { largura: 6 }),
-    });
-    return { ...r, avisos: [...avisos, ...r.avisos] };
-  }
   const c = estado.carta, outro = salvos()[c.personagemNotas], pn = outro && !validar(outro).length ? outro : estado.personagem;
   const ctx = { fontes: estado.fontes, mao, maoNotas: pn === estado.personagem ? mao : resolver(pn, null), personagens: { texto: estado.personagem.nome, notas: pn.nome } };
+  if (estado.oficina === 'livro') {
+    const l = estado.livro, nenhuma = (v, extra) => (v === 'nenhuma' ? null : { estilo: v, ...extra });
+    return comporLivro(estado.texto, ctx, {
+      ...base, colunas: o.colunas, titulo: l.titulo, inicio: l.inicio, numeracao: l.numeracao, reclamo: l.reclamo, rubrica: l.rubrica,
+      capitular: nenhuma(l.capitularLivro, { linhas: 3 }), borda: nenhuma(l.bordaLivro, { largura: 6 }),
+      conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas,
+    });
+  }
   return comporCarta(estado.texto, ctx, { ...base, tipo: c.tipo, marginalia: c.marginalia, faixa: c.faixa, conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas });
 }
 
@@ -85,7 +84,8 @@ export function comporDeSigilos(estado) {
 
 // ---- painéis ----
 const MARCACAO = [
-  ['{nota: texto}', 'nota na margem, ligada à palavra anterior'],
+  ['{nota: texto}', 'nota ligada à palavra anterior: na margem de notas ou no lugar livre mais perto, com seta'],
+  ['{nota@direita: texto}', 'fixa o lado (esquerda, direita, acima, abaixo); arraste a nota na prévia para pôr onde quiser'],
   ['{~errado~>certo}', 'risca "errado" e escreve "certo" acima ou na margem'],
   ['{_trecho_}', 'sublinha o trecho'],
   ['{o:trecho}', 'faz um laço em volta do trecho'],
@@ -100,10 +100,30 @@ export function montarCarta(div, estado, aoMudar) {
   const caneta = opcao('canetaNotas', 'Caneta das notas', 'Cor da caneta que desenha a camada de notas. Troque de caneta no plotter entre as camadas.',
     CANETA_OPS, () => c.canetaNotas, (v) => { c.canetaNotas = v; }, (v, x) => nota(x.mao, x), aoMudar, ctx);
   const ajuda = el('ul', { className: 'marcacao' }, ...MARCACAO.map(([m, t]) => el('li', {}, el('code', {}, m), ` ${t}`)));
-  return juntar(div, [
-    controle(PC.tipo, tipo, aoMudar), controle(PC.marginalia, ligar(c, 'marginalia', ctx), aoMudar), controle(PC.faixa, ligar(c, 'faixa', ctx), aoMudar),
-    controle(PN.conector, ligar(c, 'conector', ctx), aoMudar), controle(PN.espontaneo, ligar(c, 'espontaneo', ctx), aoMudar), pers, caneta,
-  ], [titulo('Marcação no texto', 'Escreva estas marcas no texto. Elas não aparecem na folha: viram notas e riscos na camada de notas.'), ajuda]);
+  const soCarta = [controle(PC.tipo, tipo, aoMudar), controle(PC.marginalia, ligar(c, 'marginalia', ctx), aoMudar), controle(PC.faixa, ligar(c, 'faixa', ctx), aoMudar)];
+  const lista = el('div', { className: 'posicoes' }), assinatura = { v: null };
+  const atualizar = juntar(div, [
+    ...soCarta, controle(PN.conector, ligar(c, 'conector', ctx), aoMudar), controle(PN.espontaneo, ligar(c, 'espontaneo', ctx), aoMudar), pers, caneta,
+  ], [titulo('Marcação no texto', 'Escreva estas marcas no texto. Elas não aparecem na folha: viram notas e riscos na camada de notas.'), ajuda,
+    titulo('Posição das notas', 'Automática: o lugar livre mais perto da palavra (na Carta com margem, a margem). Escolha um lado, ou arraste a nota na prévia para uma posição livre.'), lista]);
+  return () => {
+    atualizar();
+    soCarta.forEach((x) => { x.el.hidden = estado.oficina === 'livro'; });
+    const notas = parsearNotas(estado.texto).marcas.filter((m) => m.tipo === 'nota');
+    const sig = JSON.stringify(notas.map((m) => [m.texto, m.pos]));
+    if (sig === assinatura.v) return; // não refaz a lista enquanto o usuário escolhe
+    assinatura.v = sig;
+    lista.replaceChildren(...(notas.length ? notas.map((m, k) => {
+      const sel = el('select', {}, ...[['auto', 'automática'], ...LADOS.map((x) => [x, x]), ...(m.pos?.x != null ? [['livre', `livre (${m.pos.x}, ${m.pos.y} mm)`]] : [])].map(([v, t]) => new Option(t, v)));
+      sel.value = m.pos?.lado ?? (m.pos ? 'livre' : 'auto');
+      sel.addEventListener('change', () => {
+        if (sel.value === 'livre') return;
+        estado.texto = posicionarNota(estado.texto, k, sel.value === 'auto' ? null : { lado: sel.value });
+        aoMudar();
+      });
+      return rotulado(m.texto.length > 22 ? m.texto.slice(0, 22) + '…' : m.texto, sel);
+    }) : [el('p', { className: 'vazio-notas' }, 'Nenhuma {nota: …} no texto.')]));
+  };
 }
 
 export function montarLivro(div, estado, aoMudar) {

@@ -5,7 +5,7 @@ import { parseFonte } from '../src/fonte.js';
 import { compor, PAGINAS } from '../src/layout.js';
 import { NEUTRA } from '../src/motor/mao.js';
 import { problemas } from '../src/geo.js';
-import { parsearNotas, rabisco, sobrepoe, caixasPalavras, conectar } from '../src/materiais/notas.js';
+import { parsearNotas, posicionarNota, rabisco, sobrepoe, caixasPalavras, conectar } from '../src/materiais/notas.js';
 
 const raiz = new URL('../', import.meta.url);
 const fontes = { EMSBird: parseFonte(fs.readFileSync(new URL('fontes/EMSBird.svg', raiz), 'utf8'), 'EMSBird') };
@@ -105,4 +105,19 @@ test('conectar: linha, seta e chave terminam na nota', () => {
     assert.equal(chave.length, yNota === 40 ? 2 : 1);
     for (const t of [...linha, ...seta, ...chave]) assert.ok(t.length >= 2 && t.flat().every(Number.isFinite));
   }
+});
+
+test('parsearNotas: posição da nota (lado ou x,y em mm) e aviso para posição inválida', () => {
+  const { marcas, avisos } = parsearNotas('a {nota@direita: um} b {nota@32.5,40: dois} c {nota@xyz: três} d {nota: quatro}');
+  assert.deepEqual(marcas.map((m) => m.pos), [{ lado: 'direita' }, { x: 32.5, y: 40 }, undefined, undefined]);
+  assert.deepEqual(marcas.map((m) => m.texto), ['um', 'dois', 'três', 'quatro']);
+  assert.equal(avisos.length, 1);
+});
+
+test('posicionarNota reescreve só a k-ésima nota e mantém o resto do texto', () => {
+  const t = 'a {nota: um} b {nota@esquerda: dois} c';
+  assert.equal(posicionarNota(t, 1, { lado: 'acima' }), 'a {nota: um} b {nota@acima: dois} c');
+  assert.equal(posicionarNota(t, 0, { x: 10.123, y: 5 }), 'a {nota@10.1,5: um} b {nota@esquerda: dois} c');
+  assert.equal(posicionarNota(t, 1, null), 'a {nota: um} b {nota: dois} c');
+  assert.equal(posicionarNota(t, 5, null), t);
 });

@@ -80,7 +80,7 @@ for (const colunas of [1, 2]) {
     const cap = camada(doc, 0, 'rubrica').tracos;
     assert.ok(cap.length > 0);
     assert.ok(!toca(cap, palavras(camada(doc, 0, 'texto'))));
-    assert.deepEqual(doc.paginas.map((p) => p.camadas.map((c) => [c.id, c.caneta])), Array(n).fill([['texto', 'preta'], ['paginacao', 'preta'], ['iluminura', 'preta'], ['rubrica', 'vermelha']]));
+    assert.deepEqual(doc.paginas.map((p) => p.camadas.map((c) => [c.id, c.caneta])), Array(n).fill([['texto', 'preta'], ['paginacao', 'preta'], ['iluminura', 'preta'], ['rubrica', 'vermelha'], ['notas', 'preta']]));
   });
 }
 
@@ -134,4 +134,20 @@ test('livro: exporta por camada (svg e gcode)', () => {
   assert.deepEqual(g.avisos, []);
   assert.equal(g.nTracos, camada(doc, 1, 'paginacao').tracos.length);
   assert.ok(g.nTracos < tudo.nTracos);
+});
+
+test('livro: notas, correção e rabiscos ficam na camada notas sem tocar texto nem paginação', () => {
+  const marcado = 'O vento cobre o vale{nota: perto do rio} e o moinho {~espera~>aguarda} por você, {_viajante_}. ' + TEXTO;
+  for (const colunas of [1, 2]) {
+    const doc = comporLivro(marcado, ctx, { ...base, colunas, espontaneo: 1, capitular: { estilo: 'lombarda' } });
+    assert.deepEqual(validarDocumento(doc), []);
+    assert.ok(doc.canetas.vermelha);
+    assert.ok(!doc.avisos.some((a) => /descartad|não coube/.test(a)), doc.avisos.join('\n'));
+    const notas = camada(doc, 0, 'notas');
+    assert.ok(notas.tracos.length > 0);
+    assert.equal(doc.paginas[0].notas[0].ordem, 0);
+    const pag = camada(doc, 0, 'paginacao').tracos.map((t) => caixaDe([t]));
+    assert.ok(!toca(notas.tracos, pag), 'nota sobre a paginação');
+    assert.ok(notas.tracos.every((t) => { const b = caixaDe([t]); return b.x >= 0 && b.y >= 0 && b.x + b.l <= A6.largura && b.y + b.a <= A6.altura; }));
+  }
 });

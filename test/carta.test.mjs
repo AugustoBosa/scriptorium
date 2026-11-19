@@ -44,7 +44,7 @@ for (const tipo of Object.keys(PRESETS)) for (const conector of ['linha', 'chave
     const doc = comporCarta(TEXTO, ctx, cfg);
     assert.deepEqual(validarDocumento(doc), []);
     assert.deepEqual(comporCarta(TEXTO, ctx, cfg), doc);
-    // carta não tem margem (nota marginal descartada é esperada); o laço nunca pode ser descartado; anotação/diário: nada descartado
+    // laço nunca pode ser descartado; nota sem margem vai para lugar livre (descartar só se não houver espaço perto)
     assert.deepEqual(doc.avisos.filter((a) => /descartad/.test(a) && (tipo !== 'carta' || a.startsWith('laço'))), []);
     const reg = regiao(tipo);
     for (const pg of doc.paginas) {
@@ -58,7 +58,9 @@ for (const tipo of Object.keys(PRESETS)) for (const conector of ['linha', 'chave
         const n = cs[0].c, perto = n.x - 3 < b.x + b.l && b.x < n.x + n.l + 3 && n.y - 3 < b.y + b.a && b.y < n.y + n.a + 3;
         const alvo = perto ? [cs[0].k] : [];
         assert.equal(sobrepoe([t], caixas.filter((c, k) => c && !alvo.includes(k))), false, 'traço de nota sobre outra palavra');
-        if (!alvo.length) assert.ok((reg && b.x >= reg[0] - 1.5 && b.x + b.l <= reg[1] + 1.5) || b.y >= fim - 1e-6, `traço fora da margem de notas: ${JSON.stringify(r3(b))}`);
+        // com faixa: nota fica na faixa ou abaixo do texto; sem faixa (carta): nota solta e rabiscos em qualquer lugar livre do papel
+        if (!alvo.length && reg) assert.ok((b.x >= reg[0] - 1.5 && b.x + b.l <= reg[1] + 1.5) || b.y >= fim - 1e-6, `traço fora da margem de notas: ${JSON.stringify(r3(b))}`);
+        assert.ok(b.x >= 0 && b.y >= 0 && b.x + b.l <= A5.largura && b.y + b.a <= A5.altura, `traço fora do papel: ${JSON.stringify(r3(b))}`);
       }
     }
   });
@@ -74,11 +76,36 @@ test('carta: presets produzem as marcas esperadas (nota marginal, risco, sublinh
   assert.equal(sem.paginas[0].camadas[1].tracos.length, 0);
 });
 
-test('carta: sem margem, nota marginal é descartada com aviso e o texto fica limpo', () => {
-  const doc = comporCarta('a lua{nota: cheia} sobe', ctx, { papel: A5, tipo: 'carta' });
-  assert.ok(doc.avisos.some((a) => a.startsWith('nota descartada')));
-  assert.equal(doc.paginas[0].camadas[1].tracos.length, 0);
-  assert.ok(!doc.avisos.some((a) => a.startsWith('tolerancia')));
+// Sem margem de notas, a nota vai para o lugar livre mais perto da palavra, ligada por seta; a posição pode ser fixada.
+const notaDe = (texto, cfg = {}) => {
+  const doc = comporCarta(texto, ctx, { papel: A5, tipo: 'carta', ...cfg });
+  const pg = doc.paginas[0], txt = pg.camadas[0], notas = pg.camadas[1];
+  return { doc, pg, palavras: caixasPalavras(txt.tracos, txt.grupos), notas };
+};
+
+test('carta sem margem: nota automática fica perto da palavra, sem tocar o texto, e com metadado para arrastar', () => {
+  const { doc, pg, palavras, notas } = notaDe('a lua{nota: cheia} sobe devagar sobre o mar');
+  assert.ok(!doc.avisos.some((a) => /descartad|não coube/.test(a)), doc.avisos.join('\n'));
+  assert.ok(notas.tracos.length > 0);
+  assert.ok(!sobrepoe(notas.tracos, palavras, 0));
+  assert.equal(pg.notas.length, 1);
+  assert.equal(pg.notas[0].ordem, 0);
+  const n = pg.notas[0].caixa, w = palavras[1], dist = Math.hypot(n.x + n.l / 2 - (w.x + w.l / 2), n.y + n.a / 2 - (w.y + w.a / 2));
+  assert.ok(dist < 30, `nota longe demais: ${dist.toFixed(1)} mm`);
+});
+
+for (const lado of ['esquerda', 'direita', 'acima', 'abaixo']) {
+  test(`carta sem margem: nota @${lado} fica do lado pedido da palavra`, () => {
+    const { pg, palavras, notas } = notaDe(`era uma vez um vale e a lua{nota@${lado}: cheia} sobe devagar sobre o mar`);
+    const n = pg.notas[0].caixa, w = palavras[7];
+    assert.ok({ esquerda: n.x + n.l <= w.x, direita: n.x >= w.x + w.l, acima: n.y + n.a <= w.y, abaixo: n.y >= w.y + w.a }[lado], JSON.stringify({ n, w }));
+    assert.ok(!sobrepoe(notas.tracos, palavras, 0));
+  });
+}
+
+test('carta: nota @x,y fica na posição pedida (canto superior esquerdo, em mm)', () => {
+  const { pg } = notaDe('a lua{nota@20,150: cheia} sobe');
+  assert.ok(Math.abs(pg.notas[0].caixa.x - 20) < 0.01 && Math.abs(pg.notas[0].caixa.y - 150) < 0.01, JSON.stringify(pg.notas[0].caixa));
 });
 
 test('carta: nota grande demais não coube → aviso, nada fora da faixa', () => {

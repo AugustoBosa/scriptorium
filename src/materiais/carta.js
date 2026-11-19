@@ -26,6 +26,7 @@ export function comporCarta(texto, ctx, cfg) {
   const c = { ...PADRAO, faixa: 0.3, ...PRESETS[def.tipo ?? 'carta'], ...def };
   const { papel } = c, { tamanho } = c;
   const { limpo, marcas, avisos: avisosMarca } = parsearNotas(texto);
+  marcas.filter((m) => m.tipo === 'nota').forEach((m, k) => { m.ordem = k; }); // k-ésima {nota} do texto: a interface reescreve a posição dela
   const g = geometria(papel, tamanho, c.marginalia, c.faixa);
   const r = compor(limpo, ctx.fontes, ctx.mao, g.texto, { tamanho, entrelinha: c.entrelinha, alinhamento: c.alinhamento });
   const avisos = [...r.avisos.filter((a) => !a.startsWith('tolerancia')), ...avisosMarca];
@@ -39,7 +40,7 @@ export function comporCarta(texto, ctx, cfg) {
     return { camadas: [
       { id: 'texto', caneta: c.canetaTexto, personagem: ctx.personagens?.texto ?? null, ordem: 'escrita', grupos: r.grupos[i], tracos },
       { id: 'notas', caneta: c.canetaNotas, personagem: ctx.personagens?.notas ?? null, ordem: 'otimizada', tracos: n.tracos },
-    ] };
+    ], notas: n.notas };
   });
   return { papel, canetas: { [c.canetaTexto]: CANETAS[c.canetaTexto], [c.canetaNotas]: CANETAS[c.canetaNotas] }, paginas, avisos };
 }
