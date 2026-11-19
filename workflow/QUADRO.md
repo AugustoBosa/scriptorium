@@ -142,10 +142,10 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
    - arremate.
 6. Anotar aqui o que precisa de ajuste → novo marco.
 
-**Arquivos de OUTRA sessão (Grimório Non Presto):**
-- `src/magia.js` (modificado), `grimorios/`, `src/ornamento/tempo.js`, `test/tempo.test.mjs`.
-- Não fazem parte deste trabalho e estão sem commit.
-- Não incluir em commits deste fluxo sem falar com o usuário.
+**Limpeza (2026-11-18, pedido do usuário):**
+- Saíram: `grimorio.html` (o link antigo dá 404), `workflow/catalogo/`, imagens e logs de `workflow/ciclos/*` (os `.md` ficaram), `.superpowers/`, `test-results/`, `dist/`.
+- Grimório Non Presto removido (`grimorios/`, `src/ornamento/tempo.js`, `test/tempo.test.mjs`, `dados/non-presto/`, mudança em `src/magia.js`). Backup: `C:\Users\augus\Desktop\augusto\backups\scriptorium-non-presto-2026-11-18.zip`.
+- Depois da limpeza: `npm test` 812/0; e2e 138/138; build ok.
 
 **Pendências opcionais (próximo pedido):**
 - Mesa: faixas intermediárias; `M0` entre passadas.

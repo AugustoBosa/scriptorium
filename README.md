@@ -18,8 +18,6 @@ Cada oficina é uma rota do `index.html`: `#carta`, `#scroll`, `#grimorio`, `#li
 - **Livro** (`#livro`): colunas, título corrente, numeração, reclamo, rubrica, capitular e borda. Usa o mesmo texto da Carta.
 - **Sigilos** (`#sigilos`): cada frase vira um selo, um sigilo (método kamea, roda ou fusão) ou um círculo, com legenda. Os sigilos ficam em grade numa folha.
 
-`grimorio.html` só redireciona para `index.html#grimorio`.
-
 ## Interface
 
 - **Básico / Avançado**: o básico mostra o essencial; o avançado mostra os ajustes finos e a máquina.

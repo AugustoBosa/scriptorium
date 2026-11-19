@@ -15,10 +15,6 @@ test('index.html abre sem erro de console e com prévia', async ({ page }) => {
   expect(erros).toEqual([])
 })
 
-test('grimorio.html redireciona para index.html#grimorio', async ({ page }) => {
-  await page.goto('grimorio.html')
-  await page.waitForURL(/index\.html#grimorio/)
-})
 
 test('hash inválido cai em #inicio', async ({ page }) => {
   await page.goto('index.html#xyz')

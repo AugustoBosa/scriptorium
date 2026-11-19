@@ -11,6 +11,5 @@ const copiarEstaticos = {
 
 export default defineConfig({
   base: './',
-  build: { rollupOptions: { input: { index: 'index.html', grimorio: 'grimorio.html' } } },
   plugins: [copiarEstaticos],
 })
