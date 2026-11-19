@@ -1,22 +1,27 @@
 .mesa { display: grid; gap: var(--e3); padding: var(--e3); }
-.folha .mesa svg { display: block; width: auto; height: min(46vh, 420px); max-width: 100%; max-height: min(46vh, 420px); margin-inline: auto; background: var(--mesa); border: 1px solid var(--contorno); border-radius: var(--raio); }
+.folha .mesa svg.m-cena { display: block; width: 100%; height: auto; max-height: 72vh; margin-inline: auto; background: #ece6d8; border-radius: var(--raio); }
 .mesa-barra { display: flex; flex-wrap: wrap; gap: var(--e2); align-items: center; }
 .mesa-instrucao { margin: 0; color: var(--tinta); font-size: var(--t-ui); line-height: var(--linha); }
 .mesa-aviso { margin: 0; color: var(--aviso); font-size: var(--t-pequeno); }
 .mesa-erro { margin: 0; color: var(--rubrica); }
-.mesa .m-contorno { fill: var(--campo); stroke: var(--contorno); stroke-width: .6; }
-.mesa .m-janela { fill: none; stroke: var(--tinta-2); stroke-width: .5; stroke-dasharray: 3 2; }
-.mesa .m-folha { fill: var(--folha); fill-opacity: .55; stroke: var(--tinta-2); stroke-width: .5; }
-.mesa .m-ref { stroke: var(--rubrica); stroke-width: 2; fill: none; }
-.mesa .m-slot { fill: none; stroke-width: .6; }
-.mesa .m-fora { opacity: .35; stroke-dasharray: 2 2; }
-.mesa .m-traco { fill: none; stroke-width: .35; }
-.mesa .m-txt { font: 600 9px var(--fonte-ui); fill: var(--tinta); stroke: var(--campo); stroke-width: 2.5px; paint-order: stroke; }
+.mesa .m-txt { font-family: var(--fonte-ui); font-weight: 700; stroke: #fdfaf2; stroke-width: .25em; paint-order: stroke; stroke-linejoin: round; }
 
 .vista-previa { display: inline-flex; gap: var(--e1, 4px); }
 .vista-previa button[aria-pressed="true"] { background: var(--tinta); color: var(--pergaminho); }
 .mesa p, .mesa label { color: var(--tinta-folha); }
 .mesa select, .mesa button { color: var(--tinta-folha); background: var(--folha); border: 1px solid #85714f; }
 .mesa button.primario { background: var(--tinta-folha); color: var(--folha); }
-.mesa .m-fora-mesa { fill: url(#m-hach); fill-opacity: .6; stroke: var(--tinta-2); stroke-width: .5; stroke-dasharray: 3 2; }
-.mesa .m-mesa-borda { fill: none; stroke: var(--tinta); stroke-width: 1.2; }
+/* legenda da cena: as mesmas cores fixas do desenho */
+.mesa-legenda { display: flex; flex-wrap: wrap; gap: var(--e2) var(--e4); margin: 0; padding: 0; list-style: none; font-size: var(--t-pequeno); color: var(--tinta-folha); }
+.mesa-legenda li { display: flex; align-items: center; gap: var(--e2); }
+.m-amostra { display: inline-block; width: 22px; height: 12px; border-radius: 2px; }
+.m-l-papel { background: #fdfaf2; border: 1px solid #5c5141; }
+.m-l-tinta { background: linear-gradient(transparent 45%, #1c1611 45% 60%, transparent 60%), #fdfaf2; border: 1px solid #5c5141; }
+.m-l-outra { background: linear-gradient(transparent 45%, #c4bcac 45% 60%, transparent 60%), #fdfaf2; border: 1px solid #5c5141; }
+.m-l-janela { border: 2px dashed #1d5fb8; }
+.m-l-fora { background: repeating-linear-gradient(45deg, #fdfaf2 0 3px, #5c5141 3px 4px); border: 1px dashed #5c5141; }
+.mesa-ampliar { justify-self: start; }
+.mesa-dialogo { width: 96vw; max-width: 96vw; height: 94vh; max-height: 94vh; padding: var(--e3); background: var(--folha); border: 1px solid var(--contorno); border-radius: var(--raio); }
+.mesa-dialogo svg { display: block; width: 100%; height: calc(100% - 90px); background: #ece6d8; border-radius: var(--raio); }
+.mesa-dialogo .m-txt { font-family: var(--fonte-ui); font-weight: 700; stroke: #fdfaf2; stroke-width: .25em; paint-order: stroke; stroke-linejoin: round; }
+.mesa-dialogo .mesa-legenda { margin-top: var(--e2); }

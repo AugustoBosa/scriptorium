@@ -15,7 +15,7 @@ import * as pTexto from './texto.js';
 import * as pExportar from './exportar.js';
 import { criar as criarGrimorio } from './grimorio.js';
 import * as pMat from './materiais.js';
-import { montar as montarMesa, desenharMesa } from './mesa.js';
+import { montar as montarMesa, desenharMesa, mesaLigada } from './mesa.js';
 import { montar as montarInicio } from './inicio.js';
 import { montar as montarPersonagens } from './personagens.js';
 import { montar as montarBiblioteca, gravarMaterial, novoId } from './biblioteca.js';
@@ -134,7 +134,7 @@ function renderizar() {
 
   const opc = { pagina: e.paginaAtual, trajeto: e.trajeto, otimizar: e.otimizar };
   const mesa = ui.vista === 'mesa';
-  document.querySelector('.paginas').hidden = mesa;
+  document.querySelector('.paginas').hidden = mesa && mesaLigada(e); // sem imposição, a mesa mostra a página atual
   $('vista-pagina').setAttribute('aria-pressed', String(!mesa));
   $('vista-mesa').setAttribute('aria-pressed', String(mesa));
   if (mesa) desenharMesa($('previa'), e); else desenhar($('previa'), e.doc, opc);

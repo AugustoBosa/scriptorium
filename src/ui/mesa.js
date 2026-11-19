@@ -4,11 +4,11 @@ import { gcodeDocumento } from '../maquina/gcode.js';
 import { otimizar } from '../maquina/otimizar.js';
 import { impor, paraMesa, aPassada, instrucao } from '../maquina/imposicao.js';
 import { PAPEIS, papel } from '../materiais/documento.js';
+import { janelaDe } from '../maquina/perfis.js';
 import { controle } from './controle.js';
 
 const CHAVE = 'writer.mesa';
 const PADRAO = { ligada: false, folha: 'A4', paisagem: false, largura: 210, altura: 297, canto: 'auto', encosto: 'auto', dx: 0, dy: 0, modo: 'agrupar', espaco: 0, origem: 'frente-esquerda' };
-const CORES = ['var(--foco)', 'var(--rubrica)', 'var(--aviso)', 'var(--tinta-2)'];
 const NS = 'http://www.w3.org/2000/svg';
 const op = (o) => Object.entries(o).map(([valor, rotulo]) => ({ valor, rotulo }));
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
@@ -106,23 +106,118 @@ function arquivos(estado, p, f, k) {
     .map((i) => [`${of}-p${pg(p, f, i) + 1}-f${f + 1}-pa${k + 1}${sf}.gcode`, () => gcodePassada(estado, p, f, k, i)]);
 }
 
+// Liga a vista da mesa com imposição? (sem imposição a vista mostra a página atual na posição da exportação normal)
+export const mesaLigada = (estado) => !!mesaDe(estado).ligada;
+
+// Cores da cena física: fixas nos dois temas (a mesa e o papel são objetos, não interface).
+const COR = { tampo: '#8b8479', grade: '#9c958a', borda: '#3b352d', janela: '#1d5fb8', papel: '#fdfaf2', papelBorda: '#5c5141', outra: '#c4bcac', ref: '#b3261e', rotulo: '#1c1611' };
+
+// Cena da mesa em mm de máquina (x para a direita, y para trás); o SVG inverte y. folhas = polígonos do papel;
+// paginas = [{ t: página→máquina, papel, camadas, ativa, rotulo }]; canetas = cor de cada caneta.
+function cena({ mx, my, j, folhas, paginas, canetas, topo, refs = [], legenda }) {
+  const pts = [[0, 0], [mx, my], ...folhas.flat()];
+  const xs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]);
+  const S = Math.max(mx, my) / 40, M = 3 * S; // tamanho do rótulo e margem, em mm
+  const x0 = Math.min(...xs) - M, x1 = Math.max(...xs) + M, ya = Math.min(...ys) - M, yb = Math.max(...ys) + M;
+  const Y = ([x, y]) => `${x.toFixed(2)} ${(my - y).toFixed(2)}`;
+  const poli = (q) => 'M' + q.map(Y).join('L') + 'Z';
+  const d = sv('svg', { viewBox: `${x0} ${my - yb} ${x1 - x0} ${yb - ya}`, role: 'img', 'aria-label': legenda, class: 'm-cena' });
+  d.style.aspectRatio = `${x1 - x0} / ${yb - ya}`;
+  const defs = sv('defs', {}, d);
+  sv('path', { d: 'M0 4L4 0', stroke: COR.papelBorda, 'stroke-width': 0.5 }, sv('pattern', { id: 'm-hach', width: 4, height: 4, patternUnits: 'userSpaceOnUse' }, defs));
+  sv('path', { d: 'M10 0H0V10', fill: 'none', stroke: COR.grade, 'stroke-width': 0.3 }, sv('pattern', { id: 'm-grade', width: 10, height: 10, patternUnits: 'userSpaceOnUse', x: 0, y: my % 10 }, defs));
+  sv('rect', { x: 0, y: 0, width: mx, height: my }, sv('clipPath', { id: 'm-corte' }, defs));
+  const texto = (txt, [x, y], { ancora = 'middle', tam = 1, cor = COR.rotulo, giro = 0, cls = '' } = {}) => {
+    const t = sv('text', { class: 'm-txt ' + cls, x, y: my - y, 'text-anchor': ancora, 'font-size': (S * tam).toFixed(2), fill: cor, style: `color: ${cor}`, ...(giro && { transform: `rotate(${giro} ${x} ${my - y})` }) }, d);
+    t.textContent = txt;
+  };
+  // tampo com grade de 1 cm e área que a caneta alcança
+  sv('rect', { x: 0, y: 0, width: mx, height: my, fill: COR.tampo }, d);
+  sv('rect', { x: 0, y: 0, width: mx, height: my, fill: 'url(#m-grade)' }, d);
+  // papel: inteiro hachurado (o que sobra para fora da mesa) e cheio sobre a mesa
+  for (const f of folhas) sv('path', { d: poli(f), fill: COR.papel, 'fill-opacity': 0.55, stroke: COR.papelBorda, 'stroke-width': 0.5, 'stroke-dasharray': '3 2' }, d);
+  for (const f of folhas) sv('path', { d: poli(f), fill: 'url(#m-hach)' }, d);
+  for (const f of folhas) sv('path', { d: poli(f), fill: COR.papel, stroke: COR.papelBorda, 'stroke-width': 0.6, 'clip-path': 'url(#m-corte)' }, d);
+  sv('rect', { x: j.x0, y: my - j.y1, width: j.x1 - j.x0, height: j.y1 - j.y0, fill: 'none', stroke: COR.janela, 'stroke-width': 0.8, 'stroke-dasharray': '4 2.5', class: 'm-janela' }, d);
+  sv('rect', { x: 0, y: 0, width: mx, height: my, fill: 'none', stroke: COR.borda, 'stroke-width': 1.5 }, d);
+  // páginas: contorno, número e texto (um path por camada; tinta da caneta na passada, cinza nas outras)
+  for (const pg of paginas) {
+    const g = sv('g', { class: 'm-pagina', ...pg.dados }, d), { largura: w, altura: h } = pg.papel;
+    sv('path', { class: 'm-slot', d: poli([[0, 0], [w, 0], [w, h], [0, h]].map(pg.t)), fill: 'none', stroke: pg.ativa ? COR.janela : COR.outra, 'stroke-width': pg.ativa ? 0.6 : 0.4, 'stroke-dasharray': pg.ativa ? '' : '2 2' }, g);
+    for (const c of pg.camadas ?? []) {
+      const dd = c.tracos.filter((t) => t.length > 1).map((t) => 'M' + t.map((q) => Y(pg.t(q))).join('L')).join('');
+      if (dd) sv('path', { class: 'm-traco', d: dd, fill: 'none', stroke: pg.ativa ? (canetas?.[c.caneta]?.cor ?? '#000') : COR.outra, 'stroke-width': 0.35, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+    }
+    if (pg.rotulo) texto(pg.rotulo, pg.t(pg.vazio ? [w / 2, h / 2] : [w / 2, 2 + S * 0.8]), { ancora: 'middle', tam: 0.75, cor: pg.ativa ? COR.janela : '#5e574b', cls: 'm-num' });
+  }
+  for (const r of refs) sv('path', { d: 'M' + r.map(Y).join('L'), fill: 'none', stroke: COR.ref, 'stroke-width': 1.6, 'stroke-linecap': 'round' }, d);
+  // topo da folha: seta dentro do papel
+  if (topo) {
+    const [a, b] = topo;
+    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), p = (r, s) => [b[0] - S * 0.9 * Math.cos(ang + s * r), b[1] - S * 0.9 * Math.sin(ang + s * r)];
+    sv('path', { d: `M${Y(a)}L${Y(b)}M${Y(p(0.5, 1))}L${Y(b)}L${Y(p(0.5, -1))}`, fill: 'none', stroke: COR.ref, 'stroke-width': 0.9, 'stroke-linecap': 'round' }, d);
+    texto('topo', [a[0] - (b[0] - a[0]) * 0.4, a[1] - (b[1] - a[1]) * 0.4 - S * 0.4], { tam: 0.8, cor: COR.ref });
+  }
+  // bordas da mesa e origem
+  texto('TRÁS', [mx / 2, my + S * 0.6], { tam: 1.1, cls: 'm-borda' });
+  texto('FRENTE (onde você fica)', [mx / 2, -S * 1.6], { tam: 1.1, cls: 'm-borda' });
+  texto('ESQUERDA', [-S * 0.9, my / 2], { tam: 1.1, giro: -90, cls: 'm-borda' });
+  texto('DIREITA', [mx + S * 0.9, my / 2], { tam: 1.1, giro: 90, cls: 'm-borda' });
+  sv('circle', { cx: 0, cy: my, r: S * 0.35, fill: COR.ref }, d);
+  texto('X0 Y0', [S * 0.6, S * 0.6], { ancora: 'start', tam: 0.8, cor: COR.ref });
+  return d;
+}
+
+const ITENS_LEGENDA = [
+  ['m-l-papel', 'papel'], ['m-l-tinta', 'escrito agora'], ['m-l-outra', 'escrito em outra passada'],
+  ['m-l-janela', 'até onde a caneta alcança'], ['m-l-fora', 'papel fora da mesa (prenda bem)'],
+];
+// botão que abre a cena num diálogo do tamanho da tela (o desenho é vetorial: amplia sem perder)
+const ampliar = (svg) => {
+  const b = el('button', 'mesa-ampliar', 'Ampliar'); b.type = 'button';
+  b.addEventListener('click', () => {
+    const dlg = el('dialog', 'mesa-dialogo'), fechar = el('button', null, 'Fechar'); fechar.type = 'button';
+    fechar.addEventListener('click', () => dlg.close());
+    dlg.addEventListener('close', () => dlg.remove());
+    dlg.append(fechar, svg.cloneNode(true), legenda());
+    document.body.append(dlg);
+    dlg.showModal();
+  });
+  return b;
+};
+const legenda = () => { const ul = el('ul', 'mesa-legenda'); for (const [c, t] of ITENS_LEGENDA) { const li = el('li'); li.append(el('span', 'm-amostra ' + c), t); ul.append(li); } return ul; };
+
 export function desenharMesa(elemento, estado) {
   const raiz = el('div', 'mesa');
   elemento.replaceChildren(raiz);
   elemento.style.maxWidth = ''; // `desenhar` da página deixa largura×4
-  const m = mesaDe(estado);
-  if (!m.ligada) { raiz.append(el('p', 'mesa-aviso', 'Imposição desligada. Ligue "imposição na mesa" no painel "Mesa e folha".')); return; }
+  const perfil = estado.perfil, mx = perfil.mesaX, my = perfil.mesaY, doc = estado.doc;
+  if (!doc) return;
+  const j = janelaDe(perfil);
+  if (!mesaDe(estado).ligada) {
+    // sem imposição: a página atual exatamente onde a exportação normal a põe (canto X0 Y0 da janela, topo para trás)
+    const i = Math.min(estado.paginaAtual ?? 0, doc.paginas.length - 1), pp = doc.papel;
+    const t = ([x, y]) => [j.x0 + perfil.offsetX + x, j.y0 + perfil.offsetY + (pp.altura - y)];
+    const folha = [[0, 0], [pp.largura, 0], [pp.largura, pp.altura], [0, pp.altura]].map(t);
+    const svg = cena({ mx, my, j, folhas: [folha], paginas: [{ t, papel: pp, camadas: doc.paginas[i].camadas, ativa: true }], canetas: doc.canetas,
+      topo: [t([pp.largura - 8, Math.min(16, pp.altura * 0.2)]), t([pp.largura - 8, 3])], legenda: 'Simulação da mesa com a página' });
+    raiz.append(
+      ampliar(svg),
+      el('p', 'mesa-instrucao', `Ponha a folha (${pp.largura} × ${pp.altura} mm) com o topo para trás, encostada no canto frente-esquerda da área da caneta (X0 Y0 — confira com G0 X0 Y0). Página ${i + 1} de ${doc.paginas.length}.`),
+      svg,
+      legenda(),
+      el('p', 'mesa-aviso', 'Para várias páginas numa folha maior, ligue "imposição na mesa" no painel "Mesa e folha".'),
+    );
+    return;
+  }
   const p = plano(estado);
   if (p.erro) { raiz.append(el('p', 'mesa-erro', p.erro)); return; }
-  const { imp, passos } = p, perfil = estado.perfil;
-  const sel = (estado.mesaSel ??= { f: 0, k: 0 });
-  if (!passos.some((s) => s.f === sel.f && s.k === sel.k)) { sel.f = 0; sel.k = 0; }
-  const { f, k } = sel, j = imp.janela, mx = perfil.mesaX, my = perfil.mesaY;
-  const Y = ([x, y]) => `${x.toFixed(2)} ${(my - y).toFixed(2)}`;
-  const poli = (pts) => 'M' + pts.map(Y).join('L') + 'Z';
-  const cantos = (w, h) => [[0, 0], [w, 0], [w, h], [0, h]];
+  const { imp, passos } = p;
+  const comPagina = (x) => imp.passadas[x.k].slots.some((i) => doc.paginas[pg(p, x.f, i)]);
+  const sel = (estado.mesaSel ??= { f: -1, k: -1 });
+  if (!passos.some((s) => s.f === sel.f && s.k === sel.k)) Object.assign(sel, passos.find(comPagina) ?? passos[0]);
+  const { f, k } = sel;
 
-  // seletor "Folha f · Passada k de n" + downloads
   const aviso = el('p', 'mesa-erro');
   const botao = (txt, fn, cls) => {
     const b = el('button', cls, txt); b.type = 'button';
@@ -138,59 +233,29 @@ export function desenharMesa(elemento, estado) {
   };
   try { const { fora } = gcodePassada(estado, p, f, k, undefined, true); if (fora) aviso.textContent = perfil.experimental ? MSG_EXP : fora; } catch { /* sem G-code, sem aviso */ }
   const barra = el('div', 'mesa-barra'), rot = el('label', null, 'Passada '), s = el('select');
-  passos.forEach((x, i) => s.append(new Option(`Folha ${x.f + 1} · Passada ${x.k + 1} de ${imp.passadas.length}`, i)));
+  passos.forEach((x, i) => s.append(new Option(`Folha ${x.f + 1} · Passada ${x.k + 1} de ${imp.passadas.length}${comPagina(x) ? '' : ' (sem página)'}`, i)));
   s.value = passos.findIndex((x) => x.f === f && x.k === k);
   s.addEventListener('change', () => { Object.assign(sel, passos[Number(s.value)]); desenharMesa(elemento, estado); });
   rot.append(s);
   barra.append(
     rot,
     botao('Baixar esta passada', () => baixarTodos(arquivos(estado, p, f, k)), 'primario'),
-    botao('Baixar todas as passadas', () => baixarTodos(passos.flatMap((x) => arquivos(estado, p, x.f, x.k)))),
+    botao('Baixar todas as passadas', () => baixarTodos(passos.filter(comPagina).flatMap((x) => arquivos(estado, p, x.f, x.k)))),
   );
 
-  // desenho (Y da máquina para cima); o viewBox une a mesa e a folha em todas as passadas (o balanço aparece)
-  const fm = paraMesa(imp, k, { x: 0, y: 0, giro: 0 }, imp.folha), cf = cantos(imp.folha.largura, imp.folha.altura);
-  const pts = [[0, 0], [mx, my], ...imp.passadas.flatMap((_, kk) => cf.map(paraMesa(imp, kk, { x: 0, y: 0, giro: 0 }, imp.folha)))];
-  const M = 14, x0 = Math.min(...pts.map((q) => q[0])) - M, x1 = Math.max(...pts.map((q) => q[0])) + M;
-  const y0 = my - Math.max(...pts.map((q) => q[1])) - M, y1 = my - Math.min(...pts.map((q) => q[1])) + M;
-  const d = sv('svg', { viewBox: `${x0} ${y0} ${x1 - x0} ${y1 - y0}`, role: 'img', 'aria-label': 'Simulação da mesa, folha e passadas' });
-  d.style.aspectRatio = `${x1 - x0} / ${y1 - y0}`;
-  const defs = sv('defs', {}, d);
-  sv('path', { d: 'M0 6L6 0', stroke: 'var(--tinta-2)', 'stroke-width': .6 }, sv('pattern', { id: 'm-hach', width: 6, height: 6, patternUnits: 'userSpaceOnUse' }, defs));
-  sv('rect', { x: 0, y: 0, width: mx, height: my }, sv('clipPath', { id: 'm-corte' }, defs)); // y = 0..my já é o SVG da mesa
-  const dobra = poli(cf.map(fm));
-  sv('path', { class: 'm-fora-mesa', d: dobra }, d); // a folha toda, hachurada: o que sobra para fora aparece
-  sv('rect', { class: 'm-contorno', x: 0, y: 0, width: mx, height: my }, d);
-  sv('rect', { class: 'm-janela', x: j.x0, y: my - j.y1, width: j.x1 - j.x0, height: j.y1 - j.y0 }, d);
-  sv('path', { class: 'm-folha', d: dobra, 'clip-path': 'url(#m-corte)' }, d); // a parte sobre a mesa, cheia
-  sv('rect', { class: 'm-mesa-borda', x: 0, y: 0, width: mx, height: my }, d);
-  // nomes das bordas da mesa: X0 Y0 é o canto de baixo à esquerda do desenho
-  const [fb, lr] = (p.m.origem || 'frente-esquerda').split('-');
-  const outro = { frente: 'trás', tras: 'frente', esquerda: 'direita', direita: 'esquerda' }, nome = (w) => (w === 'tras' ? 'trás' : w);
-  const borda = (txt, x, y, rotacao) => sv('text', { class: 'm-txt m-borda', x, y, 'text-anchor': 'middle', ...(rotacao && { transform: `rotate(${rotacao} ${x} ${y})` }) }, d).textContent = txt;
-  borda(outro[fb] ?? 'trás', mx / 2, -4);
-  borda(nome(fb), mx / 2, my + 10);
-  borda(nome(lr), -4, my / 2, -90);
-  borda(outro[lr] ?? 'direita', mx + 10, my / 2, 90);
-  // bordas de referência engrossadas: as duas arestas da caixa que tocam o canto
+  // a folha inteira nesta passada, com o texto de todas as páginas dela: as desta passada em tinta, as outras em cinza
+  const fm = paraMesa(imp, k, { x: 0, y: 0, giro: 0 }, imp.folha), W = imp.folha.largura, H = imp.folha.altura;
   const c = imp.passadas[k].caixa, dir = imp.canto[1] === '1' ? -1 : 1, cima = imp.canto[3] === '1' ? -1 : 1;
   const cx = dir > 0 ? c.x : c.x + c.w, cy = cima > 0 ? c.y : c.y + c.h;
-  sv('path', { class: 'm-ref', d: `M${Y([cx + dir * c.w, cy])}L${Y([cx, cy])}L${Y([cx, cy + cima * c.h])}` }, d);
-  imp.slots.forEach((sl, i) => {
-    const dentro = imp.passadas[k].slots.includes(i), cor = CORES[imp.passadas.findIndex((x) => x.slots.includes(i)) % CORES.length];
-    const t = paraMesa(imp, k, sl, p.doc.papel), g = sv('g', { 'data-slot': i + 1, 'data-passada': dentro ? 'sim' : 'nao' }, d);
-    sv('path', { class: 'm-slot' + (dentro ? '' : ' m-fora'), d: poli(cantos(p.doc.papel.largura, p.doc.papel.altura).map(t)), stroke: cor }, g);
-    const pag = p.doc.paginas[pg(p, f, i)];
-    if (pag && dentro) for (const cam of pag.camadas) for (const tr of cam.tracos) sv('path', { class: 'm-traco', stroke: cor, d: 'M' + tr.map((q) => Y(t(q))).join('L') }, g);
-    const [qx, qy] = t([6, 10]);
-    sv('text', { class: 'm-txt', x: qx, y: my - qy }, g).textContent = pag ? `pág. ${pg(p, f, i) + 1}` : 'vazio';
+  const paginas = imp.slots.map((sl, i) => {
+    const n = pg(p, f, i), pag = doc.paginas[n], ativa = imp.passadas[k].slots.includes(i);
+    return { t: paraMesa(imp, k, sl, doc.papel), papel: doc.papel, camadas: pag?.camadas, ativa: ativa && !!pag, rotulo: pag ? `pág. ${n + 1}` : 'vazio', vazio: !pag,
+      dados: { 'data-slot': i + 1, 'data-passada': ativa ? 'sim' : 'nao' } };
   });
-  // seta "topo" da folha
-  const [a, b] = [[imp.folha.largura / 2, imp.folha.altura * .1], [imp.folha.largura / 2, imp.folha.altura * .03]].map(fm);
-  sv('path', { class: 'm-ref', d: `M${Y(a)}L${Y(b)}` }, d);
-  const [tx, ty] = fm([imp.folha.largura / 2 + 4, imp.folha.altura * .1 + 8]);
-  sv('text', { class: 'm-txt', x: tx, y: my - ty }, d).textContent = 'topo';
-
-  const resumo = `${imp.porFolha} páginas por folha · ${p.nFolhas} folha(s) · ${passos.length} passada(s)${imp.perdidos.length ? ` · ${imp.perdidos.length} posição(ões) inalcançável(is), sem página` : ''}`;
-  raiz.append(barra, el('p', 'mesa-instrucao', instrucao(imp, k, { nomeFolha: nomeFolha(p.m), origem: p.m.origem, folha: f + 1, nFolhas: p.nFolhas })), el('p', 'mesa-aviso', resumo), aviso, d);
+  const resumo = `${imp.porFolha} páginas por folha · ${p.nFolhas} folha(s) · ${passos.filter(comPagina).length} passada(s) com página${imp.perdidos.length ? ` · ${imp.perdidos.length} posição(ões) inalcançável(is), sem página` : ''}`;
+  const svg = cena({ mx, my, j, folhas: [[[0, 0], [W, 0], [W, H], [0, H]].map(fm)], paginas, canetas: doc.canetas,
+      topo: [fm([W * 0.7, Math.min(18, H * 0.2)]), fm([W * 0.7, 3])], refs: [[[cx + dir * c.w, cy], [cx, cy], [cx, cy + cima * c.h]]], legenda: 'Simulação da mesa, folha e passadas' });
+  barra.append(ampliar(svg));
+  raiz.append(barra, el('p', 'mesa-instrucao', instrucao(imp, k, { nomeFolha: nomeFolha(p.m), origem: p.m.origem, folha: f + 1, nFolhas: p.nFolhas })), aviso,
+    svg, legenda(), el('p', 'mesa-aviso', resumo));
 }

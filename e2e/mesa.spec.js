@@ -21,16 +21,26 @@ test.beforeEach(({ page }) => {
   return abrir(page, t.includes('offsetX') ? { offsetX: 40, experimental: t.includes('experimental') } : undefined)
 })
 
-test('A6 em A4 mostra 4 slots e "Passada 1 de 2"; trocar a passada muda a instrução', async ({ page }) => {
+test('A6 em A4: 4 slots, abre na passada com a página, mostra o texto dela e marca a passada vazia', async ({ page }) => {
   await expect(page.locator('.mesa svg [data-slot]')).toHaveCount(4)
   const sel = page.getByRole('combobox', { name: 'Passada' })
-  await expect(sel.locator('option:checked')).toHaveText(/Passada 1 de 2/)
+  await expect(sel.locator('option:checked')).not.toContainText('sem página')
+  await expect(sel.locator('option', { hasText: 'sem página' })).toHaveCount(1)
+  await expect(page.locator('.mesa svg [data-passada="sim"] .m-traco').first()).toBeAttached()
   const antes = await page.locator('.mesa-instrucao').textContent()
-  expect(antes).toContain('Passada 1 de 2')
-  await sel.selectOption({ index: 1 })
+  const outra = await sel.locator('option:not(:checked)').first().getAttribute('value')
+  await sel.selectOption(outra)
   const depois = await page.locator('.mesa-instrucao').textContent()
-  expect(depois).toContain('Passada 2 de 2')
   expect(depois).not.toBe(antes)
+})
+
+test('sem imposição, a mesa mostra a página atual com o texto no lugar da caneta, e o Ampliar abre a cena', async ({ page }) => {
+  await page.getByRole('checkbox', { name: 'imposição na mesa' }).uncheck()
+  await expect(page.locator('.mesa .mesa-instrucao')).toContainText('canto frente-esquerda')
+  await expect(page.locator('.mesa svg.m-cena .m-traco').first()).toBeAttached()
+  await expect(page.locator('#pag-info')).toBeVisible()
+  await page.getByRole('button', { name: 'Ampliar' }).click()
+  await expect(page.locator('dialog.mesa-dialogo svg .m-traco').first()).toBeAttached()
 })
 
 test('configuração persiste em writer.mesa', async ({ page }) => {
@@ -38,12 +48,12 @@ test('configuração persiste em writer.mesa', async ({ page }) => {
   expect(salvo).toMatchObject({ ligada: true, folha: 'A4' })
 })
 
-test('"Baixar todas as passadas" baixa carta-f1-pa1.gcode e carta-f1-pa2.gcode com a instrução no topo', async ({ page }) => {
+test('"Baixar todas as passadas" pula a passada sem página e põe a instrução no topo', async ({ page }) => {
   const baixados = []
   page.on('download', d => baixados.push(d))
   await page.getByRole('button', { name: 'Baixar todas as passadas', exact: true }).click()
-  await expect.poll(() => baixados.length).toBe(2)
-  expect(baixados.map(d => d.suggestedFilename()).sort()).toEqual(['carta-f1-pa1.gcode', 'carta-f1-pa2.gcode'])
+  await expect.poll(() => baixados.length).toBe(1) // a carta tem 1 página: só a passada dela gera arquivo
+  expect(baixados[0].suggestedFilename()).toMatch(/^carta-f1-pa[12]\.gcode$/)
   const texto = await readFile(await baixados[0].path(), 'utf8')
   expect(texto.startsWith('; Passada')).toBe(true)
 })

@@ -27,6 +27,7 @@ Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, 
 - **Temas**: claro e vela (escuro).
 - **Salvos no navegador**: personagens (`writer.personagens`), perfil de máquina (`writer.perfil`), preferências (`writer.ui`) e o trabalho em andamento de cada oficina (`trabalho.escrita`, `trabalho.sigilos`, `grimorio.estado`), no localStorage. No IndexedDB (`scriptorium`): os materiais da biblioteca e o `magias.json` importado. Nada vai para servidor.
 - **Biblioteca** (`#biblioteca`): "Salvar na biblioteca" guarda o trabalho com nome (oficina, texto ou magias, ajustes e personagem). A aba abre, baixa (.json), renomeia e apaga; "Baixar cópia de tudo" leva personagens e materiais para outro navegador. A home mostra os mais recentes.
+- **Mesa** (botão Mesa acima da prévia): a mesa da máquina vista de cima, com a frente embaixo, a origem X0 Y0, até onde a caneta alcança, a folha e o texto projetado no lugar onde a caneta vai escrever. Sem imposição, mostra a página atual; com imposição, a folha inteira, com o texto da passada em tinta e o das outras em cinza (passadas vazias ficam marcadas e não geram arquivo). "Ampliar" abre a cena em tela cheia.
 - **Trajeto**: "mostrar trajeto" na prévia mostra a viagem no ar, início, fim e ordem de cada traço.
 - **Texto**: pode ser digitado ou importado de um `.txt` de até 200 KB.
 
