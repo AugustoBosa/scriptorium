@@ -2,6 +2,7 @@
 import { hachureLines } from 'hachure-fill';
 
 export const dist = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+export const valido = (t) => Array.isArray(t) && t.length >= 2 && t.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
 export const comprimento = (t) => t.slice(1).reduce((s, p, i) => s + dist(t[i], p), 0);
 
 export const ret = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]];
@@ -21,9 +22,9 @@ export function arco(cx, cy, r, a0, a1, n = 12) {
 export function caixaDe(tracos) {
   const pts = tracos.flat();
   if (!pts.length) return { x: 0, y: 0, l: 0, a: 0 };
-  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
-  const x = Math.min(...xs), y = Math.min(...ys);
-  return { x, y, l: Math.max(...xs) - x, a: Math.max(...ys) - y };
+  let x = Infinity, y = Infinity, X = -Infinity, Y = -Infinity; // laço, não spread: textos longos estouram o limite de argumentos
+  for (const [px, py] of pts) { x = Math.min(x, px); y = Math.min(y, py); X = Math.max(X, px); Y = Math.max(Y, py); }
+  return { x, y, l: X - x, a: Y - y };
 }
 
 // ponytail: remove ponto repetido e traço com < 2 pontos; não trata NaN de propósito
@@ -39,6 +40,7 @@ export function limpar(tracos) {
 
 // n = max(1, ceil(L/passo)); pontos em k·L/n, k = 0..n
 export function reamostrar(t, passo) {
+  if (!(passo > 0)) throw new Error(`reamostrar: passo inválido (${passo})`);
   if (t.length < 2) return [...t];
   const L = comprimento(t);
   const n = Math.max(1, Math.ceil(L / passo));
@@ -170,12 +172,11 @@ export function deslocar(t, d) {
 
 // hachure-fill: armadilhas — lista de polígonos, cópia (não muta), x·100 inteiro, stepOffset = gap
 const K = 100;
-export function hachura(poligonos, { angulo = 45, espaco = 1, cruzada = false } = {}) {
+export function hachura(poligonos, { angulo = 45, espaco = 1 } = {}) {
   const lista = typeof poligonos[0][0] === 'number' ? [poligonos] : poligonos;
   const e = Math.round(Math.max(espaco, 0.1) * K);
-  const passada = (ang) => hachureLines(lista.map((p) => p.map(([x, y]) => [x * K, y * K])), e, ang, e)
+  const linhas = hachureLines(lista.map((p) => p.map(([x, y]) => [x * K, y * K])), e, angulo, e)
     .map((l) => l.map(([x, y]) => [x / K, y / K]));
-  const linhas = cruzada ? [...passada(angulo), ...passada(angulo + 90)] : passada(angulo);
   return linhas.filter(([a, b]) => dist(a, b) > 0.05);
 }
 

@@ -23,7 +23,7 @@ test('PERFIL_PADRAO bate com vpype.toml e valores fixos', { skip: !existsSync(ar
 test('gcode de um traço reto', () => {
   const r = gcode([[[10, 20], [30, 20]]], pagina, PERFIL_PADRAO);
   const esperado = PERFIL_PADRAO.header +
-    'G0 X10.000 Y190.000 F6000\nG1 Z3 F500\nG1 X30.000 Y190.000 F2400\nG0 Z6 F500\n' +
+    'G0 Z6 F500\nG0 X10.000 Y190.000 F6000\nG1 Z3 F500\nG1 X30.000 Y190.000 F2400\nG0 Z6 F500\n' +
     PERFIL_PADRAO.footer;
   assert.equal(r.texto, esperado);
   assert.equal(r.nTracos, 1);

@@ -1,11 +1,8 @@
-import { PERFIS, cabeNaMaquina } from './perfis.js';
+import { PERFIS, cabeNaMaquina, janelaDe } from './perfis.js';
+import { valido, dist } from '../geo.js';
 
 export const PERFIL_PADRAO = PERFIS.megaS;
 
-// ponytail: duplicado de propósito; unificar em geo.js no M18
-const valido = (t) => Array.isArray(t) && t.length >= 2;
-// ponytail: duplicado de propósito; unificar em geo.js no M18
-const dist = ([x1, y1], [x2, y2]) => Math.hypot(x2 - x1, y2 - y1);
 const num = (v) => String(+v.toFixed(3));
 
 // trajeto: viagem no ar (tracejado), início (verde) e fim (vermelho) de cada traço, numerados.
@@ -44,7 +41,8 @@ export function gcode(tracos, pagina, perfil = PERFIL_PADRAO) {
   const p = { ...PERFIL_PADRAO, ...perfil };
   const validos = tracos.filter(valido);
   const avisos = [];
-  let texto = p.header;
+  let texto = `${p.header}G0 Z${p.zLevantada} F${p.fZ}
+`;
   let comprimento = 0;
   validos.forEach((t, i) => {
     const maq = t.map(([x, y]) => [x + p.offsetX, pagina.altura - y + p.offsetY]);
@@ -67,12 +65,15 @@ export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, 
   for (const [campo, z] of [['zEscrita', perfil.zEscrita], ['zLevantada', perfil.zLevantada], ['estaciona.z', perfil.estaciona.z]]) {
     if (z < zMin) throw new Error(`Z de escrita ${z} abaixo do piso ${zMin} (zMin) do perfil ${perfil.nome} (${campo})`);
   }
+  if (!(perfil.zLevantada > perfil.zEscrita)) throw new Error(`Z levantada (${perfil.zLevantada}) tem que ficar acima do Z de escrita (${perfil.zEscrita}): a caneta arrastaria nas viagens`);
   const c = cabeNaMaquina(papel, perfil);
   if (!c.ok) throw new Error(c.motivo);
-  const j = perfil.janela ?? { x0: 0, y0: 0, x1: perfil.mesaX, y1: perfil.mesaY };
+  const j = janelaDe(perfil);
   const { estaciona: e, fZ, fViagem, fDesenho, zEscrita, zLevantada } = perfil;
   const avisos = [];
-  let texto = perfil.header, nTracos = 0, comprimento = 0, trocas = 0, anterior = null;
+  // o header termina numa altura fixa; sobe para zLevantada antes da 1ª viagem
+  let texto = `${perfil.header}G0 Z${zLevantada} F${fZ}
+`, nTracos = 0, comprimento = 0, trocas = 0, anterior = null;
   for (const camada of pagina.camadas.filter((k) => !camadas || camadas.includes(k.id))) {
     const validos = camada.tracos.filter(valido);
     if (!validos.length) continue;

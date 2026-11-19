@@ -66,3 +66,17 @@ test('nome de caneta com quebra de linha não gera linha nova', () => {
   const r = gcodeDocumento(duas, A6, PERFIS.megaS, { canetas: { vermelha: { nome: 'Verm\nG0 Z-99' } } });
   assert.doesNotMatch(r.texto, /^G0 Z-99/m);
 });
+
+test('sobe para zLevantada antes da 1ª viagem e recusa zLevantada <= zEscrita', () => {
+  const alto = { ...PERFIS.megaS, zEscrita: 8, zLevantada: 12 };
+  const r = gcodeDocumento(duas, A6, alto);
+  const linhas = r.texto.slice(alto.header.length).split('\n');
+  assert.equal(linhas[0], 'G0 Z12 F500');
+  assert.throws(() => gcodeDocumento(duas, A6, { ...PERFIS.megaS, zLevantada: 3 }), /arrastaria/);
+});
+
+test('traço com NaN não vira XNaN', () => {
+  const r = gcodeDocumento(pag(cam('t', 'preta', [[[1, 1], [NaN, 2]], [[1, 1], [2, 2]]])), A6, PERFIS.megaS);
+  assert.doesNotMatch(r.texto, /NaN/);
+  assert.equal(r.nTracos, 1);
+});

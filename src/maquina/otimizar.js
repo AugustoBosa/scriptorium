@@ -1,8 +1,5 @@
 import { ROTULOS, AJUDA } from '../ajuda.js';
-// ponytail: duplicado de propósito; unificar em geo.js no M18
-const valido = (t) => Array.isArray(t) && t.length >= 2;
-// ponytail: duplicado de propósito; unificar em geo.js no M18
-const dist = ([x1, y1], [x2, y2]) => Math.hypot(x2 - x1, y2 - y1);
+import { valido, dist } from '../geo.js';
 
 // Viagem no ar (mm), partindo de (0,0), na ordem dada.
 export function viagem(tracos) {

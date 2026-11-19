@@ -79,7 +79,7 @@ test('afastar: nenhum ponto restante a menos de folga do obstáculo', () => {
   for (const t of r) for (const p of t) assert.ok(Math.min(...O.map((o) => dist(o, p))) >= 1 - 1e-9);
 });
 
-test('hachura: primeiro x = 0 não estoura, ~5/espaco linhas a 0°, não muta a entrada, cruzada tem mais', () => {
+test('hachura: primeiro x = 0 não estoura, ~5/espaco linhas a 0°, não muta a entrada', () => {
   const poly = [[0, 0], [10, 0], [10, 5], [0, 5]];
   const copia = structuredClone(poly);
   const l = hachura(poly, { angulo: 0, espaco: 1 });
@@ -91,7 +91,6 @@ test('hachura: primeiro x = 0 não estoura, ~5/espaco linhas a 0°, não muta a 
       assert.ok(p[0] >= -0.02 && p[0] <= 10.02 && p[1] >= -0.02 && p[1] <= 5.02);
     }
   }
-  assert.ok(hachura(poly, { angulo: 45, espaco: 1, cruzada: true }).length > hachura(poly, { angulo: 45, espaco: 1 }).length);
 });
 
 test('hachura: anel [fora, dentro] não risca o furo', () => {
