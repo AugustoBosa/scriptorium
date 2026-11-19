@@ -11,6 +11,7 @@ import * as pPersonagem from './personagem.js';
 import { montarSoPapel, construir } from './texto.js';
 import { amostra } from '../layout.js';
 import * as pExportar from './exportar.js';
+import * as armazem from './armazem.js';
 import { controle, dica, ligar } from './controle.js';
 
 const $ = (id) => document.getElementById(id);
@@ -106,6 +107,8 @@ export function criar() {
         if (!Array.isArray(dados) || !dados[0]?.nome) throw new Error('não é um magias.json');
         estado.magias = dados;
         aoMudar();
+        // fica guardado neste navegador: na próxima visita a lista já está carregada
+        try { await armazem.gravar('magias', dados); } catch (e) { $('erro').textContent = `As magias foram carregadas, mas não ficaram salvas no navegador: ${e.message}`; }
       } catch (e) { $('erro').textContent = `Importação falhou: ${e.message}`; }
     });
     semDados.append(arquivo);
@@ -329,7 +332,8 @@ export function criar() {
     try {
       const r = await fetch('dados/magias.json');
       if (r.ok) estado.magias = await r.json();
-    } catch { /* sem dados locais: o painel oferece importar */ }
+    } catch { /* sem dados no servidor (Pages): usa as magias importadas antes */ }
+    if (!estado.magias.length) estado.magias = (await armazem.ler('magias')) ?? [];
     try { await garantirFontes(); } catch (e) { $('erro').textContent = `Erro ao carregar: ${e.message}`; }
   }
 

@@ -49,3 +49,4 @@
   #vista-inicio .oficina { transition: none; }
   #vista-inicio .oficina:hover { transform: none; }
 }
+#vista-inicio .material { text-align: left; cursor: pointer; font: inherit; }

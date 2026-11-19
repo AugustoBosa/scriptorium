@@ -18,11 +18,13 @@ import * as pMat from './materiais.js';
 import { montar as montarMesa, desenharMesa } from './mesa.js';
 import { montar as montarInicio } from './inicio.js';
 import { montar as montarPersonagens } from './personagens.js';
+import { montar as montarBiblioteca, gravarMaterial, novoId } from './biblioteca.js';
+import * as trabalho from './trabalho.js';
 
 const OFICINAS = { carta: 'escrita', livro: 'escrita', magias: 'grimorio', sigilos: 'sigilos' };
 const ANTIGAS = { scroll: true, grimorio: false }; // rota antiga → porPagina em #magias
-const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens };
-const NOMES = { inicio: 'Início', personagens: 'Personagens', carta: 'Carta', magias: 'Magias', livro: 'Livro', sigilos: 'Sigilos' };
+const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens, biblioteca: montarBiblioteca };
+const NOMES = { inicio: 'Início', personagens: 'Personagens', biblioteca: 'Biblioteca', carta: 'Carta', magias: 'Magias', livro: 'Livro', sigilos: 'Sigilos' };
 const VAZIO = { magias: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.' };
 const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto', 'mesa'];
 const $ = (id) => document.getElementById(id);
@@ -47,6 +49,7 @@ function criarEscrita() {
     carta: pMat.carta0(), livro: pMat.livro0(),
   };
   try { pPersonagem.restaurar(estado); } catch { /* usa personagem novo */ }
+  trabalho.restaurar('escrita', estado);
   const salvo = lerJSON('writer.perfil');
   if (salvo && typeof salvo === 'object') { estado.perfil = mesclarPerfil(salvo); estado.perfilNome = 'personalizado'; }
   return {
@@ -83,6 +86,7 @@ function criarSigilos() {
   const salvo = lerJSON('writer.perfil');
   if (salvo && typeof salvo === 'object') { estado.perfil = mesclarPerfil(salvo); estado.perfilNome = 'personalizado'; }
   estado.pagina = papel('A6');
+  trabalho.restaurar('sigilos', estado);
   return {
     estado,
     grupos: [
@@ -101,7 +105,7 @@ function criarSigilos() {
 const FABRICAS = { escrita: criarEscrita, grimorio: criarGrimorio, sigilos: criarSigilos };
 const insts = {}; // nome → instância
 const vistas = new Map(); // instância → { detalhes, barra, atualizar: [] }
-let atual = null, fontesCarregadas = null, ticket = 0, vindoDePagina = false, porPaginaPedido = null;
+let atual = null, fontesCarregadas = null, ticket = 0, vindoDePagina = false, porPaginaPedido = null, materialAberto = false;
 const paginasAtualizar = {}; // id → atualizar() da página, montada uma vez
 
 // ---- render ----
@@ -156,6 +160,7 @@ function renderizar() {
 
   const sem = (a) => !String(a).startsWith('tolerancia de limites');
   listar($('avisos'), [...r.avisos.filter(sem), ...(rB ? rB.avisos.filter(sem).map((a) => `B: ${a}`) : [])]);
+  if (inst.nome !== 'grimorio') trabalho.salvar(inst.nome, e); // o grimório salva o dele ao compor
   const v = vistas.get(inst);
   v.atualizar.forEach((f) => f());
   v.atualizarBarra();
@@ -201,15 +206,16 @@ async function rotear() {
   document.querySelector('main').hidden = !!PAGINAS[id];
   for (const p in PAGINAS) $('vista-' + p).hidden = p !== id;
   if (PAGINAS[id]) {
-    paginasAtualizar[id] ??= PAGINAS[id]($('vista-' + id), { fontes: fontesCarregadas });
+    paginasAtualizar[id] ??= PAGINAS[id]($('vista-' + id), { fontes: fontesCarregadas, abrir: abrirMaterial });
     paginasAtualizar[id]();
     marcar();
     vindoDePagina = true;
     return;
   }
   const nome = OFICINAS[id];
-  const inst = insts[nome] ??= FABRICAS[nome]();
-  if (atual && atual !== inst) for (const c of COMPARTILHADAS) if (c in atual.estado) inst.estado[c] = atual.estado[c]; // ponytail: cópia na troca; store único se duas oficinas ficarem visíveis juntas
+  const inst = obter(nome);
+  if (atual && atual !== inst) for (const c of COMPARTILHADAS) if (c in atual.estado && !(materialAberto && c === 'personagem')) inst.estado[c] = atual.estado[c]; // ponytail: cópia na troca; store único se duas oficinas ficarem visíveis juntas
+  materialAberto = false;
   if (vindoDePagina) { try { pPersonagem.restaurar(inst.estado); } catch { /* mantém o personagem atual */ } vindoDePagina = false; }
   if (!atual) { inst.estado.fontes = fontesCarregadas; inst.estado.nomesFontes = FONTES; }
   inst.estado.oficina = id;
@@ -229,6 +235,30 @@ async function rotear() {
   $('comparar').checked = !!inst.estado.comparar;
   renderizar();
 }
+
+// ---- biblioteca ----
+function obter(nome) { return (insts[nome] ??= Object.assign(FABRICAS[nome](), { nome })); }
+
+// Abre um material salvo: põe o trabalho na instância da oficina e vai até ela.
+function abrirMaterial(m) {
+  const inst = obter(OFICINAS[m.oficina]);
+  trabalho.aplicar(inst.nome, inst.estado, m.estado);
+  if (inst.nome === 'escrita') inst.estado.vistos = [...new Set([...(inst.estado.vistos ?? []), 'carta', 'anotacao', 'diario', 'livro'])]; // não sobrescreve o visual do material
+  vindoDePagina = false; materialAberto = true; // o personagem do material vale, não o da aba nem o da oficina anterior
+  if (location.hash === '#' + m.oficina) rotear(); else location.hash = '#' + m.oficina;
+}
+
+$('salvar-material').addEventListener('click', async () => {
+  const e = atual?.estado;
+  if (!e) return;
+  const sugestao = `${NOMES[e.oficina]} — ${new Date().toLocaleDateString('pt-BR')}`;
+  const nome = prompt('Nome do material na biblioteca', sugestao)?.trim();
+  if (!nome) return;
+  try {
+    await gravarMaterial({ id: novoId(), nome, oficina: e.oficina, quando: Date.now(), estado: trabalho.instantaneo(atual.nome, e, { comPersonagem: true }) });
+    $('salvo').textContent = `Salvo na biblioteca: ${nome}`;
+  } catch (err) { $('erro').textContent = `Não foi possível salvar no navegador: ${err.message}`; }
+});
 
 for (const v of ['pagina', 'mesa']) $('vista-' + v).addEventListener('click', () => { ui.vista = v; salvarUi(); aoMudar(); });
 

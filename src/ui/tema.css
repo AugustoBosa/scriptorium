@@ -219,3 +219,6 @@ dialog::backdrop { background: var(--sombra-cor); }
 .alca-nota { fill: transparent; stroke: var(--foco); stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-dasharray: 4 3; cursor: grab; opacity: 0; transition: opacity .15s; }
 #previa:hover .alca-nota, .alca-nota:focus, .alca-nota.arrastando { opacity: 1; }
 .alca-nota.arrastando { cursor: grabbing; }
+
+#salvar-material { margin-left: auto; }
+.salvo { font-size: var(--t-pequeno); color: var(--tinta-2); }

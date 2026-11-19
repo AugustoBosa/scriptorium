@@ -11,6 +11,7 @@ import { EXEMPLOS } from '../materiais/exemplos.js';
 import { gerarAlfabeto } from '../arcano/alfabeto.js';
 import { magiaVazia } from '../magia.js';
 import { NEUTRA } from '../motor/mao.js';
+import { materiais } from './biblioteca.js';
 
 const MAGIA = { ...magiaVazia(), id: 'exemplo', nome: 'Bola de Fogo', nivel: 3, linhaNivel: 'Evocação de 3º nível', alcance: '45 m', comp: 'V, S, M',
   duracao: 'Instantânea', resumo: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.', texto: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.' };
@@ -51,7 +52,7 @@ function el(tag, classe, texto) {
   return e;
 }
 
-export function montar(raiz, { fontes }) {
+export function montar(raiz, { fontes, abrir }) {
   const lema = el('p', 'lema', 'Caligrafia de traço único para plotter de caneta.');
   const mao = el('p', 'mao-atual');
   const gradeOf = el('div', 'grade');
@@ -61,7 +62,11 @@ export function montar(raiz, { fontes }) {
   todos.href = '#personagens';
   const hPe = el('h2');
   hPe.append(el('span', null, 'Personagens'), todos);
-  raiz.append(lema, mao, el('h2', null, 'Oficinas'), gradeOf, hPe, faixa, vazio);
+  const hBib = el('h2'), todosBib = el('a', 'todos', 'Biblioteca ›');
+  todosBib.href = '#biblioteca';
+  hBib.append(el('span', null, 'Materiais salvos'), todosBib);
+  const recentes = el('div', 'grade recentes'), semMateriais = el('p', 'vazio', 'Nenhum material salvo ainda. Nas oficinas, use "Salvar na biblioteca".');
+  raiz.append(lema, mao, el('h2', null, 'Oficinas'), gradeOf, hBib, recentes, semMateriais, hPe, faixa, vazio);
 
   function miniatura(pai, p, variacao, texto) {
     const f = el('div', 'folha');
@@ -131,6 +136,16 @@ export function montar(raiz, { fontes }) {
     novo.addEventListener('click', () => { gravarAtual(novoPersonagem(), 'normal'); location.hash = '#personagens'; });
     faixa.append(novo);
     vazio.hidden = salvos.length > 0;
+    materiais().then((ms) => {
+      semMateriais.hidden = ms.length > 0;
+      recentes.replaceChildren(...ms.slice(0, 4).map((m) => {
+        const b = el('button', 'cartao material');
+        b.type = 'button';
+        b.append(el('span', 'nome', m.nome), el('span', 'desc', `${{ carta: 'Carta', livro: 'Livro', magias: 'Magias', sigilos: 'Sigilos' }[m.oficina] ?? m.oficina} · ${new Date(m.quando).toLocaleDateString('pt-BR')}`));
+        b.addEventListener('click', () => abrir(m));
+        return b;
+      }));
+    });
   }
 
   return atualizar;
