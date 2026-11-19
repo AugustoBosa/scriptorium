@@ -1,38 +1,47 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { celulas, svgFolha, caracteres, GRADE } from '../src/letra/folha.js';
+import { parseFonte } from '../src/fonte.js';
+import { papel, CANETAS, validarDocumento } from '../src/materiais/documento.js';
+import { comporColeta, codificar, decodificar, caracteres, TIPOS, VARIANTES } from '../src/letra/folha.js';
 
-const CARACTERES = caracteres(JSON.parse(readFileSync(new URL('../src/letra/linguas/pt-BR.json', import.meta.url), 'utf8')).letras);
+const lingua = JSON.parse(readFileSync(new URL('../src/letra/linguas/pt-BR.json', import.meta.url), 'utf8'));
+const ctx = { fontes: { HersheySans1: parseFonte(readFileSync(new URL('../fontes/HersheySans1.svg', import.meta.url), 'utf8'), 'HersheySans1') } };
+const A4 = papel('A4'), A5 = papel('A5');
+const dentro = (doc) => doc.paginas.every((p) => p.camadas.every((c) => c.tracos.flat().every(([x, y]) => x >= 0 && y >= 0 && x <= doc.papel.largura && y <= doc.papel.altura)));
 
-test('cada caractere tem uma célula única, dentro das margens e sem sobrepor outra', () => {
-  const cs = celulas(CARACTERES);
-  assert.equal(new Set(CARACTERES).size, CARACTERES.length);
-  assert.equal(cs.length, CARACTERES.length);
-  const { colunas, linhas, margem } = GRADE;
-  for (const c of cs) {
-    assert.ok(c.x >= margem.esq && c.x + c.largura <= colunas - margem.dir, `x de ${c.ch}`);
-    assert.ok(c.y >= margem.topo && c.y + c.altura <= linhas - margem.base, `y de ${c.ch}`);
-    assert.ok(c.y < c.xAltura && c.xAltura < c.base && c.base < c.y + c.altura, `linhas de ${c.ch}`);
+test('código da folha: ida e volta, e papel fora da lista vira "outro"', () => {
+  const c = { tipo: 'LC', parte: 3, x: 4.5, papelNome: 'A5' };
+  assert.equal(codificar(c).length, 16);
+  assert.deepEqual(decodificar(codificar(c)), c);
+  assert.equal(decodificar(codificar({ ...c, papelNome: 'personalizado' })).papelNome, 'outro');
+  assert.throws(() => codificar({ ...c, parte: 40 }), /parte fora da faixa/);
+});
+
+test('folhas de texto: todas as palavras aparecem, em ordem, dentro do papel e com documento válido', () => {
+  for (const tipo of ['N', 'C', 'F']) {
+    const doc = comporColeta(lingua, ctx, { papel: A4, papelNome: 'A4', tipo, x: 4, canetas: CANETAS });
+    assert.deepEqual(validarDocumento(doc), []);
+    assert.ok(dentro(doc));
+    const linhas = doc.paginas.flatMap((p) => p.coleta.linhas);
+    assert.deepEqual(linhas.map((l) => l.texto).join(' ').split(' '), lingua.palavras);
+    assert.deepEqual(doc.paginas.map((p) => p.coleta.codigo), doc.paginas.map((_, i) => `${tipo}${i + 1}`));
+    assert.deepEqual(decodificar(doc.paginas[0].coleta.bits), { tipo, parte: 1, x: 4, papelNome: 'A4' });
   }
-  assert.equal(new Set(cs.map((c) => `${c.x},${c.y}`)).size, cs.length);
 });
 
-test('caracteres demais para uma página dão erro claro', () => {
-  assert.throws(() => celulas(Array.from({ length: 500 }, (_, i) => String(i))), /cabem \d+ caracteres/);
+test('folhas de letras: cada caractere uma vez por variante, caixas sem sobrepor', () => {
+  const doc = comporColeta(lingua, ctx, { papel: A5, papelNome: 'A5', tipo: 'LF', x: 4, canetas: CANETAS });
+  assert.deepEqual(validarDocumento(doc), []);
+  assert.ok(dentro(doc));
+  const cs = doc.paginas.flatMap((p) => p.coleta.celulas);
+  assert.equal(cs.length, caracteres(lingua.letras).length * VARIANTES);
+  for (const p of doc.paginas) assert.equal(new Set(p.coleta.celulas.map((c) => `${c.x},${c.y}`)).size, p.coleta.celulas.length);
 });
 
-test('svg da folha escapa caracteres especiais do XML', () => {
-  const s = svgFolha(CARACTERES);
-  assert.match(s, /&#38;/);
-  assert.match(s, /&#60;|&#34;/);
-  assert.doesNotMatch(s, />&</);
-});
-
-test('coleta: texto em 3 modos com as folhas necessárias, códigos únicos', async () => {
-  const { coleta, LINHAS_POR_FOLHA } = await import('../src/letra/folha.js');
-  const c = coleta(LINHAS_POR_FOLHA * 2 + 1);
-  assert.deepEqual(c.filter((f) => f.tipo === 'texto').map((f) => f.codigo), ['N1', 'N2', 'N3', 'C1', 'C2', 'C3', 'F1', 'F2', 'F3']);
-  assert.equal(new Set(c.map((f) => f.codigo)).size, c.length);
-  assert.deepEqual([...new Set(c.map((f) => f.modo))], ['natural', 'cursiva', 'forma']);
+test('papel pequeno demais dá erro claro; tipo desconhecido também', () => {
+  assert.throws(() => comporColeta(lingua, ctx, { papel: papel('A8'), papelNome: 'A8', tipo: 'N', x: 15, canetas: CANETAS }), /pequeno demais/);
+  assert.throws(() => comporColeta(lingua, ctx, { papel: papel('A8'), papelNome: 'A8', tipo: 'N', x: 8, canetas: CANETAS }), /máximo 31/);
+  assert.throws(() => comporColeta(lingua, ctx, { papel: A4, papelNome: 'A4', tipo: 'Z', canetas: CANETAS }), /desconhecido/);
+  assert.equal(TIPOS.length, 5);
 });

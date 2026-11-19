@@ -6,6 +6,7 @@ export const CHAVES = {
   escrita: ['texto', 'exemplo', 'vistos', 'opcoes', 'carta', 'livro', 'colunasLivro', 'papelCfg', 'paginaNome'],
   grimorio: ['selecionadas', 'atual', 'papelCfg', 'cfg', 'estilo', 'simbolos'],
   sigilos: ['sig', 'estilo', 'papelCfg', 'paginaNome'],
+  coleta: ['col', 'papelCfg', 'paginaNome'],
 };
 
 const objeto = (v) => v && typeof v === 'object' && !Array.isArray(v);

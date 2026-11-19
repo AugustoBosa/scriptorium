@@ -56,19 +56,23 @@ export function escolher(vocab, alvosLista, repeticoes = 3) {
   return { palavras: escolhidas, faltando: [...falta].filter(([, n]) => n > 0).map(([k]) => k) };
 }
 
-// Embaralha (determinístico), põe uma maiúscula inicial para cada letra que puder e quebra em linhas.
-export function montarTexto(palavras, { seed = 'texto-modelo', largura = 32 } = {}) {
+// Embaralha (determinístico) e põe uma maiúscula inicial para cada letra que puder.
+export function embaralhar(palavras, seed = 'texto-modelo') {
   const r = rng(seed), ws = [...palavras];
   for (let i = ws.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [ws[i], ws[j]] = [ws[j], ws[i]]; }
   const feitas = new Set();
-  const final = ws.map((w) => {
+  return ws.map((w) => {
     const c = [...w][0];
     if (feitas.has(c)) return w;
     feitas.add(c);
     return c.toUpperCase() + w.slice(c.length);
   });
+}
+
+// Quebra em linhas de até `largura` caracteres (palavra maior que a linha fica sozinha).
+export function quebrar(palavras, largura) {
   const linhas = [];
-  for (const w of final) {
+  for (const w of palavras) {
     if (linhas.length && (linhas.at(-1) + ' ' + w).length <= largura) linhas[linhas.length - 1] += ' ' + w;
     else linhas.push(w);
   }

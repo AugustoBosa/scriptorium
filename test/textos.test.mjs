@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { padroes, vocabulario, alvos, escolher, montarTexto } from '../src/letra/textos.js';
+import { padroes, vocabulario, alvos, escolher, embaralhar, quebrar } from '../src/letra/textos.js';
 
 test('padroes: início, fim e pares, com acento', () => {
   assert.deepEqual(padroes('mão'), ['^m', 'o$', 'mã', 'ão']);
@@ -22,8 +22,8 @@ test('escolher cobre cada alvo as vezes pedidas quando o vocabulário permite', 
   assert.equal(new Set(palavras).size, palavras.length);
 });
 
-test('montarTexto: uma maiúscula por letra inicial e linhas dentro da largura', () => {
-  const linhas = montarTexto(['casa', 'cedo', 'dado', 'vento', 'água'], { largura: 12 });
+test('embaralhar + quebrar: uma maiúscula por letra inicial e linhas dentro da largura', () => {
+  const linhas = quebrar(embaralhar(['casa', 'cedo', 'dado', 'vento', 'água']), 12);
   const ws = linhas.join(' ').split(' ');
   assert.equal(ws.filter((w) => /^\p{Lu}/u.test(w)).length, 4); // c, d, v, á
   for (const l of linhas) assert.ok(l.length <= 12 || !l.includes(' '));

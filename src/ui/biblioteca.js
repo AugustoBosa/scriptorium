@@ -4,7 +4,7 @@ import './biblioteca.css';
 import * as armazem from './armazem.js';
 import { slug } from './personagem.js';
 
-const NOMES = { carta: 'Carta', livro: 'Livro', magias: 'Magias', sigilos: 'Sigilos' };
+const NOMES = { carta: 'Carta', livro: 'Livro', magias: 'Magias', sigilos: 'Sigilos', letra: 'Minha letra' };
 const el = (tag, classe, texto) => { const e = document.createElement(tag); if (classe) e.className = classe; if (texto != null) e.textContent = texto; return e; };
 const botao = (texto, fn, rotulo) => { const b = el('button', null, texto); b.type = 'button'; if (rotulo) b.setAttribute('aria-label', rotulo); b.addEventListener('click', fn); return b; };
 const data = (t) => new Date(t).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });

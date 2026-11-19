@@ -19,14 +19,14 @@ import { montar as montarMesa, desenharMesa, mesaLigada } from './mesa.js';
 import { montar as montarInicio } from './inicio.js';
 import { montar as montarPersonagens } from './personagens.js';
 import { montar as montarBiblioteca, gravarMaterial, novoId } from './biblioteca.js';
-import { montar as montarLetra } from './letra.js';
+import { montarColeta, comporDeColeta, coleta0 } from './letra.js';
 import * as trabalho from './trabalho.js';
 
-const OFICINAS = { carta: 'escrita', livro: 'escrita', magias: 'grimorio', sigilos: 'sigilos' };
+const OFICINAS = { carta: 'escrita', livro: 'escrita', magias: 'grimorio', sigilos: 'sigilos', letra: 'coleta' };
 const ANTIGAS = { scroll: true, grimorio: false }; // rota antiga → porPagina em #magias
-const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens, biblioteca: montarBiblioteca, letra: montarLetra };
+const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens, biblioteca: montarBiblioteca };
 const NOMES = { inicio: 'Início', personagens: 'Personagens', biblioteca: 'Biblioteca', letra: 'Minha letra', carta: 'Carta', magias: 'Magias', livro: 'Livro', sigilos: 'Sigilos' };
-const VAZIO = { magias: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.' };
+const VAZIO = { magias: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.', letra: 'Nada para plotar.' };
 const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto', 'mesa'];
 const $ = (id) => document.getElementById(id);
 
@@ -103,7 +103,29 @@ function criarSigilos() {
   };
 }
 
-const FABRICAS = { escrita: criarEscrita, grimorio: criarGrimorio, sigilos: criarSigilos };
+function criarColeta() {
+  const estado = {
+    paginaNome: 'A5', variacao: 'normal', col: coleta0(),
+    personagem: novoPersonagem(), fontes: {}, perfil: structuredClone(PERFIS.megaS), perfilNome: 'megaS', otimizar: true, trajeto: false, paginaAtual: 0,
+  };
+  const salvo = lerJSON('writer.perfil');
+  if (salvo && typeof salvo === 'object') { estado.perfil = mesclarPerfil(salvo); estado.perfilNome = 'personalizado'; }
+  estado.pagina = papel('A5'); // A5 cabe na mesa da Mega S (210×210)
+  trabalho.restaurar('coleta', estado);
+  return {
+    estado,
+    grupos: [
+      { titulo: 'Folhas de coleta', montar: montarColeta },
+      { titulo: 'Papel', montar: pTexto.montarSoPapel },
+      { titulo: 'Máquina', nivel: 'avancado', montar: pExportar.montar },
+    ],
+    entrar() {},
+    compor: () => comporDeColeta(estado),
+    barra: pExportar.montarBarra,
+  };
+}
+
+const FABRICAS = { escrita: criarEscrita, grimorio: criarGrimorio, sigilos: criarSigilos, coleta: criarColeta };
 const insts = {}; // nome → instância
 const vistas = new Map(); // instância → { detalhes, barra, atualizar: [] }
 let atual = null, fontesCarregadas = null, ticket = 0, vindoDePagina = false, porPaginaPedido = null, materialAberto = false;

@@ -112,3 +112,13 @@ Arquivos que a etapa 2–3 vai tocar (a confirmar na implementação): `src/font
 - O usuário escreve cursiva, de forma e misturando. A fonte guarda o **modo** como dimensão.
 - Plano de coleta (`coleta()` em `src/letra/folha.js`, tabela na aba): N1–N3 texto natural, C1–C3 texto cursivo, F1–F3 texto de forma, LC1–LC2 letras soltas cursivas, LF1–LF2 de forma. 13 folhas; 13 linhas de texto por folha. Código da folha escrito na margem de cima e escolhido de novo ao enviar a foto.
 - Para a etapa 3: das folhas N sai a probabilidade real de ligar cada par (substitui `COMPAT`/`PARES` sintéticos de `src/motor/ductus.js` quando houver dado); C dá as ligações reais; F dá as formas separadas.
+
+## Folha plotada pela máquina (2026-11-19, substitui o caderno pontilhado)
+
+- Decisão do usuário: esquecer o caderno pontilhado; a própria máquina plota a folha de coleta em qualquer papel.
+- Oficina #letra (`src/ui/letra.js`, `src/letra/folha.js` → `comporColeta`): prévia, mesa e G-code do app.
+- Cada folha, numa caneta só (caneta guia, padrão vermelha): 4 marcas de canto (a de cima à esquerda é dupla, dá a orientação), cabeçalho legível, linha de base cheia + altura do "x" tracejada, texto a copiar (ou rótulo da caixa) e código de 16 traços embaixo (tipo, parte, altura do x, papel).
+- Sem linhas de haste e de perna: a altura natural delas é dado a coletar.
+- Cada página do documento leva `coleta` com a geometria exata (marcas, bases, células, bits): a etapa 2 endireita a foto pelas marcas e apaga as guias pela posição.
+- Padrão A5 (Mega S alcança 210×210 mm). A5 com x = 4 mm: 5 folhas por modo de texto, 4 de letras soltas por modo.
+- Texto modelo agora guarda as palavras (`palavras` no JSON); a quebra em linhas é feita na hora, pela largura do papel e pela altura do x.
