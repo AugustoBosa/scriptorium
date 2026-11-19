@@ -9,7 +9,7 @@ import { escreverEm } from './documento.js';
 
 export const VAO = 0.5; // mm (caneta 0,4)
 const TAU = 2 * Math.PI;
-const contar = (s) => s.split('\n').flatMap((l) => l.split(' ').filter(Boolean)).length;
+export const contar = (s) => s.split('\n').flatMap((l) => l.split(' ').filter(Boolean)).length;
 const resumo = (s) => (s.length > 24 ? s.slice(0, 24) + '…' : s);
 
 // { limpo, marcas, avisos }. ini/fim = índice de palavra (igual a ancora.indice do compor). Sem aninhamento.

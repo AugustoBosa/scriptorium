@@ -85,3 +85,9 @@ test('PARAMS: prévias com traços', () => {
     for (const v of valores) assert.ok([p.previa(v, ctx)].flatMap((t) => (Array.isArray(t) ? t : [...t.fundo, ...t.foco])).length > 0, `${p.chave}=${v}`);
   }
 });
+
+test('1 coluna em papel deitado: a célula não passa da altura útil', () => {
+  const deitado = papel('A5', { paisagem: true });
+  const doc = comporSigilos('abracadabra', ctx, { papel: deitado, tipo: 'selo', colunas: 1 });
+  for (const c of doc.paginas[0].camadas) for (const [x, y] of c.tracos.flat()) assert.ok(x <= deitado.largura && y <= deitado.altura, `${x},${y}`);
+});

@@ -4,7 +4,7 @@ import { caixaDe } from '../geo.js';
 import { capitular, caixaCapitular, PARAMS as PARAMS_CAP } from '../ornamento/capitular.js';
 import { borda, miolo, PARAMS as PARAMS_BORDA } from '../ornamento/borda.js';
 import { escreverEm, CANETAS } from './documento.js';
-import { parsearNotas, comporNotas } from './notas.js';
+import { parsearNotas, comporNotas, contar } from './notas.js';
 
 const D = {
   tamanho: 5, entrelinha: 1.5, alinhamento: 'justificado', colunas: 1, titulo: '', inicio: 1, numeracao: true, reclamo: true,
@@ -81,14 +81,14 @@ export function comporLivro(bruto, ctx, cfg) {
   const r = compor(corpo, ctx.fontes, ctx.mao, papelTexto, { tamanho, entrelinha, alinhamento: c.alinhamento, colunas: c.colunas, vaoColunas: c.vaoColunas, obstaculos });
   avisos.unshift(...r.avisos.filter((a) => !a.startsWith('tolerancia')), ...avisosMarca);
   // a capitular tira a 1ª letra: se ela era uma palavra inteira, os índices das marcas andam uma palavra
-  const conta = (s) => s.split(/\s+/).filter(Boolean).length, desl = conta(texto) - conta(corpo);
+  const desl = contar(texto) - contar(corpo);
   for (const m of marcas) { m.ini = Math.max(0, m.ini - desl); m.fim = Math.max(0, m.fim - desl); }
   const pagDe = (ind) => r.ancoras.find((a) => a.indice === ind)?.pagina ?? 0;
 
   const plano = paginacao(r, c);
+  const ilum = c.borda ? borda(G.util, c.borda, `${seed}|livro|borda`) : []; // igual em toda página
   const paginas = r.paginas.map((tracos, i) => {
     const d = desenhar(plano[i], G, ctx, avisos, i);
-    const ilum = c.borda ? borda(G.util, c.borda, `${seed}|livro|borda`) : [];
     const ancoras = r.ancoras.filter((a) => a.pagina === i);
     const daPagina = marcas.filter((m) => (m.tipo === 'nota' || m.tipo === 'correcao' ? pagDe(m.ini) === i : ancoras.some((a) => a.indice >= m.ini && a.indice <= m.fim)));
     const n = comporNotas(daPagina, { pagina: i, tracos, grupos: r.grupos[i], ancoras, papel, coluna: { x: G.texto.x, l: G.texto.l }, faixa: null, calha: null, tamanho,

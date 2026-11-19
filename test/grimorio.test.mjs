@@ -117,3 +117,8 @@ test('grimório corrido com separador desenha um enfeite entre as magias, e nenh
   const porPag = comporGrimorio(duas, ctx, { ...cfg, porPagina: true, separador: 'losango' }, folha('A5'));
   assert.equal(porPag.paginas.flat().length, sem.paginas.flat().length);
 });
+
+test('tamanho abaixo do mínimo ainda ajusta; "sempre completo" avisa quando não cabe', () => {
+  assert.equal(comporGrimorio([bola], ctx, { tamanho: 2, minimo: 2.5 }, folha('A5')).modos[bola.id].cabe, true);
+  assert.equal(comporGrimorio([bola], ctx, { tamanho: 6, completo: 'sim' }, folha('A8')).modos[bola.id].cabe, false);
+});

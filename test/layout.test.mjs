@@ -141,3 +141,11 @@ test('glifo ausente: aspas curvas viram ASCII; o que falta gera aviso', () => {
   const com = compor('a ☃ b', fontes, mao, PAGINAS.A5);
   assert.ok(com.avisos.includes('glifo ausente: ☃'));
 });
+
+test('bloco empilhado perto do fim: a 1ª linha não passa da margem, vai para a página seguinte', () => {
+  const p = PAGINAS.A5;
+  const r = compor('uma linha', fontes, mao, p, { tamanho: 6, topo: p.altura - p.margens.base - 2 });
+  assert.equal(r.paginas[0].length, 0);
+  assert.ok(r.paginas[1].length > 0);
+  assert.ok(pontos(r.paginas[1]).every(([, y]) => y <= p.altura - p.margens.base + 3));
+});

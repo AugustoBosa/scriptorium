@@ -15,6 +15,8 @@ test('código da folha: ida e volta, e papel fora da lista vira "outro"', () => 
   assert.equal(codificar(c).length, 16);
   assert.deepEqual(decodificar(codificar(c)), c);
   assert.equal(decodificar(codificar({ ...c, papelNome: 'personalizado' })).papelNome, 'outro');
+  assert.equal(decodificar(codificar({ ...c, papelNome: 'oficio' })).papelNome, 'outro'); // 3 bits: só 7 papéis
+  assert.equal(decodificar(codificar({ ...c, papelNome: 'carta' })).papelNome, 'carta');
   assert.throws(() => codificar({ ...c, parte: 40 }), /parte fora da faixa/);
 });
 

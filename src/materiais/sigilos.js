@@ -24,7 +24,8 @@ export function comporSigilos(frases, ctx, cfg) {
   const lista = frases.split('\n').map((s) => s.trim()).filter(Boolean);
   const m = papel.margens;
   const util = { x: m.esq, y: m.topo, l: papel.largura - m.esq - m.dir, a: papel.altura - m.topo - m.base };
-  const cw = (util.l - (colunas - 1) * 4) / colunas;
+  // célula quadrada: não passa da altura útil (1 coluna em papel deitado sairia do papel)
+  const cw = Math.min((util.l - (colunas - 1) * 4) / colunas, util.a - (legendas ? 2.2 * tl : 0));
   const ch = cw + (legendas ? 2.2 * tl : 0);
   const porPagina = colunas * Math.max(1, Math.floor((util.a + 4) / (ch + 4)));
   const avisos = lista.length ? [] : ['Nenhuma frase'];

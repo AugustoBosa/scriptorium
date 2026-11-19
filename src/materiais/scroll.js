@@ -66,11 +66,11 @@ function comporMagia(m, ctx, cfg, pagina, topo, { tamanho, completo, sigilo: com
 function ajustar(m, ctx, cfg, pagina) {
   const tenta = (modo) => comporMagia(m, ctx, cfg, pagina, pagina.margens.topo, modo).pags.length === 1 && { ...modo, cabe: true };
   const cheio = { tamanho: cfg.tamanho, completo: true, sigilo: true };
-  if (cfg.completo === 'sim') return { ...cheio, cabe: true };
+  if (cfg.completo === 'sim') return tenta(cheio) || { ...cheio, cabe: false };
   const modos = [[false, true], [false, false]];
   if (cfg.completo === 'auto') modos.unshift([true, true]);
   for (const [completo, sigilo] of modos) {
-    for (let tamanho = cfg.tamanho; tamanho >= cfg.minimo - 1e-9; tamanho -= 0.25) {
+    for (let tamanho = Math.max(cfg.tamanho, cfg.minimo); tamanho >= cfg.minimo - 1e-9; tamanho -= 0.25) {
       const ok = tenta({ tamanho, completo, sigilo });
       if (ok) return ok;
     }

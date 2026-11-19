@@ -26,11 +26,11 @@ export const TIPOS = [
 export const caracteres = (letras) => [...new Set([...letras, ...[...letras].map((c) => c.toUpperCase()), ...'0123456789', ...'.,;:!?\'"()-/&@#%*+=ªº'])];
 
 // Código da folha: 16 bits = tipo (3) | parte (5) | altura do x em meios mm (5) | papel (3; 7 = outro).
-const NOMES_PAPEL = Object.keys(PAPEIS);
+// 3 bits = 7 papéis + 'outro'; oficio (8º) também vira 'outro' (a etapa 2 mede o tamanho pela foto)
+const NOMES_PAPEL = Object.keys(PAPEIS).slice(0, 7);
 const CAMPOS = [['tipo', 3], ['parte', 5], ['meioX', 5], ['papel', 3]];
 export function codificar({ tipo, parte, x, papelNome }) {
-  const v = { tipo: TIPOS.findIndex((t) => t.id === tipo), parte, meioX: Math.round(x * 2), papel: Math.max(0, NOMES_PAPEL.indexOf(papelNome)) };
-  if (!NOMES_PAPEL.includes(papelNome)) v.papel = 7;
+  const v = { tipo: TIPOS.findIndex((t) => t.id === tipo), parte, meioX: Math.round(x * 2), papel: NOMES_PAPEL.includes(papelNome) ? NOMES_PAPEL.indexOf(papelNome) : 7 };
   return CAMPOS.flatMap(([k, n]) => {
     if (!(v[k] >= 0 && v[k] < 2 ** n)) throw new Error(`código da folha: ${k} fora da faixa (${v[k]})`);
     return Array.from({ length: n }, (_, i) => (v[k] >> (n - 1 - i)) & 1);

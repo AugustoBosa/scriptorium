@@ -56,8 +56,9 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
   let fimPag = -Infinity; // maior base de colunas já fechadas na página atual
 
   const avancar = () => {
-    if (!(cur.k > 0 && base(cur.k) > limite)) return false;
-    fimPag = Math.max(fimPag, base(cur.k - 1));
+    // bloco empilhado (topo abaixo da margem) pode transbordar já na 1ª linha
+    if (!(base(cur.k) > limite && (cur.k > 0 || cur.topo > margens.topo))) return false;
+    if (cur.k > 0) fimPag = Math.max(fimPag, base(cur.k - 1));
     cur.k = 0;
     if (++cur.col === cols.length) {
       cur.col = 0; cur.pag++; cans *= 0.5; cur.topo = margens.topo; fimPag = -Infinity;
