@@ -11,7 +11,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 
 ## Última entrega (2026-11-18)
 
-- Reorganização: oficina Magias (pergaminho + grimório, separador entre magias), oficinas com a mesma ordem de painéis e a mesma lista de papéis, texto de exemplo e visual padrão por tipo, valores com 2 casas, destaque em vermelho na prévia dos controles, menu ☰ nas oficinas e home com cartões animados. Barovia/Strahd e o histórico antigo saíram.
+- Reorganização: oficina Magias (pergaminho + grimório, separador entre magias), oficinas com a mesma ordem de painéis e a mesma lista de papéis, texto de exemplo e visual padrão por tipo, valores com 2 casas, destaque em vermelho na prévia dos controles, menu ☰ nas oficinas e home com cartões animados. Os textos do teste inicial e o histórico antigo saíram.
 
 ## Pendências de hardware (usuário)
 
