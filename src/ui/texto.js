@@ -61,7 +61,7 @@ export function montar(elemento, estado, aoMudar) {
 }
 
 // Constrói o Papel a partir da configuração: papel() e depois as 4 margens individuais.
-function construir(cfg) {
+export function construir(cfg) {
   const p = papel(cfg.papel, { paisagem: cfg.paisagem, margem: cfg.margem, largura: cfg.largura, altura: cfg.altura });
   for (const k of MARGENS) p.margens[LADOS[k]] = cfg[k];
   return p;
@@ -80,7 +80,9 @@ function cfgInicial(estado) {
   };
 }
 
-export function montarPapel(elemento, estado, aoMudar) {
+export const montarSoPapel = (elemento, estado, aoMudar) => montarPapel(elemento, estado, aoMudar, { aparencia: false });
+
+export function montarPapel(elemento, estado, aoMudar, { aparencia: comAparencia = true } = {}) {
   estado.papelCfg ??= cfgInicial(estado);
   const cfg = estado.papelCfg;
   const ctx = ctxDe(estado);
@@ -111,20 +113,20 @@ export function montarPapel(elemento, estado, aoMudar) {
 
   const controles = ['papel', 'paisagem', 'largura', 'altura', 'margem', ...MARGENS].map((c) => doCfg(PD[c]));
   const [, , cLargura, cAltura] = controles;
-  const cColunas = ctrl(PL.colunas, () => estado.opcoes.colunas, (v) => {
+  const cColunas = comAparencia && ctrl(PL.colunas, () => estado.opcoes.colunas, (v) => {
     estado.opcoes.colunas = v;
     if (estado.oficina === 'livro') estado.colunasLivro = v;
   });
-  const aparencia = [dasOpcoes(PL.tamanho), dasOpcoes(PL.entrelinha), dasOpcoes(PL.alinhamento), cColunas];
+  const aparencia = comAparencia ? [dasOpcoes(PL.tamanho), dasOpcoes(PL.entrelinha), dasOpcoes(PL.alinhamento), cColunas] : [];
 
   elemento.replaceChildren(
-    titulo('Papel'), ...controles.map((c) => c.el),
-    titulo('Aparência'), ...aparencia.map((c) => c.el),
+    ...(comAparencia ? [titulo('Papel')] : []), ...controles.map((c) => c.el),
+    ...(comAparencia ? [titulo('Aparência'), ...aparencia.map((c) => c.el)] : []),
   );
 
   return function atualizar() {
     for (const c of [...controles, ...aparencia]) c.atualizar();
     cLargura.el.hidden = cAltura.el.hidden = cfg.papel !== 'personalizado';
-    cColunas.el.hidden = estado.oficina === 'carta';
+    if (cColunas) cColunas.el.hidden = estado.oficina === 'carta';
   };
 }

@@ -34,7 +34,9 @@ export function restaurar(estado) {
   } catch {}
 }
 
+let montados = 0; // cada oficina monta o próprio painel: sufixo evita id repetido
 export function montar(elemento, estado, aoMudar, { galeria = false } = {}) {
+  const sufixo = galeria || ++montados === 1 ? '' : '-' + montados;
   const erro = document.createElement('p');
   erro.className = 'erro';
 
@@ -185,7 +187,7 @@ export function montar(elemento, estado, aoMudar, { galeria = false } = {}) {
 
   // "?" irmão do label (não filho): o nome acessível do campo fica só "Nome"
   function campo(texto, entrada, ajuda) {
-    entrada.id ||= (galeria ? 'pg-' : 'p-') + slug(texto); // prefixo próprio: o painel das oficinas também existe no DOM
+    entrada.id ||= (galeria ? 'pg-' : 'p-') + slug(texto) + sufixo; // prefixo próprio: o painel das oficinas também existe no DOM
     const l = document.createElement('label');
     l.htmlFor = entrada.id;
     l.textContent = texto;

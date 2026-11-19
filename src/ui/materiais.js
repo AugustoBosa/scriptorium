@@ -1,9 +1,9 @@
 // Painéis e composição dos materiais novos (M20): carta, livro e folha de sigilos. O shell (app.js) monta os grupos.
 import { resolver, validar } from '../personagem.js';
 import { amostra } from '../layout.js';
-import { papel as fabricaPapel, PARAMS as PARAMS_DOC, CANETAS } from '../materiais/documento.js';
+import { CANETAS } from '../materiais/documento.js';
 import { comporCarta, PRESETS, PARAMS as PARAMS_CARTA } from '../materiais/carta.js';
-import { trocarExemplo } from '../materiais/exemplos.js';
+import { trocarExemplo, aplicarVisual } from '../materiais/exemplos.js';
 import { parsearNotas, PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
 import { comporLivro, PARAMS as PARAMS_LIVRO } from '../materiais/livro.js';
 import { comporSigilos, PARAMS as PARAMS_SIG } from '../materiais/sigilos.js';
@@ -13,7 +13,7 @@ import { controle, dica, ligar } from './controle.js';
 
 // Um mapa por módulo: 'faixa' existe em carta.js e em circulo.js, então nunca se junta PARAMS de módulos diferentes.
 const mapa = (ps) => Object.fromEntries(ps.map((p) => [p.chave, p]));
-const PD = mapa(PARAMS_DOC), PC = mapa(PARAMS_CARTA), PN = mapa(PARAMS_NOTAS), PL = mapa(PARAMS_LIVRO), PS = mapa(PARAMS_SIG), PM = mapa(PARAMS_METODO), PA = mapa(PARAMS_ALF);
+const PC = mapa(PARAMS_CARTA), PN = mapa(PARAMS_NOTAS), PL = mapa(PARAMS_LIVRO), PS = mapa(PARAMS_SIG), PM = mapa(PARAMS_METODO), PA = mapa(PARAMS_ALF);
 
 export const carta0 = () => ({ tipo: 'anotacao', marginalia: 'direita', faixa: 0.3, conector: 'linha', espontaneo: 0, canetaNotas: 'vermelha', personagemNotas: '' });
 export const livro0 = () => ({ titulo: '', inicio: 1, numeracao: true, reclamo: true, rubrica: true, capitularLivro: 'nenhuma', bordaLivro: 'nenhuma' });
@@ -78,8 +78,8 @@ export function comporEscrita(estado, variacao) {
 }
 
 export function comporDeSigilos(estado) {
-  const s = estado.sig, p = estado.pagina = fabricaPapel(estado.papelNome, { paisagem: estado.paisagem, largura: estado.largura, altura: estado.altura });
-  const ctx = { fontes: estado.fontes, mao: resolver(estado.personagem, null) };
+  const s = estado.sig, p = estado.pagina;
+  const ctx = { fontes: estado.fontes, mao: resolver(estado.personagem, estado.variacao || null) };
   return comporSigilos(s.frases, ctx, { papel: p, tipo: s.tipo, metodo: s.metodo, colunas: s.colunas, legendas: s.legendas, caneta: s.caneta, seed: estado.estilo.seed, complexidade: estado.estilo.complexidade });
 }
 
@@ -93,7 +93,7 @@ const MARCACAO = [
 
 export function montarCarta(div, estado, aoMudar) {
   const c = estado.carta, ctx = ctxDe(estado);
-  const tipo = { ler: () => c.tipo, gravar: (v) => { Object.assign(c, { tipo: v, faixa: 0.3, ...PRESETS[v] }); estado.texto = trocarExemplo(estado.texto, estado.exemplo, v); estado.exemplo = v; }, ctx };
+  const tipo = { ler: () => c.tipo, gravar: (v) => { Object.assign(c, { tipo: v, faixa: 0.3, ...PRESETS[v] }); estado.texto = trocarExemplo(estado.texto, estado.exemplo, v); estado.exemplo = v; aplicarVisual(estado, v); }, ctx };
   const pers = opcao('personagemNotas', 'Personagem das notas', 'Quem escreve as notas da margem. "O mesmo da escrita" usa a mão do texto; os outros são personagens salvos no navegador.',
     () => [['', 'o mesmo da escrita'], ...Object.keys(salvos()).map((n) => [n, n])], () => c.personagemNotas, (v) => { c.personagemNotas = v; },
     (v, x) => { const p = salvos()[v]; return nota(p && !validar(p).length ? resolver(p, null) : x.mao, x); }, aoMudar, ctx);
@@ -117,16 +117,6 @@ export function montarLivro(div, estado, aoMudar) {
   ];
   const cs = ['numeracao', 'reclamo', 'rubrica', 'capitularLivro', 'bordaLivro'].map((k) => controle(PL[k], ligar(l, k, ctx), aoMudar));
   return juntar(div, [...campos, ...cs]);
-}
-
-export function montarFolha(div, estado, aoMudar) {
-  const ctx = ctxDe(estado);
-  const cs = [
-    controle(PD.papel, ligar(estado, 'papelNome', ctx), aoMudar), controle(PD.paisagem, ligar(estado, 'paisagem', ctx), aoMudar),
-    controle(PD.largura, ligar(estado, 'largura', ctx), aoMudar), controle(PD.altura, ligar(estado, 'altura', ctx), aoMudar),
-  ];
-  div.append(...cs.map((c) => c.el));
-  return () => { cs.forEach((c) => c.atualizar()); cs[2].el.hidden = cs[3].el.hidden = estado.papelNome !== 'personalizado'; };
 }
 
 export function montarSigilos(div, estado, aoMudar) {

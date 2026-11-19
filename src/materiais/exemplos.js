@@ -8,3 +8,19 @@ export const EXEMPLOS = {
 
 // Troca o texto pelo exemplo de `para` só se ele ainda for o exemplo de `de` (ou estiver vazio).
 export const trocarExemplo = (texto, de, para) => (!texto.trim() || texto === EXEMPLOS[de] ? EXEMPLOS[para] ?? texto : texto);
+
+// Visual padrão de cada tipo de folha, aplicado na primeira vez que o tipo abre (depois vale o que o usuário mudou).
+export const VISUAL = {
+  carta: { opcoes: { tamanho: 6, entrelinha: 1.6, alinhamento: 'esquerda' } },
+  anotacao: { opcoes: { tamanho: 5, entrelinha: 1.5, alinhamento: 'esquerda' } },
+  diario: { opcoes: { tamanho: 5, entrelinha: 1.4, alinhamento: 'esquerda' } },
+  livro: { opcoes: { tamanho: 4.5, entrelinha: 1.5, alinhamento: 'justificado' }, livro: { capitularLivro: 'lombarda', bordaLivro: 'linhas', titulo: 'Os sete copistas' } },
+};
+
+// Aplica o visual de `tipo` em `estado` uma única vez por tipo.
+export function aplicarVisual(estado, tipo) {
+  estado.vistos ??= [];
+  if (estado.vistos.includes(tipo) || !VISUAL[tipo]) return;
+  estado.vistos.push(tipo);
+  for (const [grupo, valores] of Object.entries(VISUAL[tipo])) Object.assign(estado[grupo], valores);
+}

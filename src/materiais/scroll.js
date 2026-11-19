@@ -17,7 +17,7 @@ export const CFG_PADRAO = {
   cifrar: { nome: false, ficha: false, efeito: false },
   completo: 'auto',       // 'auto' = texto completo se couber, senão resumo | 'sim' | 'nao'
   porPagina: true,        // true = um pergaminho por página; false = grimório, as magias fluem
-  separador: 'nenhum',    // entre magias corridas: 'nenhum' | 'losango' | 'asteriscos' | 'onda'
+  separador: 'losango',   // entre magias corridas: 'nenhum' | 'losango' | 'asteriscos' | 'onda'
   chave: false,           // acrescenta a página com a chave do alfabeto
 };
 

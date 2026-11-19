@@ -35,14 +35,17 @@ test('sigilos: 4 frases desenham 4 sigilos ou mais com legendas', async ({ page 
   await expect(page.locator('#previa g[data-camada="legendas"] path').first()).toBeAttached()
 })
 
-test('trocar de oficina não perde a variação do grimório', async ({ page }) => {
+test('trocar de oficina não perde a variação das magias', async ({ page }) => {
+  await page.addInitScript(() => {
+    const mao = { base: [{ fonte: 'EMSDelight', peso: 1 }], inclinacao: 0, largura: 1, altura: 1, espacamento: 0, espacoPalavra: 0, idio: 0, pressa: 0, capricho: 1, tremor: 0, queda: 0, compressao: 1, variacao: 0, desleixo: 0, seed: 1 }
+    localStorage.setItem('writer.personagem', JSON.stringify({ personagem: { nome: 'Teste', mao, variacoes: { normal: {}, apressado: { pressa: 0.7 } } }, variacao: 'normal' }))
+  })
   await abrir(page, 'magias')
-  await page.locator('#grupos summary', { hasText: 'Escrita' }).click()
-  const sel = page.locator('#grupos label', { hasText: /^Variação/ }).locator('select')
+  const sel = page.locator('#grupos details:not([hidden]) select[id^="p-variacao"]')
   const opcoes = await sel.locator('option').allTextContents()
   const atual = await sel.evaluate((s) => s.selectedOptions[0].textContent)
   const outra = opcoes.find((o) => o !== atual)
-  test.skip(!outra, 'personagem sem variação para trocar')
+  expect(outra).toBeTruthy()
   await sel.selectOption({ label: outra })
   await page.locator('nav.oficinas a[href="#carta"]').click()
   await expect(page.locator('#pag-info')).toBeVisible()

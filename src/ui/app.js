@@ -3,7 +3,7 @@ import { parseFonte, FONTES } from '../fonte.js';
 import { PERFIS, mesclarPerfil } from '../maquina/perfis.js';
 import { papel, deTracos } from '../materiais/documento.js';
 import { novoPersonagem } from '../personagem.js';
-import { EXEMPLOS, trocarExemplo } from '../materiais/exemplos.js';
+import { EXEMPLOS, trocarExemplo, aplicarVisual } from '../materiais/exemplos.js';
 import { AJUDA } from '../ajuda.js';
 import { dica } from './controle.js';
 import { desenhar, listar } from './previa.js';
@@ -51,11 +51,11 @@ function criarEscrita() {
     estado,
     grupos: [
       { titulo: 'Personagem', montar: pPersonagem.montar },
+      { titulo: 'Fontes', montar: pFontes.montar },
       { titulo: 'Texto', fechado: true, montar: pTexto.montar },
-      { titulo: 'Notas', so: 'carta', aberto: true, montar: pMat.montarCarta },
-      { titulo: 'Fontes', aberto: true, montar: pFontes.montar },
-      { titulo: 'Livro', so: 'livro', aberto: true, montar: pMat.montarLivro },
       { titulo: 'Papel e aparência', montar: pTexto.montarPapel },
+      { titulo: 'Notas', so: 'carta', aberto: true, montar: pMat.montarCarta },
+      { titulo: 'Livro', so: 'livro', aberto: true, montar: pMat.montarLivro },
       { titulo: 'Máquina', nivel: 'avancado', montar: pExportar.montar },
     ],
     entrar(oficina) {
@@ -63,6 +63,8 @@ function criarEscrita() {
       const tipo = oficina === 'livro' ? 'livro' : estado.carta.tipo;
       estado.texto = trocarExemplo(estado.texto, estado.exemplo, tipo);
       estado.exemplo = tipo;
+      aplicarVisual(estado, tipo);
+      if (oficina === 'livro') estado.colunasLivro ??= 2;
     },
     compor: () => pMat.comporEscrita(estado, estado.variacao),
     composB: () => pMat.comporEscrita(estado, estado.variacaoB),
@@ -72,7 +74,7 @@ function criarEscrita() {
 
 function criarSigilos() {
   const estado = {
-    papelNome: 'A6', paisagem: false, largura: 148, altura: 210, estilo: { seed: 1, curva: 0.4, complexidade: 0.5 }, sig: pMat.sigilos0(),
+    paginaNome: 'A6', variacao: 'normal', estilo: { seed: 1, curva: 0.4, complexidade: 0.5 }, sig: pMat.sigilos0(),
     personagem: novoPersonagem(), fontes: {}, perfil: structuredClone(PERFIS.megaS), perfilNome: 'megaS', otimizar: true, trajeto: false, paginaAtual: 0,
   };
   try { pPersonagem.restaurar(estado); } catch { /* usa personagem novo */ }
@@ -82,8 +84,9 @@ function criarSigilos() {
   return {
     estado,
     grupos: [
-      { titulo: 'Folha', montar: pMat.montarFolha },
+      { titulo: 'Personagem', montar: pPersonagem.montar },
       { titulo: 'Sigilos', montar: pMat.montarSigilos },
+      { titulo: 'Papel', montar: pTexto.montarSoPapel },
       { titulo: 'Tradição', montar: pMat.montarTradicao },
       { titulo: 'Máquina', nivel: 'avancado', montar: pExportar.montar },
     ],
@@ -165,7 +168,7 @@ function aoMudar() {
 // ---- roteamento ----
 function montarVista(inst) {
   const v = { detalhes: [], atualizar: [], barra: document.createElement('div') };
-  inst.grupos.flatMap((g) => (g.titulo === 'Máquina' ? [g, { titulo: 'Mesa e folha', nivel: 'basico', montar: montarMesa }] : [g])).forEach((g, i) => {
+  inst.grupos.flatMap((g) => (g.titulo === 'Máquina' ? [{ titulo: 'Mesa e folha', nivel: 'basico', montar: montarMesa }, g] : [g])).forEach((g, i) => {
     const d = document.createElement('details'), s = document.createElement('summary'), corpo = document.createElement('div');
     s.textContent = g.titulo;
     d.append(s, corpo);

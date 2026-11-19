@@ -1,21 +1,21 @@
 // Oficina Magias (pergaminho avulso ou grimório corrido): estado, painéis e composição. O shell (app.js) monta os grupos e chama compor().
-import { resolver, novoPersonagem, validar } from '../personagem.js';
-import { restaurar } from './personagem.js';
+import { resolver, novoPersonagem } from '../personagem.js';
 import { NEUTRA } from '../motor/mao.js';
 import { parseFonte } from '../fonte.js';
 import { PERFIS } from '../maquina/perfis.js';
 import { magiaVazia, ESCOLAS } from '../magia.js';
 import { gerarAlfabeto, sigilo, LETRAS, CAIXA, PARAMS as PARAMS_ARCANO } from '../arcano/alfabeto.js';
-import { comporGrimorio, folha, FOLHAS, CFG_PADRAO, PARAMS as PARAMS_SCROLL } from '../materiais/scroll.js';
-import { PARAMS as PARAMS_DOC } from '../materiais/documento.js';
+import { comporGrimorio, CFG_PADRAO, PARAMS as PARAMS_SCROLL } from '../materiais/scroll.js';
+import { papel } from '../materiais/documento.js';
+import * as pPersonagem from './personagem.js';
+import { montarSoPapel, construir } from './texto.js';
 import { amostra } from '../layout.js';
 import * as pExportar from './exportar.js';
 import { controle, dica, ligar } from './controle.js';
 
 const $ = (id) => document.getElementById(id);
 const CHAVE = 'grimorio.estado';
-const SALVOS = ['selecionadas', 'atual', 'folhaNome', 'paisagem', 'margem', 'cfg', 'estilo', 'simbolos', 'variacao'];
-const PD = Object.fromEntries(PARAMS_DOC.map((p) => [p.chave, p]));
+const SALVOS = ['selecionadas', 'atual', 'papelCfg', 'cfg', 'estilo', 'simbolos', 'variacao'];
 const PS = Object.fromEntries(PARAMS_SCROLL.map((p) => [p.chave, p]));
 const PA = Object.fromEntries(PARAMS_ARCANO.map((p) => [p.chave, p]));
 
@@ -31,7 +31,7 @@ export function criar() {
     magias: [],            // catálogo carregado de dados/magias.json ou importado
     selecionadas: [],      // cópias editáveis das magias escolhidas
     atual: 0,              // índice da magia em edição
-    folhaNome: 'A6', paisagem: false, margem: FOLHAS.A6[2],
+    paginaNome: 'A6', papelCfg: undefined,
     cfg: structuredClone(CFG_PADRAO),
     estilo: { seed: 1, curva: 0.4, complexidade: 0.5 },
     simbolos: { letras: {}, sigilos: {} },
@@ -48,9 +48,11 @@ export function criar() {
   } catch { /* estado salvo ilegível: começa do zero */ }
   estado.personagem = novoPersonagem();
   const variacaoSalva = estado.variacao;
-  try { restaurar(estado); } catch { /* usa personagem novo */ }
+  try { pPersonagem.restaurar(estado); } catch { /* usa personagem novo */ }
   if (variacaoSalva === '' || variacaoSalva in (estado.personagem.variacoes ?? {})) estado.variacao = variacaoSalva;
-  estado.pagina = folha(estado.folhaNome, estado.paisagem, estado.margem);
+  // folhaNome/paisagem/margem: formato salvo antes da padronização do papel
+  if (estado.papelCfg) { estado.pagina = construir(estado.papelCfg); estado.paginaNome = estado.papelCfg.papel; }
+  else { estado.paginaNome = estado.folhaNome ?? 'A6'; estado.pagina = papel(estado.paginaNome, { paisagem: estado.paisagem, margem: estado.margem }); }
 
   function salvar() {
     try {
@@ -192,15 +194,7 @@ export function criar() {
   // ---------- painel Folha ----------
   function painelFolha(raiz, aoMudar) {
     const cfg = () => estado.cfg;
-    const defPapel = { ...PD.papel, opcoes: PD.papel.opcoes.filter((o) => o.valor in FOLHAS), padrao: 'A6' };
     const ctrls = [
-      controle(defPapel, {
-        ler: () => estado.folhaNome,
-        gravar: (v) => { estado.folhaNome = v; estado.margem = FOLHAS[v][2]; },
-        ctx,
-      }, aoMudar),
-      controle(PD.paisagem, ligar(estado, 'paisagem', ctx), aoMudar),
-      controle(PD.margem, ligar(estado, 'margem', ctx), aoMudar),
       ...['porPagina', 'separador', 'completo', 'tamanho', 'minimo', 'entrelinha', 'sigilo', 'moldura'].map((c) => controle(PS[c], ligar(cfg, c, ctx), aoMudar)),
     ];
     raiz.append(...ctrls.map((c) => c.el));
@@ -210,18 +204,6 @@ export function criar() {
 
   // ---------- painel Escrita ----------
   function painelEscrita(raiz, aoMudar) {
-    const salvos = () => { try { return JSON.parse(localStorage.getItem('writer.personagens')) ?? {}; } catch { return {}; } };
-    const pers = el('select');
-    const vari = el('select');
-    pers.addEventListener('change', async () => {
-      const p = salvos()[pers.value];
-      if (!p || validar(p).length) return;
-      estado.personagem = p;
-      estado.variacao = Object.keys(p.variacoes ?? {})[0] ?? '';
-      try { await garantirFontes(); } catch (e) { $('erro').textContent = e.message; return; }
-      aoMudar();
-    });
-    vari.addEventListener('change', () => { estado.variacao = vari.value; aoMudar(); });
     const cifrar = (chave, campo) => controle(PS[chave], { ler: () => estado.cfg.cifrar[campo], gravar: (v) => { estado.cfg.cifrar[campo] = v; }, ctx }, aoMudar);
     const estilo = () => estado.estilo;
     const ctrls = [
@@ -230,9 +212,6 @@ export function criar() {
       ...['seed', 'curva', 'complexidade'].map((c) => controle(PA[c], ligar(estilo, c, ctx), aoMudar)),
     ];
     raiz.append(
-      el('div', { className: 'linha-campo' }, el('label', {}, 'Quem escreve ', pers), ' ', dica('Personagens salvos na aba Personagens.', 'Quem escreve')),
-      el('label', {}, 'Variação ', vari),
-      el('p', {}, el('a', { href: '#personagens' }, 'Criar ou editar personagens')),
       el('h3', {}, 'Escrever em alfabeto arcano ', dica('O bloco marcado sai no alfabeto inventado, sem acentos e em minúsculas. Plote também a chave para os jogadores decifrarem.', 'Alfabeto arcano')),
       ...ctrls.map((c) => c.el));
     const importar = el('input', { type: 'file', accept: '.json', hidden: true });
@@ -255,17 +234,7 @@ export function criar() {
       } }, 'Exportar tradição'),
       el('button', { type: 'button', onclick: () => importar.click() }, 'Importar tradição'), importar));
 
-    return () => {
-      const lista = salvos();
-      const nomes = Object.keys(lista);
-      const atual = estado.personagem.nome;
-      pers.replaceChildren(...[...new Set([atual, ...nomes])].map((n) => new Option(n, n)));
-      pers.value = atual;
-      const vs = Object.keys(estado.personagem.variacoes ?? {});
-      vari.replaceChildren(new Option('mão base', ''), ...vs.map((v) => new Option(v, v)));
-      vari.value = estado.variacao;
-      ctrls.forEach((c) => c.atualizar());
-    };
+    return () => ctrls.forEach((c) => c.atualizar());
   }
 
   // ---------- editor de símbolos (letras do alfabeto e sigilo da magia atual) ----------
@@ -365,7 +334,6 @@ export function criar() {
   }
 
   function compor() {
-    estado.pagina = folha(estado.folhaNome, estado.paisagem, estado.margem);
     let r;
     try {
       r = comporGrimorio(estado.selecionadas, contexto(), { ...estado.cfg, papel: estado.pagina });
@@ -387,10 +355,12 @@ export function criar() {
   return {
     estado,
     grupos: [
+      { titulo: 'Personagem', montar: pPersonagem.montar },
       grupo('Magias', painelMagias),
-      grupo('Editar magia', painelEditar),
-      grupo('Folha', painelFolha),
-      grupo('Escrita', painelEscrita),
+      grupo('Editar magia', painelEditar, { fechado: true }),
+      { titulo: 'Papel', montar: montarSoPapel },
+      grupo('Magia na folha', painelFolha, { aberto: true }),
+      grupo('Arcano', painelEscrita),
       { titulo: 'Máquina', nivel: 'avancado', montar: pExportar.montar },
     ],
     entrar,
