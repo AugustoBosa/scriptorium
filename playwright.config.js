@@ -6,6 +6,7 @@ export default defineConfig({
   webServer: { command: 'npm run dev', url: 'http://localhost:8765/', reuseExistingServer: true },
   projects: [
     { name: 'claro', use: { colorScheme: 'light' } },
-    { name: 'vela', use: { colorScheme: 'dark' } },
+    // tema escuro só muda a aparência: roda só as capturas/contraste, não repete a lógica
+    { name: 'vela', use: { colorScheme: 'dark' }, testMatch: 'visual.spec.js' },
   ],
 })
