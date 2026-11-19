@@ -4,8 +4,8 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 
 ## Retomada (2026-11-19) — LEIA PRIMEIRO
 
-- Tudo pedido até aqui está FEITO, commitado e PUBLICADO. `main` = `origin/main`, árvore limpa, sem branches abertas.
-- Gates na última entrega: `npm test` 827/0; `npx playwright test` 148/148; build ok; Pages verde.
+- Auditoria completa (2026-11-19) commitada no `main` local; publicar = `git push` (só com OK do usuário).
+- Gates na última entrega: `npm test` 839/0; `npx playwright test` 95/95 (tema escuro só roda `visual.spec.js`); build ok.
 - O usuário vai voltar com **adições**. Trabalhar em branch, um commit por etapa, gates, merge em `main`, push e conferir o site (`curl -s https://augustobosa.github.io/scriptorium/ | grep '<script'` deve apontar para `./assets/…`).
 - O Claude age como dono do repositório: decide e organiza; pergunta só o que muda o produto. Respostas em pt-BR simples, com tabelas.
 
@@ -32,6 +32,8 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 | Texto de exemplo e visual padrão por tipo | `src/materiais/exemplos.js` |
 | Controles e prévia viva (`{ fundo, foco }`, 2 casas) | `src/ui/controle.js`; contrato em `test/params.test.mjs` |
 | Mesa e imposição (cena, passadas, Ampliar) | `src/ui/mesa.js`, `mesa.css`, `src/maquina/imposicao.js` |
+| Ajudantes de DOM/armazenamento (`el`, `botao`, `baixar`, `lerPersonagens`, nomes das oficinas) | `src/ui/util.js` |
+| Geometria comum (`dist`, `comprimento`, `clamp`, `ret`, `VAO`, `valido`) | `src/geo.js` — não copiar em outro arquivo |
 | Salvar no navegador | trabalho: `src/ui/trabalho.js` (localStorage `trabalho.*`, `grimorio.estado`); biblioteca e magias: `src/ui/armazem.js` (IndexedDB `scriptorium`), `src/ui/biblioteca.js` |
 | Minha letra (oficina #letra: a máquina plota as folhas de coleta) | `src/letra/folha.js` (`comporColeta`, código da folha), `src/letra/textos.js` + `scripts/gerar-texto-modelo.mjs <corpus> <lingua>` → `src/letra/linguas/<lingua>.json`, painel `src/ui/letra.js`; plano em `workflow/experimentos/fonte-propria/PESQUISA.md` |
 
@@ -42,6 +44,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 - 2026-11-19 — Mão natural nas notas: setas curvas e irregulares, notas inclinadas e giradas para caber, ângulo por nota (`{nota@lado/graus: …}`), controles com prévia; a nota só fica onde a seta tem caminho livre.
 - 2026-11-19 — Site quebrado (no celular e no desktop): o Pages estava em "Deploy from branch". Voltou para GitHub Actions.
 - 2026-11-19 — Mesa: texto projetado sobre a mesa (com e sem imposição), cena legível (tampo com grade, área da caneta, papel, parte fora da mesa, FRENTE/TRÁS, X0 Y0, topo), passadas vazias marcadas e fora do "Baixar todas", legenda e botão Ampliar.
+- 2026-11-19 — Auditoria completa (ponytail): G-code sobe a caneta para `zLevantada` logo após o header e recusa `zLevantada <= zEscrita`; pontos NaN não viram `XNaN`; sigilo de 1 coluna em papel deitado cabe; grimório ajusta quando tamanho < mínimo e "sempre completo" avisa se não cabe; bloco empilhado que transborda na 1ª linha vai para a página seguinte; XSS no editor de símbolos fechado; erros do grimório aparecem; importação da biblioteca valida materiais e personagens; ids únicos e rótulos acessíveis; CI em Node 24 e testes em PR; helpers duplicados unificados (`geo.js`, `ui/util.js`); shims e código morto fora; `ilustracoes/*/saida/` fora do git.
 
 ## Pendências de hardware (usuário)
 
@@ -59,3 +62,4 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 - Livro: 2 colunas sem equilíbrio na última página.
 - Arcano: ogham e curvo empastam abaixo de 5 mm.
 - CI: `actions/deploy-pages@v4` roda em Node 20; atualizar quando sair versão nova.
+- Auditoria, deixado de propósito: traço fora da janela só avisa (Marlin limita pelos endstops); a 1ª camada não pede troca de caneta (teste `por('notas').trocas === 0` documenta); ornamentos `filigrana`/`peDeMosca`/`manicula` e `PARAMS` de `no`/`vinha` sem uso na UI (catálogo para o futuro); API antiga `gcode()`/`svg()` só nos goldens; `circulo` do alfabeto (n=12) separado do `geo.circulo` para não mexer nos goldens.
