@@ -1,7 +1,6 @@
 // Oficina Magias (pergaminho avulso ou grimório corrido): estado, painéis e composição. O shell (app.js) monta os grupos e chama compor().
 import { resolver, novoPersonagem } from '../personagem.js';
 import { NEUTRA } from '../motor/mao.js';
-import { parseFonte } from '../fonte.js';
 import { PERFIS } from '../maquina/perfis.js';
 import { magiaVazia, ESCOLAS } from '../magia.js';
 import { gerarAlfabeto, sigilo, LETRAS, CAIXA, PARAMS as PARAMS_ARCANO } from '../arcano/alfabeto.js';
@@ -13,6 +12,7 @@ import { amostra } from '../layout.js';
 import * as pExportar from './exportar.js';
 import * as armazem from './armazem.js';
 import { controle, dica, ligar } from './controle.js';
+import { baixarJson } from './util.js';
 
 const $ = (id) => document.getElementById(id);
 const CHAVE = 'grimorio.estado';
@@ -61,16 +61,6 @@ export function criar() {
     } catch (e) { $('erro').textContent = `Não foi possível salvar no navegador: ${e.message}`; }
   }
 
-  // Carrega do disco as fontes da mão que ainda não estão em memória.
-  async function garantirFontes() {
-    const faltam = estado.personagem.mao.base.map((b) => b.fonte).filter((n) => !estado.fontes[n]);
-    await Promise.all(faltam.map(async (nome) => {
-      const r = await fetch(`fontes/${nome}.svg`);
-      if (!r.ok) throw new Error(`não foi possível carregar a fonte ${nome}`);
-      estado.fontes[nome] = parseFonte(await r.text(), nome);
-    }));
-  }
-
   function contexto() {
     const arcano = gerarAlfabeto(estado.estilo, estado.simbolos.letras);
     return {
@@ -100,10 +90,12 @@ export function criar() {
     const achados = el('div', { className: 'achados' });
     const lista = el('ol', { className: 'selecionadas' });
     const semDados = el('p', { hidden: true }, 'Sem dados de magias nesta cópia da página. Importe um magias.json (gerado por scripts/gerar-magias.mjs) ou crie magias em branco. ');
-    const arquivo = el('input', { type: 'file', accept: '.json' });
+    const arquivo = el('input', { type: 'file', accept: '.json', ariaLabel: 'Arquivo magias.json' });
     arquivo.addEventListener('change', async () => {
+      const f = arquivo.files[0]; arquivo.value = '';
+      if (!f) return;
       try {
-        const dados = JSON.parse(await arquivo.files[0].text());
+        const dados = JSON.parse(await f.text());
         if (!Array.isArray(dados) || !dados[0]?.nome) throw new Error('não é um magias.json');
         estado.magias = dados;
         aoMudar();
@@ -156,9 +148,9 @@ export function criar() {
         };
         return el('li', { className: i === estado.atual ? 'atual' : '' },
           el('button', { type: 'button', className: 'nome', onclick: () => { estado.atual = i; aoMudar(); } }, m.nome),
-          el('button', { type: 'button', title: 'Subir', disabled: i === 0, onclick: mover(-1) }, '↑'),
-          el('button', { type: 'button', title: 'Descer', disabled: i === estado.selecionadas.length - 1, onclick: mover(1) }, '↓'),
-          el('button', { type: 'button', title: 'Remover', onclick: () => { estado.selecionadas.splice(i, 1); estado.atual = Math.max(0, Math.min(estado.atual, estado.selecionadas.length - 1)); aoMudar(); } }, '✕'));
+          el('button', { type: 'button', title: 'Subir', ariaLabel: `Subir ${m.nome}`, disabled: i === 0, onclick: mover(-1) }, '↑'),
+          el('button', { type: 'button', title: 'Descer', ariaLabel: `Descer ${m.nome}`, disabled: i === estado.selecionadas.length - 1, onclick: mover(1) }, '↓'),
+          el('button', { type: 'button', title: 'Remover', ariaLabel: `Remover ${m.nome}`, onclick: () => { estado.selecionadas.splice(i, 1); estado.atual = Math.max(0, Math.min(estado.atual, estado.selecionadas.length - 1)); aoMudar(); } }, '✕'));
       }));
     };
   }
@@ -219,8 +211,10 @@ export function criar() {
       ...ctrls.map((c) => c.el));
     const importar = el('input', { type: 'file', accept: '.json', hidden: true });
     importar.addEventListener('change', async () => {
+      const f = importar.files[0]; importar.value = '';
+      if (!f) return;
       try {
-        const d = JSON.parse(await importar.files[0].text());
+        const d = JSON.parse(await f.text());
         if (!d.estilo || !d.simbolos?.letras || !d.simbolos?.sigilos) throw new Error('arquivo sem estilo/simbolos');
         estado.estilo = d.estilo;
         estado.simbolos = d.simbolos;
@@ -231,9 +225,7 @@ export function criar() {
       el('button', { type: 'button', onclick: () => { estado.estilo.seed = Math.floor(Math.random() * 100000); aoMudar(); } }, 'Sortear tradição'),
       el('button', { type: 'button', onclick: () => abrirEditor(aoMudar) }, 'Desenhar símbolos…'),
       el('button', { type: 'button', onclick: () => {
-        const url = URL.createObjectURL(new Blob([JSON.stringify({ estilo: estado.estilo, simbolos: estado.simbolos })], { type: 'application/json' }));
-        el('a', { href: url, download: `tradicao-${estado.estilo.seed}.json` }).click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        baixarJson(`tradicao-${estado.estilo.seed}.json`, { estilo: estado.estilo, simbolos: estado.simbolos });
       } }, 'Exportar tradição'),
       el('button', { type: 'button', onclick: () => importar.click() }, 'Importar tradição'), importar));
 
@@ -244,7 +236,7 @@ export function criar() {
   function abrirEditor(aoMudar) {
     const dlg = $('editor');
     const magia = estado.selecionadas[estado.atual];
-    const alvo = el('select', {},
+    const alvo = el('select', { ariaLabel: 'Símbolo a desenhar' },
       ...(magia ? [new Option(`Sigilo: ${magia.nome}`, 'sigilo')] : []),
       ...[...LETRAS].map((ch) => new Option(`Letra ${ch.toUpperCase()}`, ch)));
     const NS = 'http://www.w3.org/2000/svg';
@@ -264,7 +256,12 @@ export function criar() {
         ? '<circle cx="0" cy="0" r="1" class="guia"/><circle cx="0" cy="0" r="0.02" class="guia"/>'
         : `<rect x="0" y="0" width="${CAIXA.largura}" height="${CAIXA.altura}" class="guia"/>`;
       tela.setAttribute('viewBox', ehSigilo ? '-1.1 -1.1 2.2 2.2' : `-80 -80 ${CAIXA.largura + 160} ${CAIXA.altura + 160}`);
-      tela.innerHTML = guia + tracos.map((t) => `<polyline points="${t.map((p) => paraTela(p).join(',')).join(' ')}"/>`).join('');
+      tela.innerHTML = guia; // guia é fixo; os traços (vindos de arquivo importado) entram só por setAttribute
+      for (const t of tracos) {
+        const pl = document.createElementNS(NS, 'polyline');
+        pl.setAttribute('points', t.map((p) => paraTela(p).map(Number).join(',')).join(' '));
+        tela.append(pl);
+      }
       tela.style.setProperty('--traco', ehSigilo ? '0.02' : '10');
       estadoEd.textContent = salvo() ? 'desenhado à mão' : 'gerado';
     };
@@ -334,18 +331,11 @@ export function criar() {
       if (r.ok) estado.magias = await r.json();
     } catch { /* sem dados no servidor (Pages): usa as magias importadas antes */ }
     if (!estado.magias.length) estado.magias = (await armazem.ler('magias')) ?? [];
-    try { await garantirFontes(); } catch (e) { $('erro').textContent = `Erro ao carregar: ${e.message}`; }
   }
 
+  // erro sobe para app.renderizar, que mostra (antes ficava escrito aqui e era apagado logo depois)
   function compor() {
-    let r;
-    try {
-      r = comporGrimorio(estado.selecionadas, contexto(), { ...estado.cfg, papel: estado.pagina });
-      $('erro').textContent = '';
-    } catch (e) {
-      $('erro').textContent = `Erro ao compor: ${e.message}`;
-      return { paginas: [[]], avisos: [] };
-    }
+    const r = comporGrimorio(estado.selecionadas, contexto(), { ...estado.cfg, papel: estado.pagina });
     estado.resultado = r;
     salvar();
     const linhas = estado.selecionadas.map((m) => {

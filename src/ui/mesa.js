@@ -6,12 +6,12 @@ import { impor, paraMesa, aPassada, instrucao } from '../maquina/imposicao.js';
 import { PAPEIS, papel } from '../materiais/documento.js';
 import { janelaDe } from '../maquina/perfis.js';
 import { controle } from './controle.js';
+import { el, baixar } from './util.js';
 
 const CHAVE = 'writer.mesa';
 const PADRAO = { ligada: false, folha: 'A4', paisagem: false, largura: 210, altura: 297, canto: 'auto', encosto: 'auto', dx: 0, dy: 0, modo: 'agrupar', espaco: 0, origem: 'frente-esquerda' };
 const NS = 'http://www.w3.org/2000/svg';
 const op = (o) => Object.entries(o).map(([valor, rotulo]) => ({ valor, rotulo }));
-const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 const sv = (tag, a = {}, pai) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); pai?.append(e); return e; };
 
 const BASICO = ['ligada', 'folha', 'paisagem', 'largura', 'altura', 'modo'];
@@ -92,11 +92,6 @@ function gcodePassada(estado, p, f, k, so, rapido = false) {
   return { texto, fora: g.avisos.find((a) => a.includes('fora da janela')) };
 }
 
-function baixar(conteudo, nome) {
-  const url = URL.createObjectURL(new Blob([conteudo], { type: 'text/plain' }));
-  Object.assign(document.createElement('a'), { href: url, download: nome }).click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 // arquivos de uma passada: [nome, gerar()]; um (agrupar) ou um por slot com página (pagina)
 function arquivos(estado, p, f, k) {

@@ -12,6 +12,7 @@ import { gerarAlfabeto } from '../arcano/alfabeto.js';
 import { magiaVazia } from '../magia.js';
 import { NEUTRA } from '../motor/mao.js';
 import { materiais } from './biblioteca.js';
+import { el, NOMES_OFICINA, lerPersonagens } from './util.js';
 
 const MAGIA = { ...magiaVazia(), id: 'exemplo', nome: 'Bola de Fogo', nivel: 3, linhaNivel: 'Evocação de 3º nível', alcance: '45 m', comp: 'V, S, M',
   duracao: 'Instantânea', resumo: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.', texto: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.' };
@@ -45,12 +46,6 @@ function tracar(f) {
   f.classList.add('tracando');
 }
 
-function el(tag, classe, texto) {
-  const e = document.createElement(tag);
-  if (classe) e.className = classe;
-  if (texto != null) e.textContent = texto;
-  return e;
-}
 
 export function montar(raiz, { fontes, abrir }) {
   const lema = el('p', 'lema', 'Caligrafia de traço único para plotter de caneta.');
@@ -119,7 +114,7 @@ export function montar(raiz, { fontes, abrir }) {
         (f) => especime(f, fontes, p, variacao, p.nome || 'Personagem')),
     );
 
-    const salvos = Object.values(ler('writer.personagens', {})).filter((s) => validar(s).length === 0).slice(0, 7);
+    const salvos = Object.values(lerPersonagens()).filter((s) => validar(s).length === 0).slice(0, 7);
     faixa.replaceChildren(...salvos.map((s) => {
       const c = el('div', 'cartao');
       miniatura(c, s, Object.keys(s.variacoes ?? {})[0] ?? '', s.nome);
@@ -141,7 +136,7 @@ export function montar(raiz, { fontes, abrir }) {
       recentes.replaceChildren(...ms.slice(0, 4).map((m) => {
         const b = el('button', 'cartao material');
         b.type = 'button';
-        b.append(el('span', 'nome', m.nome), el('span', 'desc', `${{ carta: 'Carta', livro: 'Livro', magias: 'Magias', sigilos: 'Sigilos' }[m.oficina] ?? m.oficina} · ${new Date(m.quando).toLocaleDateString('pt-BR')}`));
+        b.append(el('span', 'nome', m.nome), el('span', 'desc', `${NOMES_OFICINA[m.oficina] ?? m.oficina} · ${new Date(m.quando).toLocaleDateString('pt-BR')}`));
         b.addEventListener('click', () => abrir(m));
         return b;
       }));

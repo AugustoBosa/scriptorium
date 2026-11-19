@@ -1,9 +1,9 @@
 // Controle de parâmetro com prévia viva: um popover único (#previa-viva) mostra o desenho com o valor atual e os extremos.
+import { el } from './util.js';
 const NS = 'http://www.w3.org/2000/svg';
 const W = 288, H = 104;
 let contador = 0, pop = null, ativo = null, raf = 0;
 
-const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 const fmt = (v, un) => String(+Number(v).toFixed(2)).replace('.', ',').replace('-', '−') + (un ? ' ' + un : ''); // no máximo 2 casas
 
 function valida(def, bruto) {

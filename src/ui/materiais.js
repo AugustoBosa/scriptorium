@@ -10,6 +10,7 @@ import { comporSigilos, PARAMS as PARAMS_SIG } from '../materiais/sigilos.js';
 import { PARAMS as PARAMS_METODO } from '../arcano/sigilo.js';
 import { PARAMS as PARAMS_ALF } from '../arcano/alfabeto.js';
 import { controle, dica, ligar } from './controle.js';
+import { lerPersonagens as salvos } from './util.js';
 
 // Um mapa por módulo: 'faixa' existe em carta.js e em circulo.js, então nunca se junta PARAMS de módulos diferentes.
 const mapa = (ps) => Object.fromEntries(ps.map((p) => [p.chave, p]));
@@ -19,7 +20,6 @@ export const carta0 = () => ({ ...PADRAO_MAO, tipo: 'anotacao', marginalia: 'dir
 export const livro0 = () => ({ titulo: '', inicio: 1, numeracao: true, reclamo: true, rubrica: true, capitularLivro: 'nenhuma', bordaLivro: 'nenhuma' });
 export const sigilos0 = () => ({ frases: 'abracadabra\nluz da lua\nsol\nmar e céu', tipo: 'selo', metodo: 'kamea', colunas: 3, legendas: true, caneta: 'preta' });
 
-const salvos = () => { try { return JSON.parse(localStorage.getItem('writer.personagens')) ?? {}; } catch { return {}; } };
 
 const ctxDe = (estado) => () => {
   const mao = resolver(estado.personagem, estado.variacao || null);

@@ -3,6 +3,7 @@ import { rotulo, AJUDA } from '../ajuda.js';
 import { controle, dica } from './controle.js';
 import { PARAMS } from '../motor/mao.js';
 import { amostra } from '../layout.js';
+import { baixarJson, lerPersonagens as lerSalvos, gravarPersonagens as gravarSalvos } from './util.js';
 
 const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
 const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate', 'ligadura', 'adiamento'];
@@ -14,12 +15,6 @@ export function slug(nome) {
 }
 
 // Personagens salvos no navegador. Leitura tolerante; gravação lança erro para o chamador avisar.
-function lerSalvos() {
-  try { return JSON.parse(localStorage.getItem('writer.personagens')) ?? {}; } catch { return {}; }
-}
-function gravarSalvos(salvos) {
-  localStorage.setItem('writer.personagens', JSON.stringify(salvos));
-}
 
 // Restaura personagem salvo no localStorage. Qualquer erro: ignora.
 export function restaurar(estado) {
@@ -211,12 +206,7 @@ export function montar(elemento, estado, aoMudar, { galeria = false } = {}) {
     ),
     ...galeria ? [] : [avancado(linhaBotoes(
       botao('Salvar JSON', () => {
-        const url = URL.createObjectURL(new Blob([JSON.stringify(estado.personagem, null, 2)], { type: 'application/json' }));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = slug(estado.personagem.nome) + '.json';
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        baixarJson(slug(estado.personagem.nome) + '.json', estado.personagem);
       }),
       botao('Abrir JSON', () => inputArquivo.click()),
     ), inputArquivo),

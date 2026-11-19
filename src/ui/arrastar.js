@@ -19,6 +19,7 @@ export function ligarArrasto(el, notas, aoSoltar) {
       const p = emMm(ev);
       r.setAttribute('transform', `translate(${p.x - ini.x} ${p.y - ini.y})`);
     });
+    r.addEventListener('pointercancel', () => { ini = null; r.classList.remove('arrastando'); r.removeAttribute('transform'); });
     r.addEventListener('pointerup', (ev) => {
       if (!ini) return;
       const p = emMm(ev), dx = p.x - ini.x, dy = p.y - ini.y;

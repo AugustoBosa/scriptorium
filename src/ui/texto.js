@@ -26,6 +26,7 @@ function titulo(texto, dicaTexto) {
 
 export function montar(elemento, estado, aoMudar) {
   const textarea = document.createElement('textarea');
+  textarea.setAttribute('aria-label', 'Texto');
   textarea.rows = 8;
   textarea.addEventListener('input', () => {
     estado.texto = textarea.value;

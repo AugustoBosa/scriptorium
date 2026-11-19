@@ -3,17 +3,10 @@
 import './biblioteca.css';
 import * as armazem from './armazem.js';
 import { slug } from './personagem.js';
+import { validar } from '../personagem.js';
 
-const NOMES = { carta: 'Carta', livro: 'Livro', magias: 'Magias', sigilos: 'Sigilos', letra: 'Minha letra' };
-const el = (tag, classe, texto) => { const e = document.createElement(tag); if (classe) e.className = classe; if (texto != null) e.textContent = texto; return e; };
-const botao = (texto, fn, rotulo) => { const b = el('button', null, texto); b.type = 'button'; if (rotulo) b.setAttribute('aria-label', rotulo); b.addEventListener('click', fn); return b; };
+import { el, botao, baixarJson, lerPersonagens, gravarPersonagens, NOMES_OFICINA as NOMES } from './util.js';
 const data = (t) => new Date(t).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-
-export function baixarJson(nome, dados) {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' }));
-  const a = el('a'); a.href = url; a.download = nome; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 // Materiais mais recentes primeiro.
 export const materiais = async () => (await armazem.listar('material:')).sort((a, b) => b.quando - a.quando);
@@ -30,9 +23,10 @@ export function montar(raiz, { abrir }) {
     try {
       const d = JSON.parse(await f.text());
       if (d.tipo === 'scriptorium-copia') {
-        for (const m of d.materiais ?? []) await gravarMaterial(m);
-        const atuais = JSON.parse(localStorage.getItem('writer.personagens') ?? '{}');
-        localStorage.setItem('writer.personagens', JSON.stringify({ ...atuais, ...(d.personagens ?? {}) }));
+        // só entra o que abre: material com id e oficina conhecida, personagem válido
+        for (const m of d.materiais ?? []) if (m?.id && NOMES[m.oficina] && m.estado) await gravarMaterial(m);
+        const novos = Object.fromEntries(Object.entries(d.personagens ?? {}).filter(([, p]) => p && !validar(p).length));
+        gravarPersonagens({ ...lerPersonagens(), ...novos });
       } else if (d.tipo === 'scriptorium-material' && NOMES[d.oficina] && d.estado) {
         await gravarMaterial({ ...d, id: novoId(), tipo: undefined });
       } else throw new Error('não é um material nem uma cópia do Scriptorium');
@@ -41,8 +35,9 @@ export function montar(raiz, { abrir }) {
     } catch (e) { erro.textContent = `Importação falhou: ${e.message}`; }
   });
 
-  const copia = async () => baixarJson(`scriptorium-copia-${new Date().toISOString().slice(0, 10)}.json`, {
-    tipo: 'scriptorium-copia', versao: 1, personagens: JSON.parse(localStorage.getItem('writer.personagens') ?? '{}'), materiais: await materiais(),
+  const copia = async () => { try { await baixarCopia(); } catch (e) { erro.textContent = `Cópia falhou: ${e.message}`; } };
+  const baixarCopia = async () => baixarJson(`scriptorium-copia-${new Date().toISOString().slice(0, 10)}.json`, {
+    tipo: 'scriptorium-copia', versao: 1, personagens: lerPersonagens(), materiais: await materiais(),
   });
 
   raiz.append(
@@ -65,12 +60,12 @@ export function montar(raiz, { abrir }) {
         botao('Renomear', async () => {
           const nome = prompt('Novo nome do material', m.nome)?.trim();
           if (!nome) return;
-          await gravarMaterial({ ...m, nome });
+          try { await gravarMaterial({ ...m, nome }); } catch (e) { erro.textContent = `Não foi possível renomear: ${e.message}`; return; }
           atualizar();
         }, `Renomear ${m.nome}`),
         botao('Apagar', async () => {
           if (!confirm(`Apagar "${m.nome}" da biblioteca? Não dá para desfazer (baixe antes se quiser guardar).`)) return;
-          await armazem.apagar('material:' + m.id);
+          try { await armazem.apagar('material:' + m.id); } catch (e) { erro.textContent = `Não foi possível apagar: ${e.message}`; return; }
           atualizar();
         }, `Apagar ${m.nome}`),
       );

@@ -7,20 +7,7 @@ const FRASE_GRANDE = 'Querida Elena, o vento cheira a trigo.';
 const FRASE_CARTAO = 'Querida Elena,';
 const FOLHA_GRANDE = { largura: 120, altura: 40, margens: { topo: 4, dir: 4, base: 4, esq: 4 } };
 
-const el = (tag, classe, texto) => {
-  const e = document.createElement(tag);
-  if (classe) e.className = classe;
-  if (texto !== undefined) e.textContent = texto;
-  return e;
-};
-const botao = (texto, fn, rotulo) => {
-  const b = el('button', null, texto);
-  b.type = 'button';
-  if (rotulo) b.setAttribute('aria-label', rotulo);
-  b.addEventListener('click', fn);
-  return b;
-};
-const lerSalvos = () => { try { return JSON.parse(localStorage.getItem('writer.personagens')) ?? {}; } catch { return {}; } };
+import { el, botao, baixarJson, lerPersonagens as lerSalvos } from './util.js';
 const primeiraVariacao = (p) => Object.keys(p.variacoes ?? {})[0] ?? '';
 
 // Contrato de página: montar(el, { fontes }) → atualizar()
@@ -100,12 +87,7 @@ export function montar(raiz, { fontes }) {
     if (chave === estado.personagem.nome) { estado.personagem.nome = para; aoMudar(); }
   }
   function exportar(chave) {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(salvos[chave], null, 2)], { type: 'application/json' }));
-    const a = el('a');
-    a.href = url;
-    a.download = pPersonagem.slug(chave) + '.json';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    baixarJson(pPersonagem.slug(chave) + '.json', salvos[chave]);
   }
   function excluir(chave) {
     if (!confirm(`Excluir "${chave}" da galeria? O arquivo não pode ser recuperado.`)) return;

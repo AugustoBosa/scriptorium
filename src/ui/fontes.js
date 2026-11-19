@@ -43,6 +43,7 @@ export function montar(elemento, estado, aoMudar) {
     const remover = document.createElement('button');
     remover.type = 'button';
     remover.textContent = 'Remover';
+    remover.setAttribute("aria-label", `Remover a fonte ${i + 1}`);
     remover.addEventListener('click', () => {
       estado.personagem.mao.base.splice(i, 1);
       aoMudar();

@@ -21,11 +21,12 @@ import { montar as montarPersonagens } from './personagens.js';
 import { montar as montarBiblioteca, gravarMaterial, novoId } from './biblioteca.js';
 import { montarColeta, comporDeColeta, coleta0 } from './letra.js';
 import * as trabalho from './trabalho.js';
+import { NOMES_OFICINA } from './util.js';
 
 const OFICINAS = { carta: 'escrita', livro: 'escrita', magias: 'grimorio', sigilos: 'sigilos', letra: 'coleta' };
 const ANTIGAS = { scroll: true, grimorio: false }; // rota antiga → porPagina em #magias
 const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens, biblioteca: montarBiblioteca };
-const NOMES = { inicio: 'Início', personagens: 'Personagens', biblioteca: 'Biblioteca', letra: 'Minha letra', carta: 'Carta', magias: 'Magias', livro: 'Livro', sigilos: 'Sigilos' };
+const NOMES = { inicio: 'Início', personagens: 'Personagens', biblioteca: 'Biblioteca', ...NOMES_OFICINA };
 const VAZIO = { magias: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.', letra: 'Nada para plotar.' };
 const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto', 'mesa'];
 const $ = (id) => document.getElementById(id);
@@ -314,7 +315,7 @@ $('comparar').addEventListener('change', (ev) => { atual.estado.comparar = ev.ta
 $('variacao-b').addEventListener('change', (ev) => { atual.estado.variacaoB = ev.target.value; aoMudar(); });
 $('pag-ant').addEventListener('click', () => { atual.estado.paginaAtual -= 1; aoMudar(); });
 $('pag-prox').addEventListener('click', () => { atual.estado.paginaAtual += 1; aoMudar(); });
-window.addEventListener('hashchange', rotear);
+window.addEventListener('hashchange', () => rotear().catch((e) => { $('erro').textContent = `Erro: ${e.message}`; }));
 
 (async () => {
   try {

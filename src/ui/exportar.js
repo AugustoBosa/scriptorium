@@ -6,6 +6,7 @@ import { resolver } from '../personagem.js';
 import { AJUDA, rotulo } from '../ajuda.js';
 import { controle, dica, ligar } from './controle.js';
 import { resumoMesa } from './mesa.js';
+import { baixar } from './util.js';
 
 const PP = Object.fromEntries(PARAMS_PERFIL.map((p) => [p.chave, p]));
 const PO = Object.fromEntries(PARAMS_OTIM.map((p) => [p.chave, p]));
@@ -20,11 +21,6 @@ const ctxDe = (estado) => () => ({
   perfil: estado.perfil,
 });
 
-function baixar(conteudo, nome, tipo) {
-  const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
-  Object.assign(document.createElement('a'), { href: url, download: nome }).click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 // Página do documento com cada camada reordenada conforme a opção "otimizar" (sem otimizar: ordem crua, sem grupos).
 function paginaOtimizada(estado, i) {
@@ -56,6 +52,7 @@ const gravarPerfil = (perfil) => {
   try { localStorage.setItem(CHAVE_PERFIL, JSON.stringify(perfil)); } catch { /* sem armazenamento: vale só nesta sessão */ }
 };
 
+let montados = 0; // id único do header/footer: cada oficina monta o próprio painel
 export function montar(elemento, estado, aoMudar) {
   const ctx = ctxDe(estado);
 
@@ -75,7 +72,7 @@ export function montar(elemento, estado, aoMudar) {
     ta.rows = 5;
     ta.style.fontFamily = 'var(--fonte-mono)';
     ta.addEventListener('input', () => { editar(chave, ta.value); aoMudar(); });
-    ta.id = `perfil-${chave}`;
+    ta.id = `perfil-${chave}-${++montados}`; // cada oficina monta o seu painel
     const lab = document.createElement('label');
     lab.htmlFor = ta.id;
     lab.append(rotulo(chave));

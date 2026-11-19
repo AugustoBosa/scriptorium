@@ -13,7 +13,7 @@ export function comporDeColeta(estado) {
   return comporColeta(LINGUAS[c.lingua] ?? ptBR, { fontes: estado.fontes }, { papel: estado.pagina, papelNome: estado.paginaNome, tipo: c.tipo, x: c.x, caneta: c.caneta, canetas: CANETAS });
 }
 
-const el = (tag, classe, texto) => { const e = document.createElement(tag); if (classe) e.className = classe; if (texto != null) e.textContent = texto; return e; };
+import { el } from './util.js';
 const amostra = (ctx, texto, x) => ({ fundo: guias(0, 60, TAM + 2 + 2 * x, x), foco: escreverEm(texto, { x: 0, y: 0, l: 60, a: TAM }, { tamanho: TAM }, ctx.fontes, MAO_GUIA) });
 
 const PARAMS = [
