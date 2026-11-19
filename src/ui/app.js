@@ -19,12 +19,13 @@ import { montar as montarMesa, desenharMesa, mesaLigada } from './mesa.js';
 import { montar as montarInicio } from './inicio.js';
 import { montar as montarPersonagens } from './personagens.js';
 import { montar as montarBiblioteca, gravarMaterial, novoId } from './biblioteca.js';
+import { montar as montarLetra } from './letra.js';
 import * as trabalho from './trabalho.js';
 
 const OFICINAS = { carta: 'escrita', livro: 'escrita', magias: 'grimorio', sigilos: 'sigilos' };
 const ANTIGAS = { scroll: true, grimorio: false }; // rota antiga → porPagina em #magias
-const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens, biblioteca: montarBiblioteca };
-const NOMES = { inicio: 'Início', personagens: 'Personagens', biblioteca: 'Biblioteca', carta: 'Carta', magias: 'Magias', livro: 'Livro', sigilos: 'Sigilos' };
+const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens, biblioteca: montarBiblioteca, letra: montarLetra };
+const NOMES = { inicio: 'Início', personagens: 'Personagens', biblioteca: 'Biblioteca', letra: 'Minha letra', carta: 'Carta', magias: 'Magias', livro: 'Livro', sigilos: 'Sigilos' };
 const VAZIO = { magias: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.' };
 const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto', 'mesa'];
 const $ = (id) => document.getElementById(id);

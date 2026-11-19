@@ -33,6 +33,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 | Controles e prévia viva (`{ fundo, foco }`, 2 casas) | `src/ui/controle.js`; contrato em `test/params.test.mjs` |
 | Mesa e imposição (cena, passadas, Ampliar) | `src/ui/mesa.js`, `mesa.css`, `src/maquina/imposicao.js` |
 | Salvar no navegador | trabalho: `src/ui/trabalho.js` (localStorage `trabalho.*`, `grimorio.estado`); biblioteca e magias: `src/ui/armazem.js` (IndexedDB `scriptorium`), `src/ui/biblioteca.js` |
+| Minha letra (letra do usuário → fonte de traço único; etapa 1 folha-guia feita) | `src/letra/folha.js` (`celulas`, `svgFolha`, pontos a 5 mm), texto modelo `src/letra/textos.js` + `scripts/gerar-texto-modelo.mjs <corpus> <lingua>` → `src/letra/linguas/<lingua>.json`, `src/ui/letra.js`; plano em `workflow/experimentos/fonte-propria/PESQUISA.md` |
 
 ## Entregas
 

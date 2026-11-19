@@ -1,0 +1,13 @@
+/* aba Minha letra: folha-guia; só tokens de tema.css */
+#vista-letra { max-width: 1120px; margin: 0 auto; padding: var(--e5); }
+#vista-letra h2 { margin: 0 0 var(--e3); font: 600 var(--t-grupo) var(--fonte-titulo); font-variant: small-caps; letter-spacing: .04em; color: var(--rubrica); }
+.letra-intro, .letra-passos { color: var(--tinta-2); max-width: 70ch; }
+.letra-folha { margin-top: var(--e4); background: #fff; border: 1px solid var(--regua); border-radius: var(--raio); padding: var(--e3); }
+.letra-folha svg { display: block; width: 100%; max-width: 640px; height: auto; margin: 0 auto; }
+@media (max-width: 799px) { #vista-letra { padding: var(--e4); } }
+#vista-letra h3 { margin: var(--e5) 0 var(--e2); font: 500 var(--t-grupo) var(--fonte-titulo); color: var(--tinta); }
+.letra-texto { font: 1.15rem/1.9 var(--fonte-titulo); color: var(--tinta); max-width: 40ch; padding-left: 3ch; }
+.letra-texto li::marker { color: var(--tinta-2); font-size: var(--t-pequeno); }
+.letra-plano { border-collapse: collapse; font-size: var(--t-pequeno); color: var(--tinta); max-width: 100%; }
+.letra-plano th, .letra-plano td { text-align: left; padding: var(--e1) var(--e3); border-bottom: 1px solid var(--regua); vertical-align: top; }
+.letra-plano .codigo { font-weight: 600; color: var(--rubrica); }
