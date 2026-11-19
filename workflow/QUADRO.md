@@ -9,9 +9,9 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 - Se a porta 127.0.0.1:8765 estiver ocupada, o e2e roda com uma config temporária que troca `localhost` por `[::1]` (não versionar).
 - Golden de ornamento/motor: regravar só com `node --test --test-update-snapshots test/<arquivo>`, nunca `npm run golden` inteiro.
 
-## Em andamento
+## Última entrega (2026-11-18)
 
-- Reorganização (branch `reorganizacao`): oficina Magias (pergaminho + grimório), padronização das oficinas, controles com 2 casas e destaque na prévia, menu ☰ e home animada.
+- Reorganização: oficina Magias (pergaminho + grimório, separador entre magias), oficinas com a mesma ordem de painéis e a mesma lista de papéis, texto de exemplo e visual padrão por tipo, valores com 2 casas, destaque em vermelho na prévia dos controles, menu ☰ nas oficinas e home com cartões animados. Barovia/Strahd e o histórico antigo saíram.
 
 ## Pendências de hardware (usuário)
 

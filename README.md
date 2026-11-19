@@ -10,18 +10,19 @@ Caligrafia de traço único para plotter de caneta. O app gera a letra com uma m
 
 ## Oficinas
 
-Cada oficina é uma rota do `index.html`: `#carta`, `#scroll`, `#grimorio`, `#livro`, `#sigilos`. A rota padrão é `#inicio` (home: oficinas e personagens); `#personagens` cria, edita e escolhe a mão em uso.
+Cada oficina é uma rota do `index.html`: `#carta`, `#livro`, `#magias`, `#sigilos`. A rota padrão é `#inicio`: a home tem um cartão por oficina, com a miniatura real desenhada traço a traço. `#personagens` cria, edita e escolhe a mão em uso. Dentro de uma oficina, o menu ☰ do cabeçalho leva às outras. As rotas antigas `#scroll` e `#grimorio` levam a `#magias`.
+
+Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, painel próprio, Mesa e folha, Máquina. Cada tipo abre com um texto de exemplo e um visual padrão próprios.
 
 - **Carta** (`#carta`): carta, anotação ou diário. Marcações no texto: `{nota: ...}`, `{~errado~>certo}`, `{_sublinhar_}`, `{o:circular}`. As notas vão para uma camada própria (margem, risco, sublinhado, laço), com caneta e personagem próprios.
-- **Scroll** (`#scroll`): uma magia de D&D por folha, em A5, A6, A7 ou A8.
-- **Grimório** (`#grimorio`): magias em sequência, na mesma folha. Quem escreve é um personagem salvo na aba Personagens. O bloco marcado sai em alfabeto arcano, com chave opcional. O sigilo de cada magia codifica nível, escola, concentração, ritual e componentes.
+- **Magias** (`#magias`): magias de D&D. Ligado "uma magia por página", cada magia vira um pergaminho avulso; desligado, as magias seguem como num grimório, com ou sem separador decorado entre elas (losango, asteriscos ou onda). O bloco marcado sai em alfabeto arcano, com chave opcional. O sigilo de cada magia codifica nível, escola, concentração, ritual e componentes.
 - **Livro** (`#livro`): colunas, título corrente, numeração, reclamo, rubrica, capitular e borda. Usa o mesmo texto da Carta.
 - **Sigilos** (`#sigilos`): cada frase vira um selo, um sigilo (método kamea, roda ou fusão) ou um círculo, com legenda. Os sigilos ficam em grade numa folha.
 
 ## Interface
 
 - **Básico / Avançado**: o básico mostra o essencial; o avançado mostra os ajustes finos e a máquina.
-- **Prévia viva**: cada controle mostra uma amostra ao passar o mouse ou focar. Os controles de valor têm régua e escala de 10 mm.
+- **Prévia viva**: cada controle mostra uma amostra ao passar o mouse ou focar. O que o controle altera aparece em vermelho; o resto, em tinta. Os controles de valor têm régua e escala de 10 mm, e os valores têm no máximo 2 casas depois da vírgula.
 - **Personagens**: galeria com espécime; a mão em uso vale para todas as oficinas.
 - **Temas**: claro e vela (escuro).
 - **Salvos no navegador** (localStorage): personagens (`writer.personagens`), perfil de máquina (`writer.perfil`) e preferências de tema e nível (`writer.ui`). Nada vai para servidor.
@@ -38,14 +39,14 @@ O papel máximo é a janela útil do perfil. Papel maior que a janela é bloquea
 
 ## Papéis (`src/materiais/documento.js`)
 
-A3, A4, A5, A6, A7, A8, carta, ofício e personalizado, em retrato ou paisagem, com margens por lado. O scroll e o grimório usam só A5 a A8.
+A3, A4, A5, A6, A7, A8, carta, ofício e personalizado, em retrato ou paisagem, com margens por lado. Todas as oficinas usam a mesma lista; o limite é a janela da máquina.
 
 ## Estrutura
 
 - `src/motor/`: mão, ductus, escrita, cinemática.
 - `src/ornamento/`: bordas, vinhas, capitulares, filigranas.
 - `src/arcano/`: alfabeto, círculo, sigilo.
-- `src/materiais/`: carta, livro, scroll, sigilos, notas, documento.
+- `src/materiais/`: carta, livro, scroll (magias), sigilos, notas, documento, exemplos (texto e visual padrão de cada tipo).
 - `src/maquina/`: perfis, G-code, otimização do trajeto.
 - `src/ui/`: interface (DOM e CSS). Fora de `src/ui/` o código não usa DOM.
 - `fontes/`: 43 fontes de traço único (EMS, Hershey, Relief, Mistral, TwinSans). Licenças em `fontes/LICENCAS.md`.
@@ -68,4 +69,4 @@ Roteiro manual da interface: `test/ui-smoke.md`.
 
 ## Publicação
 
-`.github/workflows/pages.yml` publica no GitHub Pages a cada push em `main`: `npm ci`, `npm test`, `npm run build` e envio de `dist/`. Pré-requisito único no GitHub: Settings › Pages › Source = "GitHub Actions". `dados/` não vai para o Pages (está no `.gitignore`); sem `dados/magias.json`, o grimório oferece importar o JSON ou criar magias em branco.
+`.github/workflows/pages.yml` publica no GitHub Pages a cada push em `main`: `npm ci`, `npm test`, `npm run build` e envio de `dist/`. Pré-requisito único no GitHub: Settings › Pages › Source = "GitHub Actions". `dados/` não vai para o Pages (está no `.gitignore`); sem `dados/magias.json`, a oficina Magias oferece importar o JSON ou criar magias em branco.
