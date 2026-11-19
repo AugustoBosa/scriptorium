@@ -2,7 +2,7 @@
 import { ROTULOS, AJUDA } from '../ajuda.js';
 import { papelMaximo } from '../maquina/perfis.js';
 import { compor } from '../layout.js';
-import { caixaDe } from '../geo.js';
+import { caixaDe, ret } from '../geo.js';
 /** @typedef {[number, number][]} Traco  mm, origem no canto sup-esq do papel, y para baixo */
 /** @typedef {{id:string, caneta:string, personagem:string|null, ordem:'escrita'|'otimizada', tracos:Traco[], grupos?:number[]}} Camada */
 /** @typedef {{camadas:Camada[]}} Pagina */
@@ -51,11 +51,11 @@ export function escreverEm(texto, caixa, { alinhamento = 'esquerda', tamanho }, 
 }
 
 // Ponte até os materiais migrarem (M20): embrulha Traco[][] em uma camada por página.
-export function deTracos(paginas, papelDoc, { id = 'texto', caneta = 'preta', personagem = null, ordem = 'otimizada', avisos = [] } = {}) {
+export function deTracos(paginas, papelDoc, { avisos = [] } = {}) {
   return {
     papel: papelDoc,
-    canetas: { [caneta]: { nome: caneta, cor: '#1a1a1a', espessura: 0.4 } },
-    paginas: paginas.map((tracos) => ({ camadas: [{ id, caneta, personagem, ordem, tracos }] })),
+    canetas: { preta: CANETAS.preta },
+    paginas: paginas.map((tracos) => ({ camadas: [{ id: 'texto', caneta: 'preta', personagem: null, ordem: 'otimizada', tracos }] })),
     avisos,
   };
 }
@@ -80,7 +80,6 @@ export function validarDocumento(doc) {
 }
 
 // Parâmetros editáveis. Prévia: contorno do papel + janela útil da máquina, ou papel + área dentro das margens.
-const ret = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]];
 // fundo = o que fica igual; foco = o que o controle muda (pintado em destaque na prévia).
 const comJanela = (l, a, ctx) => { const m = papelMaximo(ctx.perfil); return { fundo: [ret(0, 0, m.largura, m.altura)], foco: [ret(0, 0, l, a)] }; };
 const comMargens = (l, a, { topo, dir, base, esq }) => ({ fundo: [ret(0, 0, l, a)], foco: [ret(esq, topo, l - dir, a - base)] });

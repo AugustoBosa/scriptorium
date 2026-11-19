@@ -1,16 +1,13 @@
 import { rng, hash } from '../rng.js';
 import { ROTULOS, AJUDA } from '../ajuda.js';
 import { CURSIVAS } from '../fonte.js';
+import { dist } from '../geo.js';
 
 export const IDENTIDADE = ['base', 'seed', 'inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate', 'ligadura', 'adiamento'];
 export const EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo', 'ondulacao', 'deriva', 'ritmo', 'fadiga', 'fluidez', 'ultrapassagem', 'retoque'];
 export const NEUTRA = { base: [], seed: 0, inclinacao: 0, largura: 1, altura: 1, espacamento: 0, espacoPalavra: 0, idio: 0, pressa: 0, capricho: 1, tremor: 0, queda: 0, compressao: 1, variacao: 0, desleixo: 0, alternativas: 1, contexto: 0, arremate: 0, ondulacao: 0, deriva: 0, ritmo: 80, fadiga: 0, ligadura: 0, adiamento: 0, fluidez: 0, ultrapassagem: 0, retoque: 0 };
 
 const N = 32;
-
-function dist([ax, ay], [bx, by]) {
-  return Math.hypot(bx - ax, by - ay);
-}
 
 // Reamostra um traço em N pontos igualmente espaçados por comprimento de arco.
 function reamostrar(pts) {

@@ -1,6 +1,8 @@
 // Geometria 2D em mm (y para baixo). Traço = [[x, y], ...]; caixa = {x, y, l, a}.
 import { hachureLines } from 'hachure-fill';
 
+export const VAO = 0.5; // mm: piso de todo vão e folga (caneta 0,4)
+export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 export const dist = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
 export const valido = (t) => Array.isArray(t) && t.length >= 2 && t.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
 export const comprimento = (t) => t.slice(1).reduce((s, p, i) => s + dist(t[i], p), 0);

@@ -4,8 +4,7 @@
 .mesa-instrucao { margin: 0; color: var(--tinta); font-size: var(--t-ui); line-height: var(--linha); }
 .mesa-aviso { margin: 0; color: var(--aviso); font-size: var(--t-pequeno); }
 .mesa-erro { margin: 0; color: var(--rubrica); }
-.mesa .m-txt { font-family: var(--fonte-ui); font-weight: 700; stroke: #fdfaf2; stroke-width: .25em; paint-order: stroke; stroke-linejoin: round; }
-
+.mesa .m-txt, 
 .vista-previa { display: inline-flex; gap: var(--e1, 4px); }
 .vista-previa button[aria-pressed="true"] { background: var(--tinta); color: var(--pergaminho); }
 .mesa p, .mesa label { color: var(--tinta-folha); }

@@ -152,7 +152,7 @@ const MIOLO = {
   T: () => [[[0, -1], [0.9, 0.7], [-0.9, 0.7], [0, -1]], circulo(0, 0.1, 0.4)],
 };
 
-const mdc = (a, b) => (b ? mdc(b, a % b) : a);
+export const mdc = (a, b) => (b ? mdc(b, a % b) : a);
 
 // Sigilo de uma magia em coordenadas [-1,1] (y para baixo). O desenho codifica:
 // pontas = nível + 2, miolo = escola, anel duplo = concentração, dentes = ritual, marcas no anel = V/S/M.

@@ -1,11 +1,11 @@
 import { gcodeDocumento, svgDocumento } from '../maquina/gcode.js';
 import { PERFIS, PARAMS as PARAMS_PERFIL, mesclarPerfil } from '../maquina/perfis.js';
-import { otimizar, PARAMS as PARAMS_OTIM } from '../maquina/otimizar.js';
+import { PARAMS as PARAMS_OTIM } from '../maquina/otimizar.js';
 import { amostra } from '../layout.js';
 import { resolver } from '../personagem.js';
 import { AJUDA, rotulo } from '../ajuda.js';
 import { controle, dica, ligar } from './controle.js';
-import { resumoMesa } from './mesa.js';
+import { resumoMesa, otim } from './mesa.js';
 import { baixar } from './util.js';
 
 const PP = Object.fromEntries(PARAMS_PERFIL.map((p) => [p.chave, p]));
@@ -22,11 +22,7 @@ const ctxDe = (estado) => () => ({
 });
 
 
-// Página do documento com cada camada reordenada conforme a opção "otimizar" (sem otimizar: ordem crua, sem grupos).
-function paginaOtimizada(estado, i) {
-  const pag = estado.doc.paginas[i];
-  return { ...pag, camadas: pag.camadas.map((c) => ({ ...c, tracos: otimizar(c.tracos, 0.1, { ordem: estado.otimizar ? c.ordem : 'escrita', grupos: estado.otimizar ? c.grupos : undefined }) })) };
-}
+const paginaOtimizada = (estado, i) => otim(estado, estado.doc.paginas[i]);
 
 // Camada escolhida na barra, se a página i tem essa camada; senão, todas (undefined).
 function escolhida(estado, i) {

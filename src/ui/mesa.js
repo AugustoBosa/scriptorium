@@ -69,7 +69,8 @@ export function resumoMesa(estado) {
   return p.erro ? null : `${p.nFolhas} folha${p.nFolhas > 1 ? 's' : ''} · ${p.passos.length} passada${p.passos.length > 1 ? 's' : ''}`;
 }
 
-const otim = (estado, pag) => ({ ...pag, camadas: pag.camadas.map((c) => ({ ...c, tracos: otimizar(c.tracos, 0.1, { ordem: estado.otimizar ? c.ordem : 'escrita', grupos: estado.otimizar ? c.grupos : undefined }) })) });
+// Página com cada camada reordenada conforme a opção "otimizar" (sem otimizar: ordem crua, sem grupos).
+export const otim = (estado, pag) => ({ ...pag, camadas: pag.camadas.map((c) => ({ ...c, tracos: otimizar(c.tracos, 0.1, { ordem: estado.otimizar ? c.ordem : 'escrita', grupos: estado.otimizar ? c.grupos : undefined }) })) });
 const nomeFolha = (m) => (m.folha === 'personalizado' ? `${m.largura}×${m.altura} mm` : m.folha);
 // camada escolhida na barra de exportar, se alguma página do documento a tem; senão, todas (undefined)
 const camadaDe = (p) => (p.doc.paginas.some((x) => x.camadas.some((c) => c.id === p.estado.camada)) ? p.estado.camada : undefined);

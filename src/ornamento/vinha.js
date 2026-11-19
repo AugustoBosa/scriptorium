@@ -1,9 +1,8 @@
 // Vinha por colonização de espaço: atratores sorteados atraem ramos que crescem até cobri-los.
-import { circulo, recortarCaixa } from '../geo.js';
+import { circulo, recortarCaixa, clamp } from '../geo.js';
 import { rng, ruido1d } from '../rng.js';
 
 const MAX_VOLTAS = 600, MAX_NOS = 3000, MAX_ATRATORES = 1500;
-const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 export const P = { densidade: 0.5, curvatura: 0.4, folhas: 0.5, frutos: 0.2, espirais: 0.2 };
 

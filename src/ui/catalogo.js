@@ -1,3 +1,4 @@
+import './catalogo.css';
 import { CATALOGO, EIXOS, ARQUETIPOS } from '../catalogo.js';
 import { glifo, NEUTRA } from '../motor/mao.js';
 import { dica } from './controle.js';
@@ -19,27 +20,6 @@ export function abrirCatalogo(estado, aoMudar) {
 }
 
 function criar() {
-  if (!document.getElementById('estilo-catalogo')) {
-    const style = document.createElement('style');
-    style.id = 'estilo-catalogo';
-    style.textContent = `
-      #catalogo-fontes { width: min(1600px, 98vw); max-height: 90vh; overflow: auto; padding: 12px 16px; border: 1px solid var(--contorno); border-radius: 6px; }
-      #catalogo-fontes .topo { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
-      #catalogo-fontes .fechar { margin-left: auto; }
-      #catalogo-fontes table { border-collapse: collapse; width: 100%; font-size: 13px; }
-      #catalogo-fontes th, #catalogo-fontes td { border-bottom: 1px solid var(--regua); padding: 4px 6px; text-align: left; vertical-align: middle; }
-      #catalogo-fontes th { position: sticky; top: 0; background: var(--campo); }
-      #catalogo-fontes td.num { text-align: center; white-space: nowrap; }
-      #catalogo-fontes tr.apta { background: var(--pergaminho); }
-      #catalogo-fontes .amostra svg { display: block; color: var(--tinta); }
-      #catalogo-fontes .nome { font-weight: 600; font-size: 12px; }
-      #catalogo-fontes .nome small { font-weight: 400; color: var(--tinta-2); }
-      #catalogo-fontes td.desc { font-size: 12px; min-width: 220px; max-width: 320px; }
-      #catalogo-fontes td.acoes { white-space: nowrap; }
-    `;
-    document.head.append(style);
-  }
-
   dialog = document.createElement('dialog');
   dialog.id = 'catalogo-fontes';
   dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });

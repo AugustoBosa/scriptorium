@@ -3,10 +3,10 @@ import { variante, deformar, escalar, encaixe, vaoMin, arrematar } from './conte
 import { rng, ruido1d } from '../rng.js';
 import { cursiva, medidas, ligar, retocada, retocar } from './ductus.js';
 import { suavizar } from './cinematica.js';
+import { comprimento } from '../geo.js';
 
 // Amplitudes (chute calibrado no papel só pelo usuário).
 const TAM_DERIVA = 0.08, INC_DERIVA = 6, ONDULACAO = 0.15, TREMOR_FADIGA = 0.02, DOBRADA = 0.93, INICIAL = 0.12;
-const comprimento = (t) => t.reduce((acc, p, i) => (i ? acc + Math.hypot(p[0] - t[i - 1][0], p[1] - t[i - 1][1]) : 0), 0);
 
 // Escreve uma palavra: medir (largura) e desenhar (glifos, s, tan, dy, tremor) usam este mesmo objeto. Pura: não altera cont.
 // ctx = { fontes, mao (completa), tamanho, cont = Map, indice, t, F, alvo? }

@@ -5,8 +5,8 @@ import { parseFonte } from '../src/fonte.js';
 import { NEUTRA } from '../src/motor/mao.js';
 import { normalizar } from '../src/magia.js';
 import { gerarAlfabeto } from '../src/arcano/alfabeto.js';
-import { paginasGrimorio, comporGrimorio, comporScroll, folha } from '../src/materiais/scroll.js';
-import { validarDocumento } from '../src/materiais/documento.js';
+import { paginasGrimorio, comporGrimorio, comporScroll } from '../src/materiais/scroll.js';
+import { validarDocumento, papel as folha } from '../src/materiais/documento.js';
 
 const raiz = new URL('../', import.meta.url);
 const fontes = { EMSBird: parseFonte(fs.readFileSync(new URL('fontes/EMSBird.svg', raiz), 'utf8'), 'EMSBird') };

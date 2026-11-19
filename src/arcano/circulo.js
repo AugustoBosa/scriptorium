@@ -1,18 +1,17 @@
 // Círculo mágico: anéis, estrelas, raios, nós, centro e satélites; texto em arco e selo. mm, y para baixo.
-import { circulo as circ, reamostrar, recortarCaixa, recortarRaio, encaixar, limpar } from '../geo.js';
+import { VAO, circulo as circ, reamostrar, recortarCaixa, recortarRaio, encaixar, limpar } from '../geo.js';
 import { rng } from '../rng.js';
 import { escreverPalavra } from '../motor/escrita.js';
 import { glifo, NEUTRA } from '../motor/mao.js';
-import { gerarAlfabeto, cifrar, LETRAS } from './alfabeto.js';
+import { gerarAlfabeto, cifrar, LETRAS, mdc } from './alfabeto.js';
 
-export const VAO = 0.5; // mm: piso de todo vão e folga (caneta 0,4)
+export { VAO };
 export const ALT_MIN = 1.5; // mm: letra menor que isso é ilegível
 const TAU = 2 * Math.PI;
 const SAT_PADRAO = { aneis: [{ raio: 1, tipo: 'linha' }], poligonos: [{ n: 3, raio: 0.8 }] };
 export const P = { aneis: [{ raio: 1, tipo: 'linha' }], poligonos: [], raios: null, nos: null, centro: { tipo: 'nenhum' }, satelites: null };
 
 const nSeg = (r) => Math.max(24, Math.ceil(TAU * r / 0.5));
-const mdc = (a, b) => (b ? mdc(b, a % b) : a);
 const polar = (c, r, a) => [c[0] + r * Math.cos(a), c[1] + r * Math.sin(a)];
 const arcana = (seed) => ({ fontes: { arcano: gerarAlfabeto({ seed }) }, mao: { ...NEUTRA, base: [{ fonte: 'arcano', peso: 1 }], seed } });
 const ctxOk = (ctx) => (ctx?.fontes && ctx?.mao ? ctx : null);

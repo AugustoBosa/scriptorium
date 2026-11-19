@@ -72,7 +72,7 @@ a { color: var(--rubrica); text-underline-offset: .15em; }
 h1, nav.oficinas a, summary { font-family: var(--fonte-titulo); font-weight: 500; }
 h1 { margin: 0; font-size: var(--t-titulo); letter-spacing: .01em; }
 summary { font-size: var(--t-grupo); font-variant-caps: small-caps; letter-spacing: .04em; color: var(--rubrica); cursor: pointer; }
-output, .numero { font-variant-numeric: tabular-nums; }
+output { font-variant-numeric: tabular-nums; }
 input, select, textarea, button { font: inherit; color: inherit; }
 input:not([type=range], [type=checkbox]), select, textarea, button {
   min-height: var(--alvo); background: var(--campo); border: 1px solid var(--contorno); border-radius: var(--raio);
@@ -83,7 +83,6 @@ button.primario { background: var(--tinta); color: var(--pergaminho); border-col
 button:disabled, button.primario:disabled { background: transparent; color: var(--tinta-2); border-style: dashed; cursor: default; } /* tinta-2 sobre pergaminho: 7,5 nos dois temas */
 :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 .erro { color: var(--rubrica); font-weight: 600; }  /* sempre com o prefixo "Erro:" no texto */
-.aviso { color: var(--aviso); }
 .so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Básico/Avançado: o nível mora no <body data-nivel>; controles e grupos avançados somem no básico */
@@ -217,7 +216,7 @@ dialog::backdrop { background: var(--sombra-cor); }
 
 /* alça de arrastar nota solta na prévia (svg em mm) */
 .alca-nota { fill: transparent; stroke: var(--foco); stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-dasharray: 4 3; cursor: grab; opacity: 0; transition: opacity .15s; }
-#previa:hover .alca-nota, .alca-nota:focus, .alca-nota.arrastando { opacity: 1; }
+#previa:hover .alca-nota, .alca-nota.arrastando { opacity: 1; }
 .alca-nota.arrastando { cursor: grabbing; }
 
 #salvar-material { margin-left: auto; }

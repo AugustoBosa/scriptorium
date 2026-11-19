@@ -1,13 +1,12 @@
 // Notas: marcação no texto ({nota:…}, {~errado~>certo}, {_…_}, {o:…}), camada de notas (marginais, risco, sublinhado, laço, rabiscos).
 // Regra de ouro: nenhum traço de nota toca palavra que não seja o alvo dele (checado por amostragem de pontos, sem booleanos de polígono).
-import { caixaDe, reamostrar, dist, recortarCaixa, hachura, ret, limpar } from '../geo.js';
+import { caixaDe, reamostrar, dist, recortarCaixa, hachura, ret, limpar, VAO } from '../geo.js';
 import { rng, ruido1d } from '../rng.js';
 import { compor } from '../layout.js';
 import { circulo } from '../arcano/circulo.js';
 import { florao } from '../ornamento/filigrana.js';
 import { escreverEm } from './documento.js';
 
-export const VAO = 0.5; // mm (caneta 0,4)
 const TAU = 2 * Math.PI;
 export const contar = (s) => s.split('\n').flatMap((l) => l.split(' ').filter(Boolean)).length;
 const resumo = (s) => (s.length > 24 ? s.slice(0, 24) + '…' : s);
@@ -122,7 +121,7 @@ export function conectar(tipo, g) {
 
 const mover = (trs, dx, dy) => trs.map((t) => t.map(([x, y]) => [x + dx, y + dy]));
 // Traço de mão: reamostra a 0,5 mm e desvia na normal com tremor fino (~8 mm) e deriva lenta (~25 mm) que some nas pontas.
-export function tracoMao(t, fino, lento, sd) {
+function tracoMao(t, fino, lento, sd) {
   const p = reamostrar(t, 0.5), tot = p.reduce((acc, q, i) => acc + (i ? dist(p[i - 1], q) : 0), 0) || 1;
   let s = 0;
   return p.map((q, i) => {
@@ -250,6 +249,8 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
   }
   fila.sort((a, b) => a.p.y - b.p.y);
   const notas = []; // { ordem, caixa } das notas soltas: a interface arrasta por aqui
+  // ponto de q (inflada em f) mais perto de (cx, cy)
+  const perto = (cx, cy, q, f) => [Math.min(Math.max(cx, q.x - f), q.x + q.l + f), Math.min(Math.max(cy, q.y - f), q.y + q.a + f)];
   const solta = ({ p, texto, pos, ordem }) => {
     const larg = Math.max(15, Math.min(45, 0.3 * papel.largura)), borda = 3, rn = rr(`nota|${p.k}|${ordem ?? texto}`);
     const r = compor(texto, ctx.fontes, maoN, { largura: larg, altura: papel.altura, margens: { topo: 0, dir: 0, base: 0, esq: 0 } }, { tamanho: tn, entrelinha: 1.3 });
@@ -266,9 +267,8 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
       const c = p.c, lw = linha(p), G = 2 * VAO + amp + 2.8, ocupa = [...caixas.filter(Boolean), ...colocados]; // folga: cabe uma seta visível
       // a seta precisa de caminho: reta do ponto da nota mais perto da palavra até a palavra, sem passar por outra palavra ou nota
       const outros = [...caixas.filter((q, k) => q && k !== p.k), ...colocados], f0 = VAO + amp;
-      const perto0 = (cx, cy, q, f) => [Math.min(Math.max(cx, q.x - f), q.x + q.l + f), Math.min(Math.max(cy, q.y - f), q.y + q.a + f)];
       const caminhoLivre = (q) => {
-        const fim = perto0(q.x + q.l / 2, q.y + q.a / 2, c, f0 + 0.3), ini = perto0(fim[0], fim[1], q, VAO), L = dist(ini, fim), n = Math.max(2, Math.ceil(L / 0.4));
+        const fim = perto(q.x + q.l / 2, q.y + q.a / 2, c, f0 + 0.3), ini = perto(fim[0], fim[1], q, VAO), L = dist(ini, fim), n = Math.max(2, Math.ceil(L / 0.4));
         for (let i = 1; i < n; i++) {
           const x = ini[0] + ((fim[0] - ini[0]) * i) / n, y = ini[1] + ((fim[1] - ini[1]) * i) / n;
           if (outros.some((o) => x > o.x - f0 && x < o.x + o.l + f0 && y > o.y - f0 && y < o.y + o.a + f0)) return false;
@@ -311,7 +311,7 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
     pôr(tr, [b]);
     if (ordem != null) notas.push({ ordem, caixa: b, ang: alvo.ang });
     // seta da nota até a palavra: curva de mão (lado da barriga sorteado), depois a outra curva, reta e cotovelos
-    const c = p.c, perto = (cx, cy, q, f) => [Math.min(Math.max(cx, q.x - f), q.x + q.l + f), Math.min(Math.max(cy, q.y - f), q.y + q.a + f)];
+    const c = p.c;
     const fim = perto(b.x + b.l / 2, b.y + b.a / 2, c, VAO + amp + 0.3), ini = perto(fim[0], fim[1], b, VAO);
     const s = rn() < 0.5 ? 1 : -1;
     const caminhos = [curvaMao(ini, fim, s * curva), curvaMao(ini, fim, -s * curva), [ini, fim], [ini, [fim[0], ini[1]], fim], [ini, [ini[0], fim[1]], fim]];

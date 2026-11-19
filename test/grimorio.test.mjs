@@ -5,7 +5,8 @@ import { parseFonte } from '../src/fonte.js';
 import { NEUTRA } from '../src/motor/mao.js';
 import { limpar, normalizar, blocos } from '../src/magia.js';
 import { gerarAlfabeto, cifrar, sigilo, LETRAS } from '../src/arcano/alfabeto.js';
-import { paginasGrimorio as comporGrimorio, folha, FOLHAS } from '../src/materiais/scroll.js';
+import { paginasGrimorio as comporGrimorio } from '../src/materiais/scroll.js';
+import { papel as folha } from '../src/materiais/documento.js';
 
 const bruta = {
   name: 'Fireball', source: 'PHB', level: 3, school: 'V',
@@ -69,9 +70,9 @@ const ctx = { fontes, mao: { ...NEUTRA, base: [{ fonte: 'EMSBird', peso: 1 }] },
 const dentro = (pags, pg) => pags.flat(2).every(([x, y]) => x >= -0.01 && x <= pg.largura + 0.01 && y >= -0.01 && y <= pg.altura + 0.01);
 
 test('toda folha de A5 a A8 recebe a magia em uma página, dentro do papel', () => {
-  for (const nome of Object.keys(FOLHAS)) {
+  for (const nome of ['A5', 'A6', 'A7', 'A8']) {
     for (const paisagem of [false, true]) {
-      const pg = folha(nome, paisagem);
+      const pg = folha(nome, { paisagem });
       const r = comporGrimorio([bola], ctx, { tamanho: 3 }, pg);
       assert.equal(r.paginas.length, 1, nome);
       assert.ok(r.modos[bola.id].cabe, nome);

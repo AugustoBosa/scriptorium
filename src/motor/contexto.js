@@ -1,4 +1,5 @@
 import { rng } from '../rng.js';
+import { clamp, comprimento } from '../geo.js';
 
 // Contexto da escrita: variantes por ocorrência, encaixe óptico e arremate. Glifo entra, glifo sai (em, y para cima).
 const AMP = 0.03; // amplitude da deformação de baixa frequência (em)
@@ -7,7 +8,6 @@ const Y0 = -0.25, DY = 1 / 6; // 6 faixas cobrindo y em [-0,25; 0,75] em
 const LIM_ENCAIXE = 0.12; // ajuste máximo de avanço por par (em)
 const ARREMATE = 0.18; // comprimento do arremate com arremate = 1 (em)
 
-const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 // Par e ímpar sorteiam de conjuntos disjuntos: n e n+1 nunca coincidem, sem guardar estado. 0 = sem deformação.
 export function variante(seed, ch, n, K) {
@@ -83,7 +83,6 @@ export function encaixe(A, B, contexto, alvo) {
   return v === null || alvo === null ? 0 : contexto * clamp(alvo - v, -LIM_ENCAIXE, LIM_ENCAIXE);
 }
 
-const comprimento = (t) => t.slice(1).reduce((s, p, i) => s + Math.hypot(p[0] - t[i][0], p[1] - t[i][1]), 0);
 
 // Prolonga o último traço para a direita (solta a caneta). Muta g (já é cópia); r = rng próprio.
 export function arrematar(g, arremate, r) {

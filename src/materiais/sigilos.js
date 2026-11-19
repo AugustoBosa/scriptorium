@@ -1,10 +1,9 @@
 // Folha de sigilos (M20): grade de células, um selo, sigilo ou círculo por frase, legenda centrada embaixo.
 import { sigiloPalavra } from '../arcano/sigilo.js';
 import { selo, circuloAleatorio, circulo } from '../arcano/circulo.js';
-import { caixaDe, ret } from '../geo.js';
+import { caixaDe, ret, VAO } from '../geo.js';
 import { escreverEm, CANETAS } from './documento.js';
 
-const VAO = 0.5; // mm: piso de qualquer vão (caneta 0,4 mm)
 const PADRAO = { tipo: 'selo', metodo: 'kamea', colunas: 3, legendas: true, tamanhoLegenda: 3, complexidade: 0.5, caneta: 'preta', seed: 1 };
 
 // Desenha o sigilo da frase dentro do quadrado `q`.

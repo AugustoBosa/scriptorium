@@ -1,6 +1,7 @@
 import { glifo } from './mao.js';
 import { CURSIVAS } from '../fonte.js';
 import { rng } from '../rng.js';
+import { dist, clamp, comprimento } from '../geo.js';
 
 // Ductus: junção de letras cursivas num traço só, adiamento de pingos e retoque.
 // Unidades em em, y para cima. Amplitudes são chute: calibrar no papel.
@@ -17,9 +18,6 @@ const PARES = Object.fromEntries([...'behijklmnprstuvwxyz'].flatMap((c) => [['v'
 const ERRO = 0.02, ERRO_PRESSA = 0.10, VIES = 0.05, TRACINHO = 0.7;
 const RETOQUE = 0.03;
 
-const dist = ([ax, ay], [bx, by]) => Math.hypot(bx - ax, by - ay);
-const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const comprimento = (t) => t.reduce((s, p, i) => (i ? s + dist(t[i - 1], p) : 0), 0);
 const baseDe = (c) => c.normalize('NFD')[0];
 const mediana = (v) => { const s = [...v].sort((a, b) => a - b); return s.length ? s[s.length >> 1] : 0; };
 const ys = (t) => t.map((p) => p[1]);

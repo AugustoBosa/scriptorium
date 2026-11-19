@@ -1,4 +1,5 @@
 import { ROTULOS, AJUDA } from '../ajuda.js';
+import { ret } from '../geo.js';
 
 const megaS = {
   nome: 'megaS', mesaX: 210, mesaY: 210,
@@ -51,7 +52,6 @@ export function cabeNaMaquina(papel, perfil) {
 }
 
 // Parâmetros editáveis. Prévia: desenhos esquemáticos em mm (semEscala nos que não são medidas reais).
-const ret = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]];
 const mesaEJanela = (p) => { const j = janelaDe(p); return { fundo: [ret(j.x0, j.y0, j.x1, j.y1)], foco: [ret(0, 0, p.mesaX, p.mesaY)] }; };
 const cruz = (x, y) => [[[x - 3, y], [x + 3, y]], [[x, y - 3], [x, y + 3]]];
 const haste = (v) => ({ fundo: [[[-15, 0], [15, 0]]], foco: [[[0, -v], [0, -v - 20]]] }); // linha do papel + caneta com a ponta a v mm acima

@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PAPEIS, papel, deTracos, validarDocumento } from '../src/materiais/documento.js';
-import { FOLHAS, folha } from '../src/materiais/scroll.js';
 import { PAGINAS } from '../src/layout.js';
 
 test('PAPEIS tem as 8 chaves com as dimensões da tabela', () => {
@@ -23,13 +22,6 @@ test('papel() personalizado exige dimensões e nome desconhecido lança erro', (
   assert.equal(p.altura, 150);
   assert.throws(() => papel('personalizado'));
   assert.throws(() => papel('B9'));
-});
-
-test('FOLHAS mantém o formato [l, a, m] de A5 a A8 e folha() não mudou', () => {
-  assert.deepEqual(FOLHAS, { A5: [148, 210, 12], A6: [105, 148, 9], A7: [74, 105, 6], A8: [52, 74, 4] });
-  assert.deepEqual(folha('A6', true, 5), {
-    largura: 148, altura: 105, margens: { topo: 5, dir: 5, base: 5, esq: 5 },
-  });
 });
 
 test('PAGINAS de layout.js bate com PAPEIS em A4 e A5', () => {

@@ -1,9 +1,8 @@
 // Sigilo de palavra (M19): kamea, roda e fusão. Não confundir com `sigilo(magia)` de alfabeto.js.
-import { circulo, recortarCaixa, recortarRaio, limpar, afastar, comprimento } from '../geo.js';
+import { VAO, circulo, recortarCaixa, recortarRaio, limpar, afastar, comprimento } from '../geo.js';
 import { rng } from '../rng.js';
 import { cifrar, gerarAlfabeto, LETRAS } from './alfabeto.js';
 
-const VAO = 0.5; // mm: piso de qualquer vão (caneta 0,4 mm)
 
 export const P = { frase: 'sigilo', metodo: 'kamea', ordem: 3, reduzir: true };
 

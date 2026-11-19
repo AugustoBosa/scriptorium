@@ -10,7 +10,7 @@ import { quebrar } from './textos.js';
 
 export const MAO_GUIA = { ...NEUTRA, base: [{ fonte: 'HersheySans1', peso: 1 }] }; // letra simples e sem variação
 export const TAM = 2.5; // mm: cabeçalho, texto a copiar e rótulos
-export const R = 3; // mm: raio da marca de canto
+const R = 3; // mm: raio da marca de canto
 export const VARIANTES = 2; // folhas de letras soltas por modo
 const LARG_CHAR = 1.1; // ponytail: largura média de uma letra escrita ≈ 1,1 × altura do x; calibrar com as primeiras fotos
 
