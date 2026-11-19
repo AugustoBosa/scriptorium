@@ -1,4 +1,4 @@
-// Oficinas de scroll e grimório: estado, painéis e composição. O shell (app.js) monta os grupos e chama compor().
+// Oficina Magias (pergaminho avulso ou grimório corrido): estado, painéis e composição. O shell (app.js) monta os grupos e chama compor().
 import { resolver, novoPersonagem, validar } from '../personagem.js';
 import { restaurar } from './personagem.js';
 import { NEUTRA } from '../motor/mao.js';
@@ -29,7 +29,7 @@ function el(tag, props = {}, ...filhos) {
 export function criar() {
   const estado = {
     magias: [],            // catálogo carregado de dados/magias.json ou importado
-    selecionadas: [],      // cópias editáveis das magias do scroll/grimório
+    selecionadas: [],      // cópias editáveis das magias escolhidas
     atual: 0,              // índice da magia em edição
     folhaNome: 'A6', paisagem: false, margem: FOLHAS.A6[2],
     cfg: structuredClone(CFG_PADRAO),
@@ -39,7 +39,7 @@ export function criar() {
     fontes: {},
     // usados pelos painéis de exportação (ui/exportar.js) e pelo shell
     perfil: structuredClone(PERFIS.megaS), perfilNome: 'megaS', otimizar: true, trajeto: false,
-    paginaAtual: 0, resultado: null, pagina: null, oficina: 'scroll', doc: null,
+    paginaAtual: 0, resultado: null, pagina: null, oficina: 'magias', doc: null,
   };
 
   try {
@@ -128,7 +128,7 @@ export function criar() {
     for (const c of [busca, nivel, classe]) c.addEventListener('input', filtrar);
 
     raiz.append(semDados, busca, el('div', { className: 'linha-botoes' }, nivel, classe), achados,
-      el('h3', {}, 'No scroll / grimório'), lista,
+      el('h3', {}, 'Escolhidas'), lista,
       el('div', { className: 'linha-botoes' },
         el('button', { type: 'button', onclick: () => adicionar(magiaVazia()) }, 'Magia em branco'),
         el('button', { type: 'button', onclick: () => { if (!confirm(`Limpar as ${estado.selecionadas.length} magias da lista?`)) return; estado.selecionadas = []; estado.atual = 0; aoMudar(); } }, 'Limpar lista')));
@@ -201,10 +201,11 @@ export function criar() {
       }, aoMudar),
       controle(PD.paisagem, ligar(estado, 'paisagem', ctx), aoMudar),
       controle(PD.margem, ligar(estado, 'margem', ctx), aoMudar),
-      ...['completo', 'tamanho', 'minimo', 'entrelinha', 'sigilo', 'moldura'].map((c) => controle(PS[c], ligar(cfg, c, ctx), aoMudar)),
+      ...['porPagina', 'separador', 'completo', 'tamanho', 'minimo', 'entrelinha', 'sigilo', 'moldura'].map((c) => controle(PS[c], ligar(cfg, c, ctx), aoMudar)),
     ];
     raiz.append(...ctrls.map((c) => c.el));
-    return () => ctrls.forEach((c) => c.atualizar());
+    const sep = ctrls.find((c) => c.el.dataset.chave === 'separador');
+    return () => { ctrls.forEach((c) => c.atualizar()); sep.el.hidden = estado.cfg.porPagina; };
   }
 
   // ---------- painel Escrita ----------
@@ -354,7 +355,6 @@ export function criar() {
   let primeira = true;
   async function entrar(oficina) {
     estado.oficina = oficina;
-    estado.cfg.porPagina = oficina === 'scroll';
     if (!primeira) return;
     primeira = false;
     try {

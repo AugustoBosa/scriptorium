@@ -106,3 +106,14 @@ test('sigilo desenhado à mão substitui o gerado', () => {
   const b = comporGrimorio([bola], { ...ctx, sigilos: { [bola.id]: meu } }, { moldura: false, completo: 'nao' }, folha('A6'));
   assert.ok(b.paginas[0].length < a.paginas[0].length);
 });
+
+test('grimório corrido com separador desenha um enfeite entre as magias, e nenhum no modo por página', () => {
+  const duas = [1, 2].map((i) => ({ ...bola, id: 's' + i }));
+  const cfg = { tamanho: 3, completo: 'nao', sigilo: 0, moldura: false };
+  const sem = comporGrimorio(duas, ctx, { ...cfg, porPagina: false }, folha('A5'));
+  const com = comporGrimorio(duas, ctx, { ...cfg, porPagina: false, separador: 'losango' }, folha('A5'));
+  assert.equal(com.paginas.length, 1);
+  assert.equal(com.paginas[0].length, sem.paginas[0].length + 3); // losango = 2 linhas + o losango
+  const porPag = comporGrimorio(duas, ctx, { ...cfg, porPagina: true, separador: 'losango' }, folha('A5'));
+  assert.equal(porPag.paginas.flat().length, sem.paginas.flat().length);
+});

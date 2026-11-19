@@ -36,7 +36,7 @@ test('sigilos: 4 frases desenham 4 sigilos ou mais com legendas', async ({ page 
 })
 
 test('trocar de oficina não perde a variação do grimório', async ({ page }) => {
-  await abrir(page, 'grimorio')
+  await abrir(page, 'magias')
   await page.locator('#grupos summary', { hasText: 'Escrita' }).click()
   const sel = page.locator('#grupos label', { hasText: /^Variação/ }).locator('select')
   const opcoes = await sel.locator('option').allTextContents()
@@ -46,7 +46,7 @@ test('trocar de oficina não perde a variação do grimório', async ({ page }) 
   await sel.selectOption({ label: outra })
   await page.locator('nav.oficinas a[href="#carta"]').click()
   await expect(page.locator('#pag-info')).toBeVisible()
-  await page.locator('nav.oficinas a[href="#grimorio"]').click()
+  await page.locator('nav.oficinas a[href="#magias"]').click()
   expect(await sel.evaluate((s) => s.selectedOptions[0].textContent)).toBe(outra)
 })
 

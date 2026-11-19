@@ -4,6 +4,7 @@ import { glifo } from '../motor/mao.js';
 import { blocos } from '../magia.js';
 import { cifrar, sigilo, moldura, LETRAS } from '../arcano/alfabeto.js';
 import { PAPEIS, papel, CANETAS } from './documento.js';
+import { separador } from '../ornamento/filigrana.js';
 
 // [largura, altura, margem] em mm.
 export const FOLHAS = Object.fromEntries(['A5', 'A6', 'A7', 'A8'].map((n) => [n, PAPEIS[n]]));
@@ -15,7 +16,8 @@ export const CFG_PADRAO = {
   moldura: true,
   cifrar: { nome: false, ficha: false, efeito: false },
   completo: 'auto',       // 'auto' = texto completo se couber, senão resumo | 'sim' | 'nao'
-  porPagina: true,        // true = um scroll por página; false = grimório, as magias fluem
+  porPagina: true,        // true = um pergaminho por página; false = grimório, as magias fluem
+  separador: 'nenhum',    // entre magias corridas: 'nenhum' | 'losango' | 'asteriscos' | 'onda'
   chave: false,           // acrescenta a página com a chave do alfabeto
 };
 
@@ -95,6 +97,9 @@ function chave(ctx, cfg, pagina) {
   return pags;
 }
 
+// Faixa do separador logo abaixo do fim da magia anterior, na largura útil.
+const faixaSeparador = (p, y, tam) => ({ x: p.margens.esq, y: y + tam * 0.5, l: p.largura - p.margens.esq - p.margens.dir, a: tam * 1.2 });
+
 // Devolve { paginas: [traços], avisos, modos: { id: { tamanho, completo, sigilo, cabe } } }.
 export function paginasGrimorio(magias, ctx, cfgParcial, pagina) {
   const cfg = { ...CFG_PADRAO, ...cfgParcial, cifrar: { ...CFG_PADRAO.cifrar, ...cfgParcial?.cifrar } };
@@ -109,7 +114,13 @@ export function paginasGrimorio(magias, ctx, cfgParcial, pagina) {
     if (!modo.cabe) avisos.push(`${m.nome}: não coube em uma página nem no tamanho mínimo`);
     else if (!modo.sigilo && cfg.sigilo > 0) avisos.push(`${m.nome}: sem sigilo para caber na página`);
     const nova = cfg.porPagina || paginas.length === 0;
-    let r = nova ? null : comporMagia(m, ctx, cfg, pagina, y + cfg.tamanho * 1.5, modo);
+    const sep = !nova && cfg.separador !== 'nenhum' && faixaSeparador(pagina, y, cfg.tamanho);
+    let r = nova ? null : comporMagia(m, ctx, cfg, pagina, sep ? sep.y + sep.a + cfg.tamanho * 0.8 : y + cfg.tamanho * 1.5, modo);
+    if (r && r.pags.length === 1 && sep) {
+      const t = separador(sep, { separador: cfg.separador }, `${ctx.seed}|${m.id}`);
+      for (const x of t) MOLDURA.add(x);
+      paginas[paginas.length - 1].push(...t);
+    }
     if (!r || r.pags.length > 1) { // não cabe no resto da página: começa em página nova
       r = comporMagia(m, ctx, cfg, pagina, margens.topo, modo);
       paginas.push(...r.pags);
@@ -149,12 +160,21 @@ const util = (p) => ({ l: p.largura - p.margens.esq - p.margens.dir, a: p.altura
 const pautas = (p, n) => Array.from({ length: n }, (_, i) => { const y = p.margens.topo + ((i + 0.5) * util(p).a) / n; return [[p.margens.esq, y], [p.largura - p.margens.dir, y]]; });
 const cif = (v, ctx) => (v ? ctx.escrever(ctx.maoArcana, cifrar('magia')) : ctx.escrever(ctx.mao, 'magia'));
 const P = (chave, grupo, nivel, rotulo, ajuda, previa, resto) => ({ chave, grupo, nivel, rotulo, ajuda, previa, ...resto });
+// Prévia de disposição: blocos de pauta (uma magia = 3 linhas) em uma ou duas folhas lado a lado.
+const blocoMagia = (x, y) => [[[x + 6, y], [x + 24, y]], [[x + 3, y + 5], [x + 27, y + 5]], [[x + 3, y + 8], [x + 22, y + 8]]];
+const SEP = { x: 3, y: 15, l: 24, a: 4 };
 export const PARAMS = [
+  P('porPagina', 'disposicao', 'basico', 'uma magia por página', 'Ligado: cada magia ocupa uma folha própria, como um pergaminho avulso. Desligado: as magias seguem uma depois da outra, como num grimório.',
+    (v) => (v ? [ret(30, 42), ...blocoMagia(0, 6), ...[ret(30, 42), ...blocoMagia(0, 6)].map((t) => t.map(([x, y]) => [x + 34, y]))]
+      : [ret(30, 42), ...blocoMagia(0, 6), ...blocoMagia(0, 24)]), { tipo: 'marca', padrao: CFG_PADRAO.porPagina, semEscala: true }),
+  P('separador', 'disposicao', 'basico', 'separador entre magias', 'Enfeite horizontal entre uma magia e a seguinte, quando as magias seguem na mesma folha.',
+    (v) => [ret(30, 42), ...blocoMagia(0, 4), ...blocoMagia(0, 25), ...(v === 'nenhum' ? [] : separador(SEP, { separador: v }, 1))],
+    { tipo: 'opcao', padrao: CFG_PADRAO.separador, semEscala: true, opcoes: [{ valor: 'nenhum', rotulo: 'nenhum' }, { valor: 'losango', rotulo: 'losango' }, { valor: 'asteriscos', rotulo: 'asteriscos' }, { valor: 'onda', rotulo: 'onda' }] }),
   P('tamanho', 'folha', 'basico', 'tamanho da letra', 'Altura das letras da magia, em mm. O programa diminui a letra até o mínimo se a magia não couber na folha.',
     (v, ctx) => ctx.escrever(ctx.mao, 'magia', { tamanho: v }), { tipo: 'faixa', min: 2, max: 8, passo: 0.25, padrao: CFG_PADRAO.tamanho, unidade: 'mm' }),
   P('minimo', 'folha', 'avancado', 'letra mínima', 'Menor altura de letra permitida ao encolher uma magia para caber na folha. Abaixo disso o texto vira resumo.',
     (v, ctx) => ctx.escrever(ctx.mao, 'magia', { tamanho: v }), { tipo: 'faixa', min: 1.5, max: 5, passo: 0.25, padrao: CFG_PADRAO.minimo, unidade: 'mm' }),
-  P('entrelinha', 'folha', 'avancado', 'entrelinha do scroll', 'Distância entre as linhas do texto da magia, de 1,1 a 2,2. Valores menores deixam a magia mais compacta e ajudam a caber.',
+  P('entrelinha', 'folha', 'avancado', 'entrelinha da magia', 'Distância entre as linhas do texto da magia, de 1,1 a 2,2. Valores menores deixam a magia mais compacta e ajudam a caber.',
     (v, ctx) => ctx.escrever(ctx.mao, 'magia\nruna', { tamanho: 4, entrelinha: v }), { tipo: 'faixa', min: 1.1, max: 2.2, passo: 0.05, padrao: CFG_PADRAO.entrelinha }),
   P('sigilo', 'folha', 'basico', 'tamanho do sigilo', 'Tamanho do sigilo desenhado acima do texto, como fração da folha. 0 = sem sigilo. O sigilo codifica nível, escola e componentes.',
     (v, ctx) => {

@@ -4,8 +4,7 @@ import { especime } from './especime.js';
 
 const OFICINAS = [
   ['carta', 'Carta', 'Querida Elena,', 'carta, nota ou diário'],
-  ['scroll', 'Scroll', 'Bola de Fogo', 'uma magia por folha'],
-  ['grimorio', 'Grimório', 'Livro de magias', 'magias em sequência'],
+  ['magias', 'Magias', 'Bola de Fogo', 'pergaminho ou grimório'],
   ['livro', 'Livro', 'Capítulo I', 'colunas e capitular'],
   ['sigilos', 'Sigilos', 'Selo e sigilo', 'frases em selos'],
 ];

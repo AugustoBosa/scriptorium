@@ -53,3 +53,11 @@ test('Básico na aba Personagens ainda mostra espaçamento', async ({ page }) =>
   await page.goto('index.html#personagens')
   await expect(page.locator('#vista-personagens [data-chave="espacamento"]').first()).toBeVisible()
 })
+
+for (const [antiga, porPagina] of [['scroll', true], ['grimorio', false]]) {
+  test(`#${antiga} redireciona para #magias (uma por página: ${porPagina})`, async ({ page }) => {
+    await page.goto('index.html#' + antiga)
+    await page.waitForURL(/#magias$/)
+    await expect(page.locator('#painel .controle[data-chave="porPagina"] input')).toBeChecked({ checked: porPagina })
+  })
+}

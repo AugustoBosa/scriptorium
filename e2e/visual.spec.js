@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const OFICINAS = ['carta', 'scroll', 'grimorio', 'livro', 'sigilos']
+const OFICINAS = ['carta', 'magias', 'livro', 'sigilos']
 
 async function abrir(page, id) {
   await page.goto('index.html#' + id)

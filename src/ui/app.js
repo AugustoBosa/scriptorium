@@ -17,10 +17,11 @@ import { montar as montarMesa, desenharMesa } from './mesa.js';
 import { montar as montarInicio } from './inicio.js';
 import { montar as montarPersonagens } from './personagens.js';
 
-const OFICINAS = { carta: 'escrita', livro: 'escrita', scroll: 'grimorio', grimorio: 'grimorio', sigilos: 'sigilos' };
+const OFICINAS = { carta: 'escrita', livro: 'escrita', magias: 'grimorio', sigilos: 'sigilos' };
+const ANTIGAS = { scroll: true, grimorio: false }; // rota antiga → porPagina em #magias
 const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens };
-const NOMES = { inicio: 'Início', personagens: 'Personagens', carta: 'Carta', scroll: 'Scroll', grimorio: 'Grimório', livro: 'Livro', sigilos: 'Sigilos' };
-const VAZIO = { grimorio: 'Escolha uma magia na lista.', scroll: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.' };
+const NOMES = { inicio: 'Início', personagens: 'Personagens', carta: 'Carta', magias: 'Magias', livro: 'Livro', sigilos: 'Sigilos' };
+const VAZIO = { magias: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.' };
 const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto', 'mesa'];
 const $ = (id) => document.getElementById(id);
 
@@ -95,7 +96,7 @@ function criarSigilos() {
 const FABRICAS = { escrita: criarEscrita, grimorio: criarGrimorio, sigilos: criarSigilos };
 const insts = {}; // nome → instância
 const vistas = new Map(); // instância → { detalhes, barra, atualizar: [] }
-let atual = null, fontesCarregadas = null, ticket = 0, vindoDePagina = false;
+let atual = null, fontesCarregadas = null, ticket = 0, vindoDePagina = false, porPaginaPedido = null;
 const paginasAtualizar = {}; // id → atualizar() da página, montada uma vez
 
 // ---- render ----
@@ -183,6 +184,7 @@ function montarVista(inst) {
 async function rotear() {
   if (!fontesCarregadas) return;
   const id = location.hash.slice(1), minha = ++ticket;
+  if (id in ANTIGAS) { porPaginaPedido = ANTIGAS[id]; location.replace('#magias'); return; }
   if (!OFICINAS[id] && !PAGINAS[id]) { location.replace('#inicio'); return; }
   const marcar = () => {
     document.querySelectorAll('nav.oficinas a').forEach((a) => (a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
@@ -203,6 +205,7 @@ async function rotear() {
   if (vindoDePagina) { try { pPersonagem.restaurar(inst.estado); } catch { /* mantém o personagem atual */ } vindoDePagina = false; }
   if (!atual) { inst.estado.fontes = fontesCarregadas; inst.estado.nomesFontes = FONTES; }
   inst.estado.oficina = id;
+  if (porPaginaPedido != null && inst.estado.cfg) { inst.estado.cfg.porPagina = porPaginaPedido; porPaginaPedido = null; }
   await inst.entrar(id);
   if (minha !== ticket) return;
   if (!vistas.has(inst)) montarVista(inst);

@@ -14,12 +14,12 @@ test('sem hash vai para #inicio com 5 cartões de oficina com miniatura', async 
   await page.goto('index.html')
   await page.waitForURL(/#inicio$/)
   const cartoes = page.locator('#vista-inicio .grade').first().locator('a.cartao')
-  await expect(cartoes).toHaveCount(5)
-  for (let i = 0; i < 5; i++) await expect(cartoes.nth(i).locator('svg path').first()).toBeAttached()
+  await expect(cartoes).toHaveCount(4)
+  for (let i = 0; i < 4; i++) await expect(cartoes.nth(i).locator('svg path').first()).toBeAttached()
   expect(erros).toEqual([])
 })
 
-for (const id of ['carta', 'scroll', 'grimorio', 'livro', 'sigilos']) {
+for (const id of ['carta', 'magias', 'livro', 'sigilos']) {
   test(`cartão ${id} leva a #${id}`, async ({ page }) => {
     await page.goto('index.html#inicio')
     await page.locator(`#vista-inicio a.cartao[href="#${id}"]`).click()
