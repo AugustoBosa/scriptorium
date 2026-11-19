@@ -1,12 +1,33 @@
 import './inicio.css';
-import { novoPersonagem, validar } from '../personagem.js';
+import { novoPersonagem, validar, resolver } from '../personagem.js';
 import { especime } from './especime.js';
+import { desenhar } from './previa.js';
+import { papel } from '../materiais/documento.js';
+import { comporCarta } from '../materiais/carta.js';
+import { comporLivro } from '../materiais/livro.js';
+import { comporGrimorio } from '../materiais/scroll.js';
+import { comporSigilos } from '../materiais/sigilos.js';
+import { parsearNotas } from '../materiais/notas.js';
+import { EXEMPLOS } from '../materiais/exemplos.js';
+import { gerarAlfabeto } from '../arcano/alfabeto.js';
+import { magiaVazia } from '../magia.js';
+import { NEUTRA } from '../motor/mao.js';
 
+const MAGIA = { ...magiaVazia(), id: 'exemplo', nome: 'Bola de Fogo', nivel: 3, linhaNivel: 'Evocação de 3º nível', alcance: '45 m', comp: 'V, S, M',
+  duracao: 'Instantânea', resumo: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.', texto: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.' };
+
+// Cada oficina: rota, nome, descrição e a miniatura real feita pelo próprio compositor, com o texto de exemplo.
 const OFICINAS = [
-  ['carta', 'Carta', 'Querida Elena,', 'carta, nota ou diário'],
-  ['magias', 'Magias', 'Bola de Fogo', 'pergaminho ou grimório'],
-  ['livro', 'Livro', 'Capítulo I', 'colunas e capitular'],
-  ['sigilos', 'Sigilos', 'Selo e sigilo', 'frases em selos'],
+  ['carta', 'Carta', 'Cartas, anotações e diários. Notas na margem, palavras riscadas e sublinhadas, numa segunda caneta.',
+    (ctx) => comporCarta(EXEMPLOS.anotacao, ctx, { papel: papel('A7'), tamanho: 3.5, tipo: 'anotacao' })],
+  ['livro', 'Livro', 'Páginas de livro em colunas, com título corrente, número de página, capitular e borda.',
+    (ctx) => comporLivro(parsearNotas(EXEMPLOS.livro).limpo, ctx, { papel: papel('A7'), tamanho: 2.5, entrelinha: 1.5, colunas: 1, titulo: 'Os sete copistas',
+      capitular: { estilo: 'lombarda', linhas: 3 }, borda: { estilo: 'linhas', largura: 4 } })],
+  ['magias', 'Magias', 'Magias de D&D em pergaminhos avulsos ou num grimório corrido, com sigilo, moldura e alfabeto arcano.',
+    (ctx) => comporGrimorio([MAGIA], { ...ctx, fontes: { ...ctx.fontes, arcano: gerarAlfabeto({ seed: 1, curva: 0.4, complexidade: 0.5 }) },
+      maoArcana: { ...NEUTRA, base: [{ fonte: 'arcano', peso: 1 }], seed: 1 }, sigilos: {}, seed: 1 }, { papel: papel('A7'), tamanho: 3, completo: 'nao' })],
+  ['sigilos', 'Sigilos', 'Frases viram selos, sigilos e círculos mágicos, arrumados em grade numa folha.',
+    (ctx) => comporSigilos('luz\nmar\nsol\nlua', ctx, { papel: papel('A7'), tipo: 'selo', colunas: 2, legendas: true, seed: 1 })],
 ];
 
 function ler(chave, padrao) {
@@ -15,6 +36,15 @@ function ler(chave, padrao) {
 function gravarAtual(p, variacao) {
   try { localStorage.setItem('writer.personagem', JSON.stringify({ personagem: p, variacao })); } catch {}
 }
+// Desenha a miniatura traço a traço (CSS anima stroke-dashoffset; sem animação com prefers-reduced-motion).
+function tracar(f) {
+  const ps = [...f.querySelectorAll('path')];
+  ps.forEach((p, i) => { p.setAttribute('pathLength', '1'); p.style.animationDelay = `${(i / ps.length) * 1.4}s`; });
+  f.classList.remove('tracando');
+  void f.offsetWidth; // reinicia a animação
+  f.classList.add('tracando');
+}
+
 function el(tag, classe, texto) {
   const e = document.createElement(tag);
   if (classe) e.className = classe;
@@ -65,13 +95,25 @@ export function montar(raiz, { fontes }) {
     trocar.href = '#personagens';
     mao.replaceChildren('Mão atual: ', el('strong', null, p.nome), variacao ? ` · ${variacao}` : '', ' ', trocar);
 
-    gradeOf.replaceChildren(...OFICINAS.map(([id, nome, frase, desc]) => {
-      const a = el('a', 'cartao');
+    const escrita = resolver(p, variacao || null);
+    const ctx = { fontes, mao: escrita, maoNotas: escrita, personagens: { texto: p.nome, notas: p.nome } };
+    const cartao = (id, nome, desc, desenho) => {
+      const a = el('a', `cartao oficina ${id}`);
       a.href = `#${id}`;
-      miniatura(a, p, variacao, frase);
-      a.append(el('span', 'nome', nome), el('span', 'desc', desc));
+      const f = el('div', 'folha');
+      a.append(f, el('span', 'nome', nome), el('span', 'desc', desc));
+      desenho(f);
+      tracar(f);
+      a.addEventListener('pointerenter', () => tracar(f));
       return a;
-    }));
+    };
+    gradeOf.replaceChildren(
+      ...OFICINAS.map(([id, nome, desc, compor]) => cartao(id, nome, desc, (f) => {
+        try { desenhar(f, compor(ctx)); f.style.maxWidth = ''; } catch { especime(f, fontes, p, variacao, nome); }
+      })),
+      cartao('personagens', 'Personagens', 'Crie a mão de cada personagem: fontes, inclinação, pressa e as variações do jeito de escrever.',
+        (f) => especime(f, fontes, p, variacao, p.nome || 'Personagem')),
+    );
 
     const salvos = Object.values(ler('writer.personagens', {})).filter((s) => validar(s).length === 0).slice(0, 7);
     faixa.replaceChildren(...salvos.map((s) => {

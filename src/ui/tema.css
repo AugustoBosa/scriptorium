@@ -29,6 +29,12 @@
   --contorno:   light-dark(#85714f, #8f7d5c); /* borda de controle (>= 3:1) */
   --regua:      light-dark(#cdbd9b, #3d3225); /* pautas e divisórias (ornamento) */
   --foco:       light-dark(#1d4f91, #f0b84a); /* lápis-lazúli de dia, chama à noite */
+  /* acento de cada oficina (cartões da home), AA sobre o pergaminho nos dois temas */
+  --acento-carta:       light-dark(#96231a, #e8826b);
+  --acento-livro:       light-dark(#1d4f91, #8fb4ea);
+  --acento-magias:      light-dark(#6a2c8a, #c9a0e6);
+  --acento-sigilos:     light-dark(#2f6a3a, #8fd19c);
+  --acento-personagens: light-dark(#7a5a12, #e6c36a);
   --sombra-cor: light-dark(rgb(40 28 12 / .20), rgb(0 0 0 / .60));
 
   /* dentro da folha e das miniaturas do popover: fixos nos dois temas (a folha é sempre clara) */
@@ -104,9 +110,15 @@ figure { margin: 0; min-width: 0; }
 
 /* cabeçalho */
 header { display: flex; align-items: center; gap: var(--e5); min-height: 56px; padding: 0 var(--e4); background: var(--pergaminho); border-bottom: 3px double var(--regua); }
-nav.oficinas { display: flex; gap: var(--e4); margin-right: auto; }
+h1 { margin-right: auto; }
+h1 a { color: inherit; text-decoration: none; }
+#menu { min-width: var(--alvo); min-height: var(--alvo); font-size: 1.4rem; line-height: 1; }
+/* menu ☰: popover nativo (Esc e clique fora fecham), abre abaixo do cabeçalho */
+nav.oficinas[popover] { position: fixed; inset: 60px auto auto var(--e4); margin: 0; padding: var(--e3) var(--e4); min-width: 220px;
+  flex-direction: column; gap: var(--e2); background: var(--pergaminho); color: var(--tinta); border: 1px solid var(--contorno); border-radius: var(--raio); box-shadow: 0 8px 24px var(--sombra-cor); }
+nav.oficinas[popover]:popover-open { display: flex; }
 nav.oficinas a { font-size: var(--t-grupo); color: var(--tinta); text-decoration: none; padding: var(--e1) 0; border-bottom: 2px solid transparent; }
-nav.oficinas a.sep { margin-left: var(--e3); padding-left: var(--e4); border-left: 1px solid var(--regua); }
+nav.oficinas a.sep { margin-top: var(--e2); padding-top: var(--e3); border-top: 1px solid var(--regua); }
 nav.oficinas a:hover { border-bottom-color: var(--regua); }
 nav.oficinas a[aria-current="page"] { color: var(--rubrica); border-bottom-color: var(--rubrica); }
 #tema { min-width: var(--alvo); }
@@ -194,7 +206,6 @@ dialog::backdrop { background: var(--sombra-cor); }
 
 @media (max-width: 800px) {
   header { flex-wrap: wrap; gap: var(--e2) var(--e4); padding-block: var(--e2); }
-  nav.oficinas { order: 3; flex-basis: 100%; flex-wrap: wrap; gap: var(--e2) var(--e4); margin-right: 0; }
   #tema { margin-left: auto; }
   main { grid-template-columns: minmax(0, 1fr); grid-template-areas: "previa" "painel" "exportar"; }
   aside#painel { position: static; max-height: none; overflow: visible; }

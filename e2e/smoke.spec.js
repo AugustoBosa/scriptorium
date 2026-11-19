@@ -40,13 +40,22 @@ test('Avançado mostra parâmetros avançados; Básico os esconde', async ({ pag
   await expect(esp).toBeHidden()
 })
 
-test('nav tem Início e Personagens e aria-current acompanha a rota', async ({ page }) => {
-  await page.goto('index.html')
+test('menu ☰: some na home, abre nas oficinas, marca a rota atual e fecha ao navegar', async ({ page }) => {
+  await page.goto('index.html#inicio')
+  await expect(page.locator('#menu')).toBeHidden()
+  await page.goto('index.html#carta')
+  await page.waitForSelector('#previa svg')
   const nav = page.getByRole('navigation', { name: 'Seções' })
-  await expect(nav.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
+  await expect(nav).toBeHidden()
+  await page.locator('#menu').click()
+  await expect(nav.getByRole('link', { name: 'Carta' })).toHaveAttribute('aria-current', 'page')
   await nav.getByRole('link', { name: 'Personagens' }).click()
+  await page.waitForURL(/#personagens$/)
+  await expect(nav).toBeHidden()
+  await page.locator('#menu').click()
   await expect(nav.getByRole('link', { name: 'Personagens' })).toHaveAttribute('aria-current', 'page')
-  await expect(nav.getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current', 'page')
+  await page.keyboard.press('Escape')
+  await expect(nav).toBeHidden()
 })
 
 test('Básico na aba Personagens ainda mostra espaçamento', async ({ page }) => {

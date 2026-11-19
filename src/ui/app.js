@@ -192,6 +192,8 @@ async function rotear() {
   const marcar = () => {
     document.querySelectorAll('nav.oficinas a').forEach((a) => (a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     document.title = `Scriptorium — ${NOMES[id]}`;
+    $('menu').hidden = id === 'inicio'; // na home os cartões são a navegação
+    if ($('nav-oficinas').matches(':popover-open')) $('nav-oficinas').hidePopover();
   };
   document.querySelector('main').hidden = !!PAGINAS[id];
   for (const p in PAGINAS) $('vista-' + p).hidden = p !== id;

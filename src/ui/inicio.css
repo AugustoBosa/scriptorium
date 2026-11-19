@@ -28,3 +28,24 @@
   #vista-inicio .faixa { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
   #vista-inicio .faixa .cartao { flex: 0 0 160px; scroll-snap-align: start; }
 }
+
+/* Cartões das oficinas: acento próprio, descrição e miniatura desenhada traço a traço. */
+#vista-inicio .oficina { border-top: 4px solid var(--acento, var(--regua)); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+#vista-inicio .oficina:hover, #vista-inicio .oficina:focus-visible { transform: translateY(-3px); box-shadow: 0 6px 18px var(--sombra-cor); }
+#vista-inicio .oficina .nome { color: var(--acento, var(--tinta)); }
+#vista-inicio .oficina .desc { font-size: var(--t-ui); line-height: 1.4; }
+#vista-inicio .oficina .folha { display: grid; place-items: center; aspect-ratio: 3 / 4; overflow: hidden; }
+#vista-inicio .oficina .folha svg { width: 100%; height: 100%; }
+#vista-inicio .oficina.personagens .folha { aspect-ratio: 3 / 1; }
+#vista-inicio .carta { --acento: var(--acento-carta); }
+#vista-inicio .livro { --acento: var(--acento-livro); }
+#vista-inicio .magias { --acento: var(--acento-magias); }
+#vista-inicio .sigilos { --acento: var(--acento-sigilos); }
+#vista-inicio .personagens { --acento: var(--acento-personagens); }
+#vista-inicio .tracando path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: tracar .5s ease-out forwards; }
+@keyframes tracar { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  #vista-inicio .tracando path { animation: none; stroke-dashoffset: 0; }
+  #vista-inicio .oficina { transition: none; }
+  #vista-inicio .oficina:hover { transform: none; }
+}
