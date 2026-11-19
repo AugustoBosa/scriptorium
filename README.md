@@ -14,9 +14,9 @@ Cada oficina é uma rota do `index.html`: `#carta`, `#livro`, `#magias`, `#sigil
 
 Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, painel próprio, Mesa e folha, Máquina. Cada tipo abre com um texto de exemplo e um visual padrão próprios.
 
-- **Carta** (`#carta`): carta, anotação ou diário. Marcações no texto: `{nota: ...}`, `{~errado~>certo}`, `{_sublinhar_}`, `{o:circular}`. As notas vão para uma camada própria (margem, risco, sublinhado, laço), com caneta e personagem próprios.
+- **Carta** (`#carta`): carta, anotação ou diário. Marcações no texto: `{nota: ...}`, `{~errado~>certo}`, `{_sublinhar_}`, `{o:circular}`. As notas vão para uma camada própria (margem, risco, sublinhado, laço), com caneta e personagem próprios. Sem posição, a nota vai para a margem de notas (anotação e diário) ou para o lugar livre mais perto da palavra, ligada por seta. `{nota@direita: ...}` fixa o lado (esquerda, direita, acima, abaixo) e `{nota@x,y: ...}` fixa a posição em mm; o painel Notas lista as notas, e arrastar a nota na prévia grava a posição.
 - **Magias** (`#magias`): magias de D&D. Ligado "uma magia por página", cada magia vira um pergaminho avulso; desligado, as magias seguem como num grimório, com ou sem separador decorado entre elas (losango, asteriscos ou onda). O bloco marcado sai em alfabeto arcano, com chave opcional. O sigilo de cada magia codifica nível, escola, concentração, ritual e componentes.
-- **Livro** (`#livro`): colunas, título corrente, numeração, reclamo, rubrica, capitular e borda. Usa o mesmo texto da Carta.
+- **Livro** (`#livro`): colunas, título corrente, numeração, reclamo, rubrica, capitular e borda. Usa o mesmo texto da Carta e aceita as mesmas marcações: notas soltas com seta, correções, sublinhados, laços e rabiscos nas margens, sem tocar a paginação, a borda nem a capitular.
 - **Sigilos** (`#sigilos`): cada frase vira um selo, um sigilo (método kamea, roda ou fusão) ou um círculo, com legenda. Os sigilos ficam em grade numa folha.
 
 ## Interface
@@ -25,7 +25,8 @@ Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, 
 - **Prévia viva**: cada controle mostra uma amostra ao passar o mouse ou focar. O que o controle altera aparece em vermelho; o resto, em tinta. Os controles de valor têm régua e escala de 10 mm, e os valores têm no máximo 2 casas depois da vírgula.
 - **Personagens**: galeria com espécime; a mão em uso vale para todas as oficinas.
 - **Temas**: claro e vela (escuro).
-- **Salvos no navegador** (localStorage): personagens (`writer.personagens`), perfil de máquina (`writer.perfil`) e preferências de tema e nível (`writer.ui`). Nada vai para servidor.
+- **Salvos no navegador**: personagens (`writer.personagens`), perfil de máquina (`writer.perfil`), preferências (`writer.ui`) e o trabalho em andamento de cada oficina (`trabalho.escrita`, `trabalho.sigilos`, `grimorio.estado`), no localStorage. No IndexedDB (`scriptorium`): os materiais da biblioteca e o `magias.json` importado. Nada vai para servidor.
+- **Biblioteca** (`#biblioteca`): "Salvar na biblioteca" guarda o trabalho com nome (oficina, texto ou magias, ajustes e personagem). A aba abre, baixa (.json), renomeia e apaga; "Baixar cópia de tudo" leva personagens e materiais para outro navegador. A home mostra os mais recentes.
 - **Trajeto**: "mostrar trajeto" na prévia mostra a viagem no ar, início, fim e ordem de cada traço.
 - **Texto**: pode ser digitado ou importado de um `.txt` de até 200 KB.
 

@@ -13,6 +13,8 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 
 - Reorganização: oficina Magias (pergaminho + grimório, separador entre magias), oficinas com a mesma ordem de painéis e a mesma lista de papéis, texto de exemplo e visual padrão por tipo, valores com 2 casas, destaque em vermelho na prévia dos controles, menu ☰ nas oficinas e home com cartões animados. Os textos do teste inicial e o histórico antigo saíram.
 
+- Notas livres e biblioteca: notas com posição automática, por lado ou livre (arrastar) na Carta e no Livro; Livro com notas e rabiscos; trabalho salvo sozinho; aba Biblioteca com materiais (.json) e cópia de tudo; magias importadas guardadas no navegador.
+
 ## Pendências de hardware (usuário)
 
 1. Na Mega S, `G0 X0 Y0` deve levar a caneta ao canto frente-esquerda. Se não levar, ajustar "origem" no painel Mesa e folha.
