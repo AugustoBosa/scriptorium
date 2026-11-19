@@ -114,8 +114,8 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - Tudo o que foi pedido até aqui está FEITO e PUBLICADO.
 - `main` = `origin/main` (GitHub `AugustoBosa/scriptorium`).
 - Pages: https://augustobosa.github.io/scriptorium/ (responde 200).
-- Último commit de produto: `41b38a0` (pendências da mesa).
-- Testes: `npm test` 815/0; e2e 140/140; geometria da mesa com 0 pontos fora em 24 casos (`node workflow/ciclos/28/geo-check.mjs`).
+- Último commit: `c0f6e80` (limpeza; o último de produto é `41b38a0`).
+- Testes: `npm test` 812/0; e2e 138/138; geometria da mesa com 0 pontos fora em 24 casos (`node workflow/ciclos/28/geo-check.mjs`).
 
 **Pasta local:** o usuário vai renomear `C:\Users\augus\Desktop\augusto\projects\3dprinter_plotter` para `C:\Users\augus\Desktop\augusto\projects\scriptorium`.
 - Já está tudo ajustado para o rename:
@@ -146,6 +146,7 @@ Atualizado pelo gerente a cada ciclo. Status de tarefa: pendente | em andamento 
 - Saíram: `grimorio.html` (o link antigo dá 404), `workflow/catalogo/`, imagens e logs de `workflow/ciclos/*` (os `.md` ficaram), `.superpowers/`, `test-results/`, `dist/`.
 - Grimório Non Presto removido (`grimorios/`, `src/ornamento/tempo.js`, `test/tempo.test.mjs`, `dados/non-presto/`, mudança em `src/magia.js`). Backup: `C:\Users\augus\Desktop\augusto\backups\scriptorium-non-presto-2026-11-18.zip`.
 - Depois da limpeza: `npm test` 812/0; e2e 138/138; build ok.
+- Publicado: commit `c0f6e80` no `main`; Pages verde; `/scriptorium/` dá 200, `/scriptorium/grimorio.html` dá 404 (esperado).
 
 **Pendências opcionais (próximo pedido):**
 - Mesa: faixas intermediárias; `M0` entre passadas.
