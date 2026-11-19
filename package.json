@@ -23,6 +23,9 @@
   },
   "homepage": "https://augustobosa.github.io/scriptorium/",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "devDependencies": {
     "@playwright/test": "^1.65.1",
     "vite": "^8.3.8"
