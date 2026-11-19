@@ -4,7 +4,7 @@ import { amostra } from '../layout.js';
 import { CANETAS } from '../materiais/documento.js';
 import { comporCarta, PRESETS, PARAMS as PARAMS_CARTA } from '../materiais/carta.js';
 import { trocarExemplo, aplicarVisual } from '../materiais/exemplos.js';
-import { parsearNotas, posicionarNota, LADOS, PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
+import { parsearNotas, posicionarNota, LADOS, PADRAO_MAO, PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
 import { comporLivro, PARAMS as PARAMS_LIVRO } from '../materiais/livro.js';
 import { comporSigilos, PARAMS as PARAMS_SIG } from '../materiais/sigilos.js';
 import { PARAMS as PARAMS_METODO } from '../arcano/sigilo.js';
@@ -15,7 +15,7 @@ import { controle, dica, ligar } from './controle.js';
 const mapa = (ps) => Object.fromEntries(ps.map((p) => [p.chave, p]));
 const PC = mapa(PARAMS_CARTA), PN = mapa(PARAMS_NOTAS), PL = mapa(PARAMS_LIVRO), PS = mapa(PARAMS_SIG), PM = mapa(PARAMS_METODO), PA = mapa(PARAMS_ALF);
 
-export const carta0 = () => ({ tipo: 'anotacao', marginalia: 'direita', faixa: 0.3, conector: 'linha', espontaneo: 0, canetaNotas: 'vermelha', personagemNotas: '' });
+export const carta0 = () => ({ ...PADRAO_MAO, tipo: 'anotacao', marginalia: 'direita', faixa: 0.3, conector: 'linha', espontaneo: 0, canetaNotas: 'vermelha', personagemNotas: '' });
 export const livro0 = () => ({ titulo: '', inicio: 1, numeracao: true, reclamo: true, rubrica: true, capitularLivro: 'nenhuma', bordaLivro: 'nenhuma' });
 export const sigilos0 = () => ({ frases: 'abracadabra\nluz da lua\nsol\nmar e céu', tipo: 'selo', metodo: 'kamea', colunas: 3, legendas: true, caneta: 'preta' });
 
@@ -60,6 +60,8 @@ function juntar(div, itens, extras = []) {
 }
 
 // ---- composição ----
+// Gesto da mão nas notas (seta, irregularidade, inclinação); trabalho salvo antes disso cai no padrão.
+const maoNotas = (c) => Object.fromEntries(Object.keys(PADRAO_MAO).map((k) => [k, c[k] ?? PADRAO_MAO[k]]));
 export function comporEscrita(estado, variacao) {
   const o = estado.opcoes, mao = resolver(estado.personagem, variacao || null);
   const base = { papel: estado.pagina, tamanho: o.tamanho, entrelinha: o.entrelinha, alinhamento: o.alinhamento };
@@ -70,10 +72,10 @@ export function comporEscrita(estado, variacao) {
     return comporLivro(estado.texto, ctx, {
       ...base, colunas: o.colunas, titulo: l.titulo, inicio: l.inicio, numeracao: l.numeracao, reclamo: l.reclamo, rubrica: l.rubrica,
       capitular: nenhuma(l.capitularLivro, { linhas: 3 }), borda: nenhuma(l.bordaLivro, { largura: 6 }),
-      conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas,
+      conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas, ...maoNotas(c),
     });
   }
-  return comporCarta(estado.texto, ctx, { ...base, tipo: c.tipo, marginalia: c.marginalia, faixa: c.faixa, conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas });
+  return comporCarta(estado.texto, ctx, { ...base, tipo: c.tipo, marginalia: c.marginalia, faixa: c.faixa, conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas, ...maoNotas(c) });
 }
 
 export function comporDeSigilos(estado) {
@@ -104,6 +106,7 @@ export function montarCarta(div, estado, aoMudar) {
   const lista = el('div', { className: 'posicoes' }), assinatura = { v: null };
   const atualizar = juntar(div, [
     ...soCarta, controle(PN.conector, ligar(c, 'conector', ctx), aoMudar), controle(PN.espontaneo, ligar(c, 'espontaneo', ctx), aoMudar), pers, caneta,
+    ...Object.keys(PADRAO_MAO).map((k) => { c[k] ??= PADRAO_MAO[k]; return controle(PN[k], ligar(c, k, ctx), aoMudar); }),
   ], [titulo('Marcação no texto', 'Escreva estas marcas no texto. Elas não aparecem na folha: viram notas e riscos na camada de notas.'), ajuda,
     titulo('Posição das notas', 'Automática: o lugar livre mais perto da palavra (na Carta com margem, a margem). Escolha um lado, ou arraste a nota na prévia para uma posição livre.'), lista]);
   return () => {
@@ -115,13 +118,20 @@ export function montarCarta(div, estado, aoMudar) {
     assinatura.v = sig;
     lista.replaceChildren(...(notas.length ? notas.map((m, k) => {
       const sel = el('select', {}, ...[['auto', 'automática'], ...LADOS.map((x) => [x, x]), ...(m.pos?.x != null ? [['livre', `livre (${m.pos.x}, ${m.pos.y} mm)`]] : [])].map(([v, t]) => new Option(t, v)));
-      sel.value = m.pos?.lado ?? (m.pos ? 'livre' : 'auto');
-      sel.addEventListener('change', () => {
-        if (sel.value === 'livre') return;
-        estado.texto = posicionarNota(estado.texto, k, sel.value === 'auto' ? null : { lado: sel.value });
+      sel.value = m.pos?.lado ?? (m.pos?.x != null ? 'livre' : 'auto');
+      const ang = el('input', { type: 'number', min: -90, max: 90, step: 1, placeholder: 'auto', value: m.pos?.ang ?? '', title: 'Ângulo da nota em graus (vazio = inclinação sorteada)' });
+      ang.setAttribute('aria-label', `Ângulo da nota "${m.texto}"`);
+      const gravar = () => {
+        const a = ang.value === '' ? undefined : Math.max(-90, Math.min(90, Number(ang.value)));
+        const lugar = sel.value === 'auto' ? {} : sel.value === 'livre' ? { x: m.pos.x, y: m.pos.y } : { lado: sel.value };
+        const pos = { ...lugar, ...(a != null && Number.isFinite(a) && { ang: a }) };
+        estado.texto = posicionarNota(estado.texto, k, Object.keys(pos).length ? pos : null);
         aoMudar();
-      });
-      return rotulado(m.texto.length > 22 ? m.texto.slice(0, 22) + '…' : m.texto, sel);
+      };
+      sel.addEventListener('change', gravar);
+      ang.addEventListener('change', gravar);
+      const linha = el('div', { className: 'posicao' }, rotulado(m.texto.length > 22 ? m.texto.slice(0, 22) + '…' : m.texto, sel), ang, el('span', {}, '°'));
+      return linha;
     }) : [el('p', { className: 'vazio-notas' }, 'Nenhuma {nota: …} no texto.')]));
   };
 }

@@ -222,3 +222,5 @@ dialog::backdrop { background: var(--sombra-cor); }
 
 #salvar-material { margin-left: auto; }
 .salvo { font-size: var(--t-pequeno); color: var(--tinta-2); }
+.posicao { display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; }
+.posicao input[type=number] { width: 5em; }

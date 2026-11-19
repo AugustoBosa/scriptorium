@@ -5,7 +5,7 @@ import { parseFonte } from '../src/fonte.js';
 import { compor, PAGINAS } from '../src/layout.js';
 import { NEUTRA } from '../src/motor/mao.js';
 import { problemas } from '../src/geo.js';
-import { parsearNotas, posicionarNota, rabisco, sobrepoe, caixasPalavras, conectar } from '../src/materiais/notas.js';
+import { parsearNotas, posicionarNota, rabisco, sobrepoe, caixasPalavras, conectar, girarEm, curvaMao, pontaMao } from '../src/materiais/notas.js';
 
 const raiz = new URL('../', import.meta.url);
 const fontes = { EMSBird: parseFonte(fs.readFileSync(new URL('fontes/EMSBird.svg', raiz), 'utf8'), 'EMSBird') };
@@ -120,4 +120,26 @@ test('posicionarNota reescreve só a k-ésima nota e mantém o resto do texto', 
   assert.equal(posicionarNota(t, 0, { x: 10.123, y: 5 }), 'a {nota@10.1,5: um} b {nota@esquerda: dois} c');
   assert.equal(posicionarNota(t, 1, null), 'a {nota: um} b {nota: dois} c');
   assert.equal(posicionarNota(t, 5, null), t);
+});
+
+test('nota com ângulo: @lado/graus, @/graus (lado automático) e @x,y/graus; posicionarNota escreve de volta', () => {
+  const { marcas, avisos } = parsearNotas('a {nota@direita/30: um} b {nota@/-20: dois} c {nota@10,20/45: três} d {nota@/xx: quatro}');
+  assert.deepEqual(marcas.map((m) => m.pos), [{ lado: 'direita', ang: 30 }, { ang: -20 }, { x: 10, y: 20, ang: 45 }, undefined]);
+  assert.equal(avisos.length, 1);
+  assert.equal(posicionarNota('x {nota: a}', 0, { lado: 'acima', ang: 12.34 }), 'x {nota@acima/12.3: a}');
+  assert.equal(posicionarNota('x {nota: a}', 0, { ang: -5 }), 'x {nota@/-5: a}');
+  assert.equal(posicionarNota('x {nota: a}', 0, { x: 1, y: 2, ang: 0 }), 'x {nota@1,2/0: a}');
+});
+
+test('girarEm, curvaMao e pontaMao: geometria básica', () => {
+  const t = [[[0, 0], [10, 0]]];
+  const g = girarEm(t, 90)[0];
+  assert.ok(Math.abs(g[0][0] - 5) < 1e-9 && Math.abs(g[1][0] - 5) < 1e-9);
+  const c = curvaMao([0, 0], [10, 0], 1);
+  assert.deepEqual(c[0], [0, 0]);
+  assert.ok(Math.abs(c.at(-1)[0] - 10) < 1e-9 && Math.abs(c.at(-1)[1]) < 1e-9);
+  assert.ok(Math.abs(c[Math.floor(c.length / 2)][1]) > 1); // barriga
+  assert.equal(pontaMao(c, 'aberta').length, 2);
+  assert.equal(pontaMao(c, 'gancho').length, 1);
+  assert.equal(pontaMao(c, 'fechada')[0].length, 4);
 });

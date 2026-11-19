@@ -35,7 +35,7 @@ export function comporCarta(texto, ctx, cfg) {
     const ancoras = r.ancoras.filter((a) => a.pagina === i);
     const daPagina = marcas.filter((m) => (m.tipo === 'nota' || m.tipo === 'correcao' ? pagDe(m.ini) === i : ancoras.some((a) => a.indice >= m.ini && a.indice <= m.fim)));
     const n = comporNotas(daPagina, { pagina: i, tracos, grupos: r.grupos[i], ancoras, papel, coluna: g.coluna, faixa: g.faixa, calha: g.calha, tamanho },
-      ctx, { tamanhoNotas: c.tamanhoNotas, conector: c.conector, espontaneo: c.espontaneo, seed: c.seed });
+      ctx, { tamanhoNotas: c.tamanhoNotas, conector: c.conector, espontaneo: c.espontaneo, seed: c.seed, curva: c.curva, irregular: c.irregular, ponta: c.ponta, inclinacao: c.inclinacao, girar: c.girar });
     avisos.push(...n.avisos);
     return { camadas: [
       { id: 'texto', caneta: c.canetaTexto, personagem: ctx.personagens?.texto ?? null, ordem: 'escrita', grupos: r.grupos[i], tracos },

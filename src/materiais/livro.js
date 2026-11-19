@@ -93,7 +93,7 @@ export function comporLivro(bruto, ctx, cfg) {
     const daPagina = marcas.filter((m) => (m.tipo === 'nota' || m.tipo === 'correcao' ? pagDe(m.ini) === i : ancoras.some((a) => a.indice >= m.ini && a.indice <= m.fim)));
     const n = comporNotas(daPagina, { pagina: i, tracos, grupos: r.grupos[i], ancoras, papel, coluna: { x: G.texto.x, l: G.texto.l }, faixa: null, calha: null, tamanho,
       ocupado: [...d.paginacao, ...ilum, ...(i === 0 ? cap : []), ...d.cabecalho] }, { ...ctx, maoNotas: ctx.maoNotas ?? ctx.mao },
-    { conector: c.conector, espontaneo: c.espontaneo, seed: `${seed}|livro` });
+    { conector: c.conector, espontaneo: c.espontaneo, seed: `${seed}|livro`, curva: c.curva, irregular: c.irregular, ponta: c.ponta, inclinacao: c.inclinacao, girar: c.girar });
     avisos.push(...n.avisos);
     return { notas: n.notas, camadas: [
       { id: 'texto', caneta: 'preta', personagem, ordem: 'escrita', grupos: r.grupos[i], tracos },

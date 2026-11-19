@@ -42,14 +42,25 @@ const intervalo = (limpo, trecho) => ({ ini: contar(limpo + /^\s*/.exec(trecho)[
 
 // Posição de uma nota: lado ('esquerda' | 'direita' | 'acima' | 'abaixo') ou canto superior esquerdo { x, y } em mm.
 export const LADOS = ['esquerda', 'direita', 'acima', 'abaixo'];
+// Mão das notas por padrão: seta curva e um pouco torta, ponta aberta desigual, notas levemente inclinadas, girando para caber.
+export const PADRAO_MAO = { curva: 0.4, irregular: 0.5, ponta: 'aberta', inclinacao: 6, girar: true };
+// Texto da posição: '[lado | x,y][/graus]'. Lado vazio com ângulo = lado automático com ângulo fixo.
 function lerPos(s) {
   if (s == null) return null;
-  const t = s.trim();
-  if (LADOS.includes(t)) return { lado: t };
-  const m = /^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/.exec(t);
-  return m ? { x: Number(m[1]), y: Number(m[2]) } : null;
+  const [lugar, giro] = s.trim().split('/').map((x) => x.trim()), num = /^-?\d+(?:\.\d+)?$/;
+  if (giro != null && !num.test(giro)) return null;
+  const ang = giro != null ? { ang: Number(giro) } : {};
+  if (!lugar) return giro != null ? ang : null;
+  if (LADOS.includes(lugar)) return { lado: lugar, ...ang };
+  const m = /^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/.exec(lugar);
+  return m ? { x: Number(m[1]), y: Number(m[2]), ...ang } : null;
 }
-const escreverPos = (pos) => (!pos ? '' : pos.lado ? '@' + pos.lado : `@${+pos.x.toFixed(1)},${+pos.y.toFixed(1)}`);
+const um = (v) => +v.toFixed(1);
+const escreverPos = (pos) => {
+  if (!pos) return '';
+  const lugar = pos.lado ?? (pos.x != null ? `${um(pos.x)},${um(pos.y)}` : '');
+  return '@' + lugar + (pos.ang != null ? '/' + um(pos.ang) : '');
+};
 
 // Reescreve a posição da k-ésima {nota…} do texto (null = automática). Fora do intervalo: texto igual.
 export function posicionarNota(texto, k, pos) {
@@ -110,14 +121,49 @@ export function conectar(tipo, g) {
 }
 
 const mover = (trs, dx, dy) => trs.map((t) => t.map(([x, y]) => [x + dx, y + dy]));
+// Traço de mão: reamostra a 0,5 mm e desvia na normal com tremor fino (~8 mm) e deriva lenta (~25 mm) que some nas pontas.
+export function tracoMao(t, fino, lento, sd) {
+  const p = reamostrar(t, 0.5), tot = p.reduce((acc, q, i) => acc + (i ? dist(p[i - 1], q) : 0), 0) || 1;
+  let s = 0;
+  return p.map((q, i) => {
+    if (i) s += dist(p[i - 1], q);
+    const env = Math.sin(Math.PI * Math.min(1, s / tot)); // começa e termina onde devia
+    const a = p[Math.max(0, i - 1)], b = p[Math.min(p.length - 1, i + 1)], L = dist(a, b) || 1;
+    const d = ruido1d(sd, s / 8) * fino + ruido1d(sd + '|lento', s / 25) * lento * env;
+    return [q[0] - ((b[1] - a[1]) / L) * d, q[1] + ((b[0] - a[0]) / L) * d];
+  });
+}
+
+// Gira os traços `ang` graus em volta do centro da caixa deles.
+export function girarEm(trs, ang) {
+  if (!ang) return trs;
+  const b = caixaDe(trs), cx = b.x + b.l / 2, cy = b.y + b.a / 2, r = (ang * Math.PI) / 180, co = Math.cos(r), si = Math.sin(r);
+  return trs.map((t) => t.map(([x, y]) => [cx + (x - cx) * co - (y - cy) * si, cy + (x - cx) * si + (y - cy) * co]));
+}
+// Curva de mão de `a` até `b`: quadrática com a barriga para um lado (k = -1..1, fração de 0,3 do comprimento).
+export function curvaMao(a, b, k) {
+  const L = dist(a, b), n = Math.max(8, Math.ceil(L / 0.5)), mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+  const cx = mx - ((b[1] - a[1]) / (L || 1)) * k * 0.3 * L, cy = my + ((b[0] - a[0]) / (L || 1)) * k * 0.3 * L;
+  return Array.from({ length: n + 1 }, (_, i) => { const u = i / n, v = 1 - u; return [v * v * a[0] + 2 * u * v * cx + u * u * b[0], v * v * a[1] + 2 * u * v * cy + u * u * b[1]]; });
+}
+// Ponta de seta feita à mão no fim de `pts`: 'aberta' (duas farpas desiguais), 'gancho' (uma farpa) ou 'fechada' (triângulo).
+export function pontaMao(pts, tipo = 'aberta', r = () => 0.5) {
+  const [px, py] = pts.at(-1), [u, v] = pts.at(-Math.min(pts.length, 3)), L = Math.hypot(px - u, py - v) || 1, ux = (px - u) / L, uy = (py - v) / L;
+  const farpa = (lado, ang, comp) => { const a = (ang * Math.PI) / 180, co = Math.cos(a), si = Math.sin(a) * lado; return [px - comp * (ux * co - uy * si), py - comp * (uy * co + ux * si)]; };
+  const a1 = 22 + 14 * r(), a2 = 22 + 14 * r(), c1 = 1.1 + 0.5 * r(), c2 = 1.1 + 0.5 * r();
+  if (tipo === 'gancho') return [[[px, py], farpa(1, a1 + 6, c1 + 0.3)]];
+  if (tipo === 'fechada') { const e = farpa(1, a1, c1), d = farpa(-1, a2, c1); return [[[px, py], e, d, [px, py]]]; }
+  return [[[px, py], farpa(1, a1, c1)], [[px, py], farpa(-1, a2, c2)]];
+}
 const caixasSeg = (trs) => trs.flatMap((t) => t.slice(1).map((p, i) => caixaDe([[t[i], p]])));
 
 // base = { pagina, tracos, grupos, ancoras (desta página), papel, coluna:{x,l}, faixa:{x,y,l,a}|null, calha:{x,l}|null, tamanho, ocupado? }
 // ocupado = traços de outras camadas (paginação, borda, capitular) que as notas também não podem tocar.
-// cfg = { tamanhoNotas, conector, espontaneo, seed }; ctx = { fontes, mao, maoNotas }. → { tracos, avisos, notas }
+// cfg = { tamanhoNotas, conector, espontaneo, seed, curva, irregular, ponta, inclinacao, girar }; ctx = { fontes, mao, maoNotas }. → { tracos, avisos, notas }
 export function comporNotas(marcas, base, ctx, cfg = {}) {
   const { pagina, tracos, grupos, ancoras, papel, coluna, faixa, calha, tamanho, ocupado = [] } = base;
   const seed = cfg.seed ?? 1, tn = cfg.tamanhoNotas ?? 0.6 * tamanho, esp = cfg.espontaneo ?? 0;
+  const { curva = PADRAO_MAO.curva, irregular: irr = PADRAO_MAO.irregular, ponta = PADRAO_MAO.ponta, inclinacao = PADRAO_MAO.inclinacao, girar = PADRAO_MAO.girar } = cfg;
   const maoN = ctx.maoNotas ?? ctx.mao;
   const rr = (chave) => rng(`${seed}|notas|${pagina}|${chave}`);
   const caixas = caixasPalavras(tracos, grupos);
@@ -131,16 +177,9 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
     if (ok) pôr(trs, regs); else avisos.push(`${desc} descartado: tocaria outra palavra ou nota`);
     return ok;
   };
-  const amp = 0.12 + 0.3 * (maoN.tremor ?? 0);
-  const mao = (t, k) => { // traço de mão: reamostra a 0,5 mm e desvia na normal
-    const p = reamostrar(t, 0.5), sd = `${seed}|notas|${pagina}|mao|${k}`;
-    let s = 0;
-    return p.map((q, i) => {
-      if (i) s += dist(p[i - 1], q);
-      const a = p[Math.max(0, i - 1)], b = p[Math.min(p.length - 1, i + 1)], L = dist(a, b) || 1, d = ruido1d(sd, s / 8) * amp;
-      return [q[0] - ((b[1] - a[1]) / L) * d, q[1] + ((b[0] - a[0]) / L) * d];
-    });
-  };
+  // traço de mão: tremor fino (ondas de ~8 mm) + deriva lenta (~25 mm), as duas crescem com `irregular`; ponta firme, meio solto
+  const fino = 0.12 * (0.5 + irr) + 0.3 * (maoN.tremor ?? 0), lento = 0.45 * irr, amp = fino + lento;
+  const mao = (t, k) => tracoMao(t, fino, lento, `${seed}|notas|${pagina}|mao|${k}`);
   const linha = (p, d = 0) => { // palavras da linha vizinha (d = 0 própria, -1 anterior, 1 seguinte) na mesma coluna
     const alvoL = palavras.filter((q) => q.coluna === p.coluna && (d === 0 ? q.linha === p.linha : d < 0 ? q.linha < p.linha : q.linha > p.linha));
     if (!d || !alvoL.length) return alvoL;
@@ -212,34 +251,50 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
   fila.sort((a, b) => a.p.y - b.p.y);
   const notas = []; // { ordem, caixa } das notas soltas: a interface arrasta por aqui
   const solta = ({ p, texto, pos, ordem }) => {
-    const larg = Math.max(15, Math.min(45, 0.3 * papel.largura)), borda = 3;
+    const larg = Math.max(15, Math.min(45, 0.3 * papel.largura)), borda = 3, rn = rr(`nota|${p.k}|${ordem ?? texto}`);
     const r = compor(texto, ctx.fontes, maoN, { largura: larg, altura: papel.altura, margens: { topo: 0, dir: 0, base: 0, esq: 0 } }, { tamanho: tn, entrelinha: 1.3 });
-    const tr0 = r.paginas[0], b0 = caixaDe(tr0);
+    const tr0 = r.paginas[0];
     if (!tr0.length) return;
-    const em = (x, y) => mover(tr0, x - b0.x, y - b0.y);
-    const caixaEm = (x, y) => ({ x, y, l: b0.l, a: b0.a });
+    // inclinação de mão: cada nota sorteia um ângulo pequeno; girar (até 90°) só quando o lugar perto pede
+    const base = pos?.ang ?? (rn() * 2 - 1) * inclinacao;
+    const angulos = pos?.ang != null || !girar ? [base] : [...new Set([base, base + 15, base - 15, base + 30, base - 30, 45, -45, 90, -90].map((a) => Math.round(a * 10) / 10))];
+    const forma = (ang) => { const t = girarEm(tr0, ang), b = caixaDe(t); return { ang, t, b }; };
+    const formas = angulos.map(forma);
     let alvo = null;
-    if (pos?.x != null) alvo = { x: pos.x, y: pos.y };
+    if (pos?.x != null) alvo = { ...formas[0], x: pos.x, y: pos.y };
     else {
-      const c = p.c, lw = linha(p), G = 1.5, ocupa = [...caixas.filter(Boolean), ...colocados];
-      const xe = Math.min(c.x, ...lw.map((q) => q.c.x)), xd = Math.max(c.x + c.l, ...lw.map((q) => q.c.x + q.c.l));
-      const cyN = c.y + c.a / 2 - b0.a / 2, cxN = c.x + c.l / 2 - b0.l / 2;
-      const passos = (n, d) => Array.from({ length: 2 * n + 1 }, (_, i) => (i % 2 ? -1 : 1) * Math.ceil(i / 2) * d); // 0, d, -d, 2d…
-      const lados = { // [x, y] de partida e para onde andar procurando espaço
-        direita: (k, j) => [xd + G + 2 * j, cyN + k], esquerda: (k, j) => [xe - G - b0.l - 2 * j, cyN + k],
-        acima: (k, j) => [cxN + k, c.y - G - b0.a - 2 * j], abaixo: (k, j) => [cxN + k, c.y + c.a + G + 2 * j],
+      const c = p.c, lw = linha(p), G = 2 * VAO + amp + 2.8, ocupa = [...caixas.filter(Boolean), ...colocados]; // folga: cabe uma seta visível
+      // a seta precisa de caminho: reta do ponto da nota mais perto da palavra até a palavra, sem passar por outra palavra ou nota
+      const outros = [...caixas.filter((q, k) => q && k !== p.k), ...colocados], f0 = VAO + amp;
+      const perto0 = (cx, cy, q, f) => [Math.min(Math.max(cx, q.x - f), q.x + q.l + f), Math.min(Math.max(cy, q.y - f), q.y + q.a + f)];
+      const caminhoLivre = (q) => {
+        const fim = perto0(q.x + q.l / 2, q.y + q.a / 2, c, f0 + 0.3), ini = perto0(fim[0], fim[1], q, VAO), L = dist(ini, fim), n = Math.max(2, Math.ceil(L / 0.4));
+        for (let i = 1; i < n; i++) {
+          const x = ini[0] + ((fim[0] - ini[0]) * i) / n, y = ini[1] + ((fim[1] - ini[1]) * i) / n;
+          if (outros.some((o) => x > o.x - f0 && x < o.x + o.l + f0 && y > o.y - f0 && y < o.y + o.a + f0)) return false;
+        }
+        return true;
       };
+      const xe = Math.min(c.x, ...lw.map((q) => q.c.x)), xd = Math.max(c.x + c.l, ...lw.map((q) => q.c.x + q.c.l));
+      const passos = (n, d) => Array.from({ length: 2 * n + 1 }, (_, i) => (i % 2 ? -1 : 1) * Math.ceil(i / 2) * d); // 0, d, -d, 2d…
+      const lados = (b) => ({ // [x, y] de partida e para onde andar procurando espaço
+        direita: (k, j) => [xd + G + 2 * j, c.y + c.a / 2 - b.a / 2 + k], esquerda: (k, j) => [xe - G - b.l - 2 * j, c.y + c.a / 2 - b.a / 2 + k],
+        acima: (k, j) => [c.x + c.l / 2 - b.l / 2 + k, c.y - G - b.a - 2 * j], abaixo: (k, j) => [c.x + c.l / 2 - b.l / 2 + k, c.y + c.a + G + 2 * j],
+      });
       const livreCaixa = (q) => q.x >= borda && q.y >= borda && q.x + q.l <= papel.largura - borda && q.y + q.a <= papel.altura - borda
         && !ocupa.some((o) => q.x < o.x + o.l + VAO && o.x < q.x + q.l + VAO && q.y < o.y + o.a + VAO && o.y < q.y + q.a + VAO);
       const buscar = (lista) => {
         let melhor = Infinity, achado = null;
-        for (const lado of lista) {
-          for (const j of [0, 1, 2, 4, 8]) for (const k of passos(15, 2)) {
-            const [x, y] = lados[lado](k, j), q = caixaEm(x, y);
-            if (!livreCaixa(q)) continue;
-            const d = Math.hypot(x + b0.l / 2 - (c.x + c.l / 2), y + b0.a / 2 - (c.y + c.a / 2));
-            if (d < melhor) { melhor = d; achado = { x, y }; }
-            break; // o primeiro livre de cada desvio já é o mais perto nessa direção
+        for (const f of formas) {
+          const L = lados(f.b), custoGiro = 0.08 * Math.abs(f.ang - base); // mm por grau: só gira se ganhar espaço de verdade
+          for (const lado of lista) {
+            for (const j of [0, 1, 2, 4, 8]) for (const k of passos(15, 2)) {
+              const [x, y] = L[lado](k, j);
+              if (!livreCaixa({ x, y, l: f.b.l, a: f.b.a }) || !caminhoLivre({ x, y, l: f.b.l, a: f.b.a })) continue;
+              const d = Math.hypot(x + f.b.l / 2 - (c.x + c.l / 2), y + f.b.a / 2 - (c.y + c.a / 2)) + custoGiro;
+              if (d < melhor) { melhor = d; achado = { ...f, x, y }; }
+              break; // o primeiro livre de cada desvio já é o mais perto nessa direção
+            }
           }
         }
         return achado;
@@ -251,19 +306,17 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
       }
     }
     if (!alvo) { avisos.push(`nota descartada: sem espaço livre perto da palavra: "${resumo(texto)}"`); return; }
-    const tr = em(alvo.x, alvo.y), b = caixaEm(alvo.x, alvo.y);
+    const tr = mover(alvo.t, alvo.x - alvo.b.x, alvo.y - alvo.b.y), b = { x: alvo.x, y: alvo.y, l: alvo.b.l, a: alvo.b.a };
     if (pos?.x == null && !livre(tr)) { avisos.push(`nota descartada: tocaria texto ou outra nota: "${resumo(texto)}"`); return; }
     pôr(tr, [b]);
-    if (ordem != null) notas.push({ ordem, caixa: b });
-    // seta da nota até a palavra: reta; se cruzar texto, tenta cotovelo horizontal-vertical e vertical-horizontal
+    if (ordem != null) notas.push({ ordem, caixa: b, ang: alvo.ang });
+    // seta da nota até a palavra: curva de mão (lado da barriga sorteado), depois a outra curva, reta e cotovelos
     const c = p.c, perto = (cx, cy, q, f) => [Math.min(Math.max(cx, q.x - f), q.x + q.l + f), Math.min(Math.max(cy, q.y - f), q.y + q.a + f)];
     const fim = perto(b.x + b.l / 2, b.y + b.a / 2, c, VAO + amp + 0.3), ini = perto(fim[0], fim[1], b, VAO);
-    const seta = (pts) => {
-      const [u, v] = pts.at(-2), [px, py] = pts.at(-1), L = Math.hypot(px - u, py - v) || 1, ux = (px - u) / L, uy = (py - v) / L, a = 1.2;
-      return [pts, [[px, py], [px - a * (ux * 0.87 - uy * 0.5), py - a * (uy * 0.87 + ux * 0.5)]], [[px, py], [px - a * (ux * 0.87 + uy * 0.5), py - a * (uy * 0.87 - ux * 0.5)]]];
-    };
-    for (const pts of [[ini, fim], [ini, [fim[0], ini[1]], fim], [ini, [ini[0], fim[1]], fim]]) {
-      const cons = limpar(seta(pts)), jit = cons.map((t, i) => mao(t, `n${p.k}|${i}`));
+    const s = rn() < 0.5 ? 1 : -1;
+    const caminhos = [curvaMao(ini, fim, s * curva), curvaMao(ini, fim, -s * curva), [ini, fim], [ini, [fim[0], ini[1]], fim], [ini, [ini[0], fim[1]], fim]];
+    for (const pts of caminhos) {
+      const cons = limpar([pts, ...pontaMao(pts, ponta, rn)]), jit = cons.map((t, i) => mao(t, `n${p.k}|${i}`));
       if (cons.length && livre(jit, [p.k])) { pôr(jit, caixasSeg(cons)); return; }
     }
     avisos.push(`conector descartado: cruzaria texto ou outra nota: "${resumo(texto)}"`);
@@ -341,6 +394,15 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
 
 // Prévias. ctx.escrever(mao, texto, opcoes) = traços de uma folha de amostra 60×40.
 const RAB = ['espiral', 'estrela', 'caixa', 'flor'];
+// Prévia de nota solta: palavra, nota acima à direita e a seta feita com a mão das notas (o foco muda conforme o controle).
+const notaPrevia = (ctx, m = {}) => {
+  const q = { ...PADRAO_MAO, ...m }, fino = 0.12 * (0.5 + q.irregular), lento = 0.45 * q.irregular;
+  const texto = ctx.escrever(ctx.mao, 'palavra', { tamanho: 4 }), bt = caixaDe(texto);
+  const nota = girarEm(mover(ctx.escrever(ctx.mao, 'nota', { tamanho: 3 }), bt.x + bt.l + 10, -9), q.inclinacao), bn = caixaDe(nota);
+  const ini = [bn.x, bn.y + bn.a + 0.5], fim = [bt.x + bt.l + 0.6, bt.y - 0.6], curvo = curvaMao(ini, fim, q.curva);
+  const seta = [curvo, ...pontaMao(curvo, q.ponta, rng('previa|ponta'))].map((t, i) => tracoMao(t, fino, lento, `previa|${i}`));
+  return { texto, nota, seta };
+};
 export const PARAMS = [
   { chave: 'espontaneo', grupo: 'notas', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: 0, rotulo: 'rabiscos espontâneos',
     ajuda: 'Quantos sublinhados, asteriscos, interrogações e rabiscos aparecem sozinhos na margem e na calha. 0 = nenhum; 1 = a página bem rabiscada.',
@@ -354,5 +416,26 @@ export const PARAMS = [
       const bt = caixaDe(texto), nota = mover(ctx.escrever(ctx.mao, 'nota', { tamanho: 2.5 }), 30, 0), bn = caixaDe(nota);
       const calha = { x: bt.x + bt.l, l: bn.x - bt.x - bt.l };
       return { fundo: [...texto, ...nota], foco: conectar(v, { dir: true, xTexto: bt.x + bt.l, base: 6, tam: 4, calha, xNota: bn.x - VAO, yNota: bn.y + bn.a / 2, tn: 2.5 }) };
+    } },
+  { chave: 'curva', grupo: 'notas', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: PADRAO_MAO.curva, rotulo: 'curva da seta',
+    ajuda: 'Quanto a seta da nota solta faz barriga, como um gesto de mão. 0 = reta; 1 = bem arqueada. O lado da curva é sorteado por nota.',
+    previa: (v, ctx) => { const n = notaPrevia(ctx, { curva: v }); return { fundo: [...n.texto, ...n.nota], foco: n.seta }; } },
+  { chave: 'irregular', grupo: 'notas', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: PADRAO_MAO.irregular, rotulo: 'irregularidade do traço',
+    ajuda: 'Tremor e desvio lento das setas, conectores, riscos, sublinhados e laços. 0 = traço de régua; 1 = mão bem solta. As pontas sempre acertam o alvo.',
+    previa: (v, ctx) => { const n = notaPrevia(ctx, { irregular: v }); return { fundo: [...n.texto, ...n.nota], foco: n.seta }; } },
+  { chave: 'ponta', grupo: 'notas', nivel: 'basico', tipo: 'opcao', padrao: PADRAO_MAO.ponta, rotulo: 'ponta da seta',
+    ajuda: 'Como a seta termina: duas farpas desiguais (aberta), uma farpa só (gancho) ou um triângulo fechado.',
+    opcoes: [{ valor: 'aberta', rotulo: 'aberta' }, { valor: 'gancho', rotulo: 'gancho' }, { valor: 'fechada', rotulo: 'fechada' }],
+    previa: (v, ctx) => { const n = notaPrevia(ctx, { ponta: v }); return { fundo: [...n.texto, ...n.nota], foco: n.seta }; } },
+  { chave: 'inclinacao', grupo: 'notas', nivel: 'basico', tipo: 'faixa', min: 0, max: 30, passo: 1, padrao: PADRAO_MAO.inclinacao, unidade: '°', rotulo: 'inclinação das notas',
+    ajuda: 'Até quantos graus cada nota solta se inclina, para um lado ou para o outro (sorteado por nota). 0 = notas retas. Cada nota pode ter um ângulo fixo: {nota@direita/30: …}.',
+    previa: (v, ctx) => { const n = notaPrevia(ctx, { inclinacao: v }); return { fundo: [...n.texto, ...n.seta], foco: n.nota }; } },
+  { chave: 'girar', grupo: 'notas', nivel: 'avancado', tipo: 'marca', padrao: PADRAO_MAO.girar, rotulo: 'girar para caber',
+    ajuda: 'Deixa a nota girar (diagonal, até de lado a 90°) quando assim ela cabe mais perto da palavra, como na margem estreita de um livro.',
+    previa: (v, ctx) => {
+      const texto = ctx.escrever(ctx.mao, 'linha de texto', { tamanho: 4 }), bt = caixaDe(texto), x = bt.x + bt.l + 2;
+      const nota = ctx.escrever(ctx.mao, 'nota longa', { tamanho: 3 }), bn = caixaDe(nota);
+      const posta = v ? mover(girarEm(nota, 90), x + bn.a / 2 - (bn.x + bn.l / 2) + 1, bt.y - (bn.y + bn.a / 2) + bn.l / 2 - 2) : mover(nota, x - bn.x, bt.y - 8 - bn.y);
+      return { fundo: [...texto, [[x + 8, bt.y - 12], [x + 8, bt.y + 12]]], foco: posta };
     } },
 ];

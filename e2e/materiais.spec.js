@@ -79,3 +79,13 @@ test('livro: nota do exemplo aparece na camada notas e o painel muda a posição
   await expect.poll(() => page.locator('#painel textarea').evaluateAll((ts) => ts.some((t) => t.value.includes('{nota@esquerda:')))).toBe(true)
   await expect(page.locator('#previa .alca-nota').first()).toBeAttached()
 })
+
+test('livro: ângulo da nota no painel vira /graus no texto e as setas usam os controles de mão', async ({ page }) => {
+  await abrir(page, 'livro')
+  const ang = page.locator('#grupos details:not([hidden]) .posicao input[type=number]').first()
+  await ang.fill('30')
+  await ang.dispatchEvent('change')
+  await expect.poll(() => page.locator('#painel textarea').evaluateAll((ts) => ts.some((t) => /\{nota@\/30:/.test(t.value)))).toBe(true)
+  const notas = page.locator('#grupos details:not([hidden])', { has: page.locator('summary', { hasText: /^Notas$/ }) })
+  for (const k of ['curva', 'irregular', 'ponta', 'inclinacao']) await expect(notas.locator(`.controle[data-chave="${k}"]`)).toBeVisible()
+})
