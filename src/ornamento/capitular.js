@@ -105,7 +105,7 @@ const pv = (chave) => (v, ctx) => capitular(CX, { ...P, [chave]: v }, 1, ctx?.fo
 const previaLinhas = (v, ctx) => {
   const c = caixaCapitular({ x: 0, y: 0, linhas: v, entrelinha: 5 });
   const pautas = Array.from({ length: v }, (_, k) => [[c.l + 2, (k + 0.8) * 5], [c.l + 32, (k + 0.8) * 5]]);
-  return [...capitular(c, { ...P, linhas: v }, 1, ctx?.fontes), ...pautas];
+  return { fundo: pautas, foco: capitular(c, { ...P, linhas: v }, 1, ctx?.fontes) };
 };
 
 export const PARAMS = [

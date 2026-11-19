@@ -35,8 +35,12 @@ test('descoberta: pelo menos 7 módulos exportam PARAMS', () => {
 });
 
 const valoresDe = (x) => x.tipo === 'marca' ? [false, true] : x.tipo === 'opcao' ? x.opcoes.map((o) => o.valor) : [x.min, x.padrao, x.max];
-const traçosOk = (t, onde) => {
-  assert.ok(Array.isArray(t) && t.length >= 1, `${onde}: sem traços`);
+// previa devolve traços ou { fundo, foco } (foco = o que o controle muda, em destaque na prévia).
+const traçosOk = (bruto, onde) => {
+  const obj = !Array.isArray(bruto);
+  if (obj) assert.ok(Array.isArray(bruto?.fundo) && Array.isArray(bruto?.foco), `${onde}: { fundo, foco } sem arrays`);
+  const t = obj ? [...bruto.fundo, ...bruto.foco] : bruto;
+  assert.ok(t.length >= 1, `${onde}: sem traços`);
   for (const tr of t) {
     assert.ok(tr.length >= 2, `${onde}: traço com menos de 2 pontos`);
     assert.ok(tr.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y)), `${onde}: ponto não finito`);
@@ -55,6 +59,9 @@ for (const [caminho, params] of modulos) {
       assert.ok(['faixa', 'numero', 'opcao', 'marca'].includes(x.tipo), `${id}: tipo`);
       assert.ok(x.rotulo && x.ajuda && x.ajuda.length <= 220, `${id}: rotulo/ajuda (${x.ajuda?.length})`);
       assert.equal(typeof x.previa, 'function', `${id}: previa`);
+      for (const k of ['min', 'max', 'passo', 'padrao']) {
+        if (typeof x[k] === 'number') assert.ok((String(x[k]).split('.')[1] ?? '').length <= 2, `${id}: ${k}=${x[k]} com mais de 2 casas`);
+      }
       if (x.tipo === 'faixa' || x.tipo === 'numero') {
         assert.ok(x.min < x.max && x.passo > 0 && x.min <= x.padrao && x.padrao <= x.max, `${id}: faixa inválida`);
       } else if (x.tipo === 'marca') assert.equal(typeof x.padrao, 'boolean', `${id}: padrao`);

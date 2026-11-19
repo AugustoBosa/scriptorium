@@ -47,7 +47,7 @@ export function comporCarta(texto, ctx, cfg) {
 // Prévia: papel + área do texto + faixa da marginália.
 const previa = (marginalia, faixa) => (v, ctx) => {
   const p = ctx.papel, g = geometria(p, 6, marginalia(v), faixa(v)), m = p.margens;
-  return [ret(0, 0, p.largura, p.altura), ret(g.coluna.x, m.topo, g.coluna.x + g.coluna.l, p.altura - m.base), ...(g.faixa ? [ret(g.faixa.x, g.faixa.y, g.faixa.x + g.faixa.l, g.faixa.y + g.faixa.a)] : [])];
+  return { fundo: [ret(0, 0, p.largura, p.altura), ret(g.coluna.x, m.topo, g.coluna.x + g.coluna.l, p.altura - m.base)], foco: g.faixa ? [ret(g.faixa.x, g.faixa.y, g.faixa.x + g.faixa.l, g.faixa.y + g.faixa.a)] : [] };
 };
 export const PARAMS = [
   { chave: 'tipo', grupo: 'carta', nivel: 'basico', tipo: 'opcao', padrao: 'carta', rotulo: 'tipo de folha',

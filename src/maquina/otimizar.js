@@ -84,12 +84,12 @@ const comViagem = (t) => {
   let pos = [0, 0];
   const ar = [];
   for (const x of t) { ar.push([pos, x[0]]); pos = x[x.length - 1]; }
-  return [...t, ...ar];
+  return { fundo: t, foco: ar };
 };
 export const PARAMS = [
   { chave: 'otimizar', grupo: 'maquina', nivel: 'basico', tipo: 'marca', padrao: true, rotulo: ROTULOS.otimizar, ajuda: AJUDA.otimizar,
     previa: (v, ctx) => { const t = ctx.escrever(ctx.mao, 'mão viu'); return comViagem(v ? otimizar(t) : t); } },
   { chave: 'trajeto', grupo: 'maquina', nivel: 'avancado', tipo: 'marca', padrao: false, rotulo: 'mostrar trajeto',
     ajuda: 'Desenha na prévia o caminho da caneta no ar entre um traço e o próximo. Só aparece na tela; o desenho e o G-code não mudam.',
-    previa: (v, ctx) => { const t = otimizar(ctx.escrever(ctx.mao, 'mão viu')); return v ? comViagem(t) : t; } },
+    previa: (v, ctx) => { const t = otimizar(ctx.escrever(ctx.mao, 'mão viu')); return v ? comViagem(t) : { fundo: t, foco: [] }; } },
 ];

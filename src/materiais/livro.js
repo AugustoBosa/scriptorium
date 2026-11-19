@@ -93,7 +93,7 @@ export function comporLivro(texto, ctx, cfg) {
 // Prévias: folha A6 com pautas e o elemento.
 const A6 = { largura: 105, altura: 148, margens: { topo: 9, dir: 9, base: 9, esq: 9 } };
 const PAUTA = 5 * 1.5;
-const folha = (extra = []) => [...Array.from({ length: 12 }, (_, k) => [[9, 30 + k * PAUTA], [96, 30 + k * PAUTA]]), ...extra];
+const folha = (extra = []) => ({ fundo: Array.from({ length: 12 }, (_, k) => [[9, 30 + k * PAUTA], [96, 30 + k * PAUTA]]), foco: extra });
 const retBorda = { x: 3, y: 3, l: 99, a: 142 };
 const G6 = geometria(A6, { ...D });
 const op = (...vs) => vs.map(([valor, rotulo]) => ({ valor, rotulo }));
@@ -116,5 +116,5 @@ export const PARAMS = [
   { chave: 'bordaLivro', grupo: 'livro', nivel: 'basico', tipo: 'opcao', padrao: 'nenhuma', rotulo: 'borda do livro',
     ajuda: 'Moldura ao redor de cada página. O texto ocupa só o que sobra dentro dela. Escolha o estilo ou nenhuma.',
     opcoes: [...op(['nenhuma', 'nenhuma']), ...bordas],
-    previa: (v) => (v === 'nenhuma' ? folha() : [...borda(retBorda, { estilo: v, largura: 6 }, 1), ...folha()]) },
+    previa: (v) => folha(v === 'nenhuma' ? [] : borda(retBorda, { estilo: v, largura: 6 }, 1)) },
 ];

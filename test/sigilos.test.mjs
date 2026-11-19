@@ -82,6 +82,6 @@ test('golden: 4 frases tipo selo, A6, 2 colunas', (t) => {
 test('PARAMS: prévias com traços', () => {
   for (const p of PARAMS) {
     const valores = p.tipo === 'marca' ? [false, true] : p.tipo === 'opcao' ? p.opcoes.map((o) => o.valor) : [p.min, p.max];
-    for (const v of valores) assert.ok(p.previa(v, ctx).length > 0, `${p.chave}=${v}`);
+    for (const v of valores) assert.ok([p.previa(v, ctx)].flatMap((t) => (Array.isArray(t) ? t : [...t.fundo, ...t.foco])).length > 0, `${p.chave}=${v}`);
   }
 });

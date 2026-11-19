@@ -81,8 +81,9 @@ export function validarDocumento(doc) {
 
 // Parâmetros editáveis. Prévia: contorno do papel + janela útil da máquina, ou papel + área dentro das margens.
 const ret = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]];
-const comJanela = (l, a, ctx) => { const m = papelMaximo(ctx.perfil); return [ret(0, 0, l, a), ret(0, 0, m.largura, m.altura)]; };
-const comMargens = (l, a, { topo, dir, base, esq }) => [ret(0, 0, l, a), ret(esq, topo, l - dir, a - base)];
+// fundo = o que fica igual; foco = o que o controle muda (pintado em destaque na prévia).
+const comJanela = (l, a, ctx) => { const m = papelMaximo(ctx.perfil); return { fundo: [ret(0, 0, m.largura, m.altura)], foco: [ret(0, 0, l, a)] }; };
+const comMargens = (l, a, { topo, dir, base, esq }) => ({ fundo: [ret(0, 0, l, a)], foco: [ret(esq, topo, l - dir, a - base)] });
 const lado = (k) => (v, ctx) => comMargens(ctx.papel.largura, ctx.papel.altura, { ...ctx.papel.margens, [k]: v });
 const marg = (chave, k, rot) => ({ chave, grupo: 'papel', nivel: 'avancado', tipo: 'faixa', min: 0, max: 60, passo: 1, padrao: 12, unidade: 'mm', rotulo: ROTULOS[rot], ajuda: AJUDA[rot], previa: lado(k) });
 export const PARAMS = [

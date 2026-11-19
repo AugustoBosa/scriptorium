@@ -68,5 +68,5 @@ export const PARAMS = [
     previa: (v) => grade(v) },
   { chave: 'legendas', grupo: 'sigilos', nivel: 'basico', tipo: 'marca', padrao: true, rotulo: 'legendas',
     ajuda: 'Escreve a frase centrada embaixo de cada sigilo, em letra de 3 mm. Desligado, a célula fica só com o desenho.',
-    previa: (v, ctx) => { const t = desenhar('sigilo', CELULA, 'sigilo', 1, ctx, PADRAO); return v ? [...t, ...escreverEm('sigilo', { x: 0, y: 31, l: 30, a: 6.6 }, { alinhamento: 'centro', tamanho: 3 }, ctx.fontes, ctx.mao)] : t; } },
+    previa: (v, ctx) => { const t = desenhar('sigilo', CELULA, 'sigilo', 1, ctx, PADRAO); return { fundo: t, foco: v ? escreverEm('sigilo', { x: 0, y: 31, l: 30, a: 6.6 }, { alinhamento: 'centro', tamanho: 3 }, ctx.fontes, ctx.mao) : [] }; } },
 ];

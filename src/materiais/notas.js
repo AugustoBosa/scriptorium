@@ -262,8 +262,8 @@ const RAB = ['espiral', 'estrela', 'caixa', 'flor'];
 export const PARAMS = [
   { chave: 'espontaneo', grupo: 'notas', nivel: 'basico', tipo: 'faixa', min: 0, max: 1, passo: 0.05, padrao: 0, rotulo: 'rabiscos espontâneos',
     ajuda: 'Quantos sublinhados, asteriscos, interrogações e rabiscos aparecem sozinhos na margem e na calha. 0 = nenhum; 1 = a página bem rabiscada.',
-    previa: (v, ctx) => [...ctx.escrever(ctx.mao, 'nota', { tamanho: 6 }),
-      ...Array.from({ length: Math.round(v * 4) }, (_, i) => rabisco(RAB[i], { x: 22 + (i % 2) * 10, y: 2 + Math.floor(i / 2) * 10, l: 8, a: 8 }, 1)).flat()] },
+    previa: (v, ctx) => ({ fundo: ctx.escrever(ctx.mao, 'nota', { tamanho: 6 }),
+      foco: Array.from({ length: Math.round(v * 4) }, (_, i) => rabisco(RAB[i], { x: 22 + (i % 2) * 10, y: 2 + Math.floor(i / 2) * 10, l: 8, a: 8 }, 1)).flat() }) },
   { chave: 'conector', grupo: 'notas', nivel: 'basico', tipo: 'opcao', padrao: 'linha', rotulo: 'conector da nota',
     ajuda: 'Como a nota da margem se liga à linha do texto: uma linha reta com cotovelos, uma chave } ou uma seta.',
     opcoes: [{ valor: 'linha', rotulo: 'linha' }, { valor: 'chave', rotulo: 'chave' }, { valor: 'seta', rotulo: 'seta' }],
@@ -271,6 +271,6 @@ export const PARAMS = [
       const texto = ctx.escrever(ctx.mao, 'texto', { tamanho: 4 });
       const bt = caixaDe(texto), nota = mover(ctx.escrever(ctx.mao, 'nota', { tamanho: 2.5 }), 30, 0), bn = caixaDe(nota);
       const calha = { x: bt.x + bt.l, l: bn.x - bt.x - bt.l };
-      return [...texto, ...nota, ...conectar(v, { dir: true, xTexto: bt.x + bt.l, base: 6, tam: 4, calha, xNota: bn.x - VAO, yNota: bn.y + bn.a / 2, tn: 2.5 })];
+      return { fundo: [...texto, ...nota], foco: conectar(v, { dir: true, xTexto: bt.x + bt.l, base: 6, tam: 4, calha, xNota: bn.x - VAO, yNota: bn.y + bn.a / 2, tn: 2.5 }) };
     } },
 ];

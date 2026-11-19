@@ -4,17 +4,24 @@ const W = 288, H = 104;
 let contador = 0, pop = null, ativo = null, raf = 0;
 
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
-const fmt = (v, un) => String(v).replace('.', ',').replace('-', '−') + (un ? ' ' + un : '');
+const fmt = (v, un) => String(+Number(v).toFixed(2)).replace('.', ',').replace('-', '−') + (un ? ' ' + un : ''); // no máximo 2 casas
 
 function valida(def, bruto) {
   let v = Number(bruto);
   if (bruto === '' || bruto == null || Number.isNaN(v)) return null;
   const { min = -Infinity, max = Infinity, passo } = def;
-  if (passo) { v = Math.round((v - (Number.isFinite(min) ? min : 0)) / passo) * passo + (Number.isFinite(min) ? min : 0); v = +v.toFixed(6); }
-  return Math.min(max, Math.max(min, v));
+  if (passo) { v = Math.round((v - (Number.isFinite(min) ? min : 0)) / passo) * passo + (Number.isFinite(min) ? min : 0); }
+  return +Math.min(max, Math.max(min, v)).toFixed(2);
 }
 
-const tentar = (def, v, ctx) => { try { const t = def.previa(v, ctx); return Array.isArray(t) ? t : null; } catch { return null; } };
+// previa devolve traços (tudo muda com o valor) ou { fundo, foco }: o foco é o que o controle altera, pintado em destaque.
+const tentar = (def, v, ctx) => {
+  try {
+    const t = def.previa(v, ctx);
+    if (Array.isArray(t)) return { fundo: [], foco: t };
+    return t && Array.isArray(t.foco) ? { fundo: t.fundo ?? [], foco: t.foco } : null;
+  } catch { return null; }
+};
 
 // ---- desenho ----
 function svg(w, h) { const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('aria-hidden', 'true'); return s; }
@@ -86,8 +93,8 @@ function render() {
     const fant = a.fant || [];
     if (atual && fant.every(Boolean)) {
       filhos.push(folha(desenhar([
-        { tracos: fant[0], cls: 'pv-fantasma' }, { tracos: fant[1], cls: 'pv-fantasma' }, { tracos: atual, cls: 'pv-atual' },
-      ].filter(c => c.tracos), W, H, !def.semEscala)));
+        { tracos: atual.fundo, cls: 'pv-fundo' }, { tracos: fant[0].foco, cls: 'pv-fantasma' }, { tracos: fant[1].foco, cls: 'pv-fantasma' }, { tracos: atual.foco, cls: 'pv-foco' },
+      ], W, H, !def.semEscala)));
       if (def.tipo === 'faixa') filhos.push(...regua(def, v));
     }
   }
@@ -97,8 +104,8 @@ function render() {
 
 function grade(itens, cols = 4) {
   const g = el('div', 'pv-grade'); g.style.gridTemplateColumns = `repeat(${Math.min(cols, 4)}, 1fr)`;
-  for (const [rot, tracos, sel] of itens) {
-    const f = el('figure'), cx = [{ tracos, cls: 'pv-atual' }];
+  for (const [rot, t, sel] of itens) {
+    const f = el('figure'), cx = [{ tracos: t.fundo, cls: 'pv-fundo' }, { tracos: t.foco, cls: 'pv-foco' }];
     const s = desenhar(cx, 96, 72, false);
     f.append(folha(s, sel), el('figcaption', null, rot));
     g.append(f);

@@ -168,7 +168,7 @@ export const PARAMS = [
     (v) => (v ? [ret(30, 42), ...blocoMagia(0, 6), ...[ret(30, 42), ...blocoMagia(0, 6)].map((t) => t.map(([x, y]) => [x + 34, y]))]
       : [ret(30, 42), ...blocoMagia(0, 6), ...blocoMagia(0, 24)]), { tipo: 'marca', padrao: CFG_PADRAO.porPagina, semEscala: true }),
   P('separador', 'disposicao', 'basico', 'separador entre magias', 'Enfeite horizontal entre uma magia e a seguinte, quando as magias seguem na mesma folha.',
-    (v) => [ret(30, 42), ...blocoMagia(0, 4), ...blocoMagia(0, 25), ...(v === 'nenhum' ? [] : separador(SEP, { separador: v }, 1))],
+    (v) => ({ fundo: [ret(30, 42), ...blocoMagia(0, 4), ...blocoMagia(0, 25)], foco: v === 'nenhum' ? [] : separador(SEP, { separador: v }, 1) }),
     { tipo: 'opcao', padrao: CFG_PADRAO.separador, semEscala: true, opcoes: [{ valor: 'nenhum', rotulo: 'nenhum' }, { valor: 'losango', rotulo: 'losango' }, { valor: 'asteriscos', rotulo: 'asteriscos' }, { valor: 'onda', rotulo: 'onda' }] }),
   P('tamanho', 'folha', 'basico', 'tamanho da letra', 'Altura das letras da magia, em mm. O programa diminui a letra até o mínimo se a magia não couber na folha.',
     (v, ctx) => ctx.escrever(ctx.mao, 'magia', { tamanho: v }), { tipo: 'faixa', min: 2, max: 8, passo: 0.25, padrao: CFG_PADRAO.tamanho, unidade: 'mm' }),
@@ -179,15 +179,15 @@ export const PARAMS = [
   P('sigilo', 'folha', 'basico', 'tamanho do sigilo', 'Tamanho do sigilo desenhado acima do texto, como fração da folha. 0 = sem sigilo. O sigilo codifica nível, escola e componentes.',
     (v, ctx) => {
       const p = ctx.papel, u = util(p), r = (v * Math.min(u.l, u.a)) / 2;
-      return [ret(p.largura, p.altura), ...sigilo(ctx.magia, ctx.estilo.seed).map((t) => t.map(([x, y]) => [p.largura / 2 + x * r, p.altura / 2 + y * r]))];
+      return { fundo: [ret(p.largura, p.altura)], foco: sigilo(ctx.magia, ctx.estilo.seed).map((t) => t.map(([x, y]) => [p.largura / 2 + x * r, p.altura / 2 + y * r])) };
     }, { tipo: 'faixa', min: 0, max: 0.8, passo: 0.05, padrao: CFG_PADRAO.sigilo }),
   P('moldura', 'folha', 'basico', 'moldura', 'Desenha uma moldura dupla com losangos nos cantos em volta de cada página.',
-    (v, ctx) => [ret(ctx.papel.largura, ctx.papel.altura), ...(v ? moldura(ctx.papel) : [])], { tipo: 'marca', padrao: CFG_PADRAO.moldura }),
+    (v, ctx) => ({ fundo: [ret(ctx.papel.largura, ctx.papel.altura)], foco: v ? moldura(ctx.papel) : [] }), { tipo: 'marca', padrao: CFG_PADRAO.moldura }),
   P('completo', 'folha', 'basico', 'texto completo', 'Escolhe entre o texto inteiro da magia (sempre completo), só um resumo ou o texto inteiro apenas quando couber na folha (auto).',
-    (v, ctx) => [ret(ctx.papel.largura, ctx.papel.altura), ...pautas(ctx.papel, { nao: 3, auto: 6, sim: 10 }[v])],
+    (v, ctx) => ({ fundo: [ret(ctx.papel.largura, ctx.papel.altura)], foco: pautas(ctx.papel, { nao: 3, auto: 6, sim: 10 }[v]) }),
     { tipo: 'opcao', padrao: CFG_PADRAO.completo, semEscala: true, opcoes: [{ valor: 'auto', rotulo: 'auto' }, { valor: 'nao', rotulo: 'só resumo' }, { valor: 'sim', rotulo: 'sempre completo' }] }),
   P('chave', 'folha', 'basico', 'página da chave', 'Acrescenta no fim uma página com cada letra legível ao lado do símbolo arcano, para decifrar o texto.',
-    (v, ctx) => [...ctx.escrever(ctx.mao, 'a b c'), ...(v ? ctx.escrever(ctx.maoArcana, 'a b c').map((t) => t.map(([x, y]) => [x, y + 14])) : [])], { tipo: 'marca', padrao: CFG_PADRAO.chave }),
+    (v, ctx) => ({ fundo: ctx.escrever(ctx.mao, 'a b c'), foco: v ? ctx.escrever(ctx.maoArcana, 'a b c').map((t) => t.map(([x, y]) => [x, y + 14])) : [] }), { tipo: 'marca', padrao: CFG_PADRAO.chave }),
   P('cifrarNome', 'cifrar', 'basico', 'cifrar o nome', 'Escreve o nome da magia no alfabeto arcano em vez da sua letra.', cif, { tipo: 'marca', padrao: CFG_PADRAO.cifrar.nome }),
   P('cifrarFicha', 'cifrar', 'basico', 'cifrar a ficha', 'Escreve a ficha da magia (nível, tempo, alcance) no alfabeto arcano em vez da sua letra.', cif, { tipo: 'marca', padrao: CFG_PADRAO.cifrar.ficha }),
   P('cifrarEfeito', 'cifrar', 'basico', 'cifrar o efeito', 'Escreve a descrição do efeito da magia no alfabeto arcano em vez da sua letra.', cif, { tipo: 'marca', padrao: CFG_PADRAO.cifrar.efeito }),

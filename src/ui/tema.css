@@ -34,6 +34,7 @@
   /* dentro da folha e das miniaturas do popover: fixos nos dois temas (a folha é sempre clara) */
   --tinta-folha:    #1c1611;
   --fantasma-folha: #9a8a6c;
+  --destaque-folha: #b3261e; /* o que o controle altera, na prévia */
 
   /* tipografia */
   --fonte-titulo: "EB Garamond", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
@@ -169,7 +170,8 @@ dialog::backdrop { background: var(--sombra-cor); }
 #previa-viva .pv-folha { background: var(--folha); border-radius: var(--raio); border: 2px solid transparent; }
 #previa-viva .pv-folha svg { display: block; width: 100%; height: auto; }
 #previa-viva .pv-folha.pv-sel { border-color: var(--rubrica); }
-#previa-viva .pv-atual { fill: none; stroke: var(--tinta-folha); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+#previa-viva .pv-fundo { fill: none; stroke: var(--tinta-folha); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+#previa-viva .pv-foco { fill: none; stroke: var(--destaque-folha); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 #previa-viva .pv-fantasma { fill: none; stroke: var(--fantasma-folha); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
 #previa-viva .pv-escala { stroke: var(--tinta-folha); stroke-width: 1; fill: none; }
 #previa-viva .pv-escala-txt { fill: var(--tinta-folha); font-size: 10px; font-family: var(--fonte-ui); }
