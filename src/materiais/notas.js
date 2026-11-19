@@ -231,15 +231,23 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
       };
       const livreCaixa = (q) => q.x >= borda && q.y >= borda && q.x + q.l <= papel.largura - borda && q.y + q.a <= papel.altura - borda
         && !ocupa.some((o) => q.x < o.x + o.l + VAO && o.x < q.x + q.l + VAO && q.y < o.y + o.a + VAO && o.y < q.y + q.a + VAO);
-      let melhor = Infinity;
-      for (const lado of pos?.lado ? [pos.lado] : LADOS) {
-        for (const j of [0, 1, 2, 4, 8]) for (const k of passos(15, 2)) {
-          const [x, y] = lados[lado](k, j), q = caixaEm(x, y);
-          if (!livreCaixa(q)) continue;
-          const d = Math.hypot(x + b0.l / 2 - (c.x + c.l / 2), y + b0.a / 2 - (c.y + c.a / 2));
-          if (d < melhor) { melhor = d; alvo = { x, y }; }
-          break; // o primeiro livre de cada desvio já é o mais perto nessa direção
+      const buscar = (lista) => {
+        let melhor = Infinity, achado = null;
+        for (const lado of lista) {
+          for (const j of [0, 1, 2, 4, 8]) for (const k of passos(15, 2)) {
+            const [x, y] = lados[lado](k, j), q = caixaEm(x, y);
+            if (!livreCaixa(q)) continue;
+            const d = Math.hypot(x + b0.l / 2 - (c.x + c.l / 2), y + b0.a / 2 - (c.y + c.a / 2));
+            if (d < melhor) { melhor = d; achado = { x, y }; }
+            break; // o primeiro livre de cada desvio já é o mais perto nessa direção
+          }
         }
+        return achado;
+      };
+      alvo = buscar(pos?.lado ? [pos.lado] : LADOS);
+      if (!alvo && pos?.lado) { // lado pedido sem espaço: vai para o lugar livre mais perto, com aviso
+        alvo = buscar(LADOS);
+        if (alvo) avisos.push(`nota sem espaço ${pos.lado === 'acima' || pos.lado === 'abaixo' ? '' : 'à '}${pos.lado} da palavra; foi para o lugar livre mais perto: "${resumo(texto)}"`);
       }
     }
     if (!alvo) { avisos.push(`nota descartada: sem espaço livre perto da palavra: "${resumo(texto)}"`); return; }
