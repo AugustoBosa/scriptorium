@@ -9,7 +9,7 @@ const raiz = new URL('../', import.meta.url);
 const carregarFonte = (nome) => parseFonte(fs.readFileSync(new URL(`fontes/${nome}.svg`, raiz), 'utf8'), nome);
 
 // Fixture inline (não é preset): só para os testes.
-const strahdLike = () => ({
+const personagemValido = () => ({
   nome: 'Fixture',
   mao: { ...NEUTRA, base: [{ fonte: 'EMSAllure', peso: 1 }], seed: 4004, inclinacao: 6, idio: 0.25, capricho: 0.8 },
   variacoes: {
@@ -26,7 +26,7 @@ test('resolver recusa chave de identidade e variação inexistente', () => {
 });
 
 test('identidade intacta nas variações e resolver não muta p', () => {
-  const p = strahdLike();
+  const p = personagemValido();
   const antes = structuredClone(p);
   for (const v of Object.keys(p.variacoes)) {
     const m = resolver(p, v);
@@ -37,7 +37,7 @@ test('identidade intacta nas variações e resolver não muta p', () => {
 });
 
 test('validar detecta erros', () => {
-  const ok = strahdLike();
+  const ok = personagemValido();
   assert.deepEqual(validar(ok), []);
   assert.ok(validar({ ...ok, nome: '' }).length >= 1);
   assert.ok(validar({ ...ok, mao: { ...ok.mao, base: [] } }).length >= 1);
@@ -46,7 +46,7 @@ test('validar detecta erros', () => {
 });
 
 test('compor "Teste" com a fonte da fixture não falha', () => {
-  const p = strahdLike();
+  const p = personagemValido();
   const fontes = { EMSAllure: carregarFonte('EMSAllure') };
   for (const v of Object.keys(p.variacoes)) {
     const mao = resolver(p, v);
@@ -59,7 +59,7 @@ test('compor "Teste" com a fonte da fixture não falha', () => {
 });
 
 test('variações emocionais têm tremor maior que o formal e apressado tem pressa maior', () => {
-  const p = strahdLike();
+  const p = personagemValido();
   assert.ok(resolver(p, 'medo').tremor > resolver(p, 'formal').tremor, 'tremor');
   assert.ok(resolver(p, 'apressado').pressa > resolver(p, 'formal').pressa, 'pressa');
 });
@@ -80,7 +80,7 @@ test('novoPersonagem: válido, padrão e independente', () => {
 });
 
 test('ajustarVariacao: grava, remove se igual à mão, altera mão sem variação, recusa erros', () => {
-  const p = strahdLike();
+  const p = personagemValido();
   ajustarVariacao(p, 'formal', 'tremor', 0.3);
   assert.equal(p.variacoes.formal.tremor, 0.3);
   assert.equal(p.mao.tremor, NEUTRA.tremor);
@@ -98,13 +98,13 @@ test('ajustarVariacao: grava, remove se igual à mão, altera mão sem variaçã
 });
 
 test('validar: personagem sem as 7 chaves novas é válido', () => {
-  const p = strahdLike();
+  const p = personagemValido();
   for (const k of ['alternativas', 'contexto', 'arremate', 'ondulacao', 'deriva', 'ritmo', 'fadiga']) delete p.mao[k];
   assert.deepEqual(validar(p), []);
 });
 
 test('validar: faixas das chaves novas e variação de identidade', () => {
-  const ok = strahdLike();
+  const ok = personagemValido();
   const com = (k, v) => validar({ ...ok, mao: { ...ok.mao, [k]: v } });
   assert.ok(com('alternativas', 9).length >= 1);
   assert.ok(com('alternativas', 2.5).length >= 1);
@@ -115,13 +115,13 @@ test('validar: faixas das chaves novas e variação de identidade', () => {
 });
 
 test('validar: 5 chaves do ductus são opcionais, faixa [0,1], variação de identidade recusada', () => {
-  const ok = strahdLike();
+  const ok = personagemValido();
   for (const k of ['ligadura', 'adiamento', 'fluidez', 'ultrapassagem', 'retoque']) delete ok.mao[k];
   assert.deepEqual(validar(ok), []);
-  const com = (k, v) => validar({ ...strahdLike(), mao: { ...strahdLike().mao, [k]: v } });
+  const com = (k, v) => validar({ ...personagemValido(), mao: { ...personagemValido().mao, [k]: v } });
   assert.ok(com('ligadura', 2).length >= 1);
-  assert.deepEqual(validar({ ...strahdLike(), variacoes: { v: { fluidez: 0.5 } } }), []);
-  assert.ok(validar({ ...strahdLike(), variacoes: { v: { ligadura: 1 } } }).some((e) => /identidade/.test(e)));
+  assert.deepEqual(validar({ ...personagemValido(), variacoes: { v: { fluidez: 0.5 } } }), []);
+  assert.ok(validar({ ...personagemValido(), variacoes: { v: { ligadura: 1 } } }).some((e) => /identidade/.test(e)));
 });
 
 test('nomeLivre devolve base ou base N', () => {

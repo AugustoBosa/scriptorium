@@ -13,7 +13,7 @@ async function escrever(page, texto) {
 test('carta: marcação vira camada de notas e não aparece como texto', async ({ page }) => {
   await abrir(page, 'carta')
   await page.locator('#painel .controle[data-chave="tipo"] select').selectOption({ label: 'anotação' })
-  await escrever(page, 'Caro viajante, a neblina {nota: cuidado com a neblina} cobre {_Barovia_} e o castelo espera {~vc~>você} ainda hoje.')
+  await escrever(page, 'Caro viajante, o vento {nota: cuidado com o vento} cobre {_vale_} e o moinho espera {~vc~>você} ainda hoje.')
   await expect(page.locator('#previa g[data-camada="texto"]')).toBeAttached()
   await expect(page.locator('#previa g[data-camada="notas"] path').first()).toBeAttached()
   await expect(page.locator('#avisos')).not.toContainText('{')
@@ -61,7 +61,7 @@ test('sigilos: complexidade muda o SVG da prévia (tipo círculo)', async ({ pag
 
 test('livro: marcação da Carta não vira texto literal', async ({ page }) => {
   await abrir(page, 'livro')
-  await escrever(page, 'A neblina {nota: cuidado} cobre {_Barovia_} e o castelo.')
+  await escrever(page, 'O vento {nota: cuidado} cobre {_vale_} e o moinho.')
   expect(await page.locator('#previa').innerHTML()).not.toContain('{')
   await expect(page.locator('#avisos')).not.toContainText('{')
 })

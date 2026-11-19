@@ -3,6 +3,7 @@ import { resolver, validar } from '../personagem.js';
 import { amostra } from '../layout.js';
 import { papel as fabricaPapel, PARAMS as PARAMS_DOC, CANETAS } from '../materiais/documento.js';
 import { comporCarta, PRESETS, PARAMS as PARAMS_CARTA } from '../materiais/carta.js';
+import { trocarExemplo } from '../materiais/exemplos.js';
 import { parsearNotas, PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
 import { comporLivro, PARAMS as PARAMS_LIVRO } from '../materiais/livro.js';
 import { comporSigilos, PARAMS as PARAMS_SIG } from '../materiais/sigilos.js';
@@ -92,7 +93,7 @@ const MARCACAO = [
 
 export function montarCarta(div, estado, aoMudar) {
   const c = estado.carta, ctx = ctxDe(estado);
-  const tipo = { ler: () => c.tipo, gravar: (v) => Object.assign(c, { tipo: v, faixa: 0.3, ...PRESETS[v] }), ctx };
+  const tipo = { ler: () => c.tipo, gravar: (v) => { Object.assign(c, { tipo: v, faixa: 0.3, ...PRESETS[v] }); estado.texto = trocarExemplo(estado.texto, estado.exemplo, v); estado.exemplo = v; }, ctx };
   const pers = opcao('personagemNotas', 'Personagem das notas', 'Quem escreve as notas da margem. "O mesmo da escrita" usa a mão do texto; os outros são personagens salvos no navegador.',
     () => [['', 'o mesmo da escrita'], ...Object.keys(salvos()).map((n) => [n, n])], () => c.personagemNotas, (v) => { c.personagemNotas = v; },
     (v, x) => { const p = salvos()[v]; return nota(p && !validar(p).length ? resolver(p, null) : x.mao, x); }, aoMudar, ctx);

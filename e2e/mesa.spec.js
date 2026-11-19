@@ -76,8 +76,8 @@ test('offsetX com perfil experimental: traço fora da janela: erro e nenhum arqu
 test('camada "notas" escolhida: "Baixar esta passada" gera …-notas.gcode (passada 2) sem a camada texto', async ({ page }) => {
   await page.getByRole('button', { name: 'Página', exact: true }).click()
   await page.getByText('Texto', { exact: true }).click()
-  const idx = await page.$$eval('#painel textarea', ts => ts.findIndex(t => t.value.includes('Caro viajante')))
-  await page.locator('#painel textarea').nth(idx).fill('Caro {_viajante_},\n\nA neblina cobre Barovia.')
+  const idx = await page.$$eval('#painel textarea', ts => ts.findIndex(t => t.value.includes('Tinta ferrogálica')))
+  await page.locator('#painel textarea').nth(idx).fill('Caro {_viajante_},\n\nO vento cobre o vale.')
   await page.getByRole('button', { name: 'Mesa', exact: true }).click()
   await page.getByRole('combobox', { name: 'Camada', exact: true }).selectOption('notas')
   await page.getByRole('combobox', { name: 'Passada' }).selectOption({ index: 1 }) // a carta (página 1) está no slot da passada 2

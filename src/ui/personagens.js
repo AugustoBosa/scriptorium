@@ -3,8 +3,8 @@ import { validar, novoPersonagem, nomeLivre, renomearSalvo } from '../personagem
 import * as pPersonagem from './personagem.js';
 import { especime } from './especime.js';
 
-const FRASE_GRANDE = 'Caro viajante, a neblina cobre Barovia.';
-const FRASE_CARTAO = 'Caro viajante,';
+const FRASE_GRANDE = 'Querida Elena, o vento cheira a trigo.';
+const FRASE_CARTAO = 'Querida Elena,';
 const FOLHA_GRANDE = { largura: 120, altura: 40, margens: { topo: 4, dir: 4, base: 4, esq: 4 } };
 
 const el = (tag, classe, texto) => {

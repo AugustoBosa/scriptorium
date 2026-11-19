@@ -19,9 +19,9 @@ const ctx = { fontes, mao };
 const r3 = (v) => Array.isArray(v) ? v.map(r3) : typeof v === 'number' ? Math.round(v * 1000) / 1000 + 0 : v;
 const resumo = (doc) => doc.paginas.map((p) => p.camadas.map((c) => ({ id: c.id, caneta: c.caneta, n: c.tracos.length, caixa: r3(caixaDe(c.tracos)), primeiros: r3(c.tracos.slice(0, 2)) })));
 
-const TEXTO = 'A neblina cobre Barovia e o castelo espera por você, viajante. '.repeat(50);
+const TEXTO = 'O vento cobre o vale e o moinho espera por você, viajante. '.repeat(50);
 const A6 = papel('A6');
-const base = { papel: A6, tamanho: 4, entrelinha: 1.5, titulo: 'Barovia', inicio: 5 };
+const base = { papel: A6, tamanho: 4, entrelinha: 1.5, titulo: 'Vale', inicio: 5 };
 
 // caixa de cada palavra do texto (blocos de `grupos`)
 const palavras = (c) => c.grupos.map((g, k) => caixaDe(c.tracos.slice(g, c.grupos[k + 1] ?? c.tracos.length)));
@@ -45,11 +45,11 @@ for (const colunas of [1, 2]) {
     assert.equal(sem.paginas.length, plano.length);
     plano.forEach((p, i) => {
       assert.equal(p.numero, String(5 + i));
-      assert.equal(p.cabecalho, i === 0 ? null : 'Barovia');
+      assert.equal(p.cabecalho, i === 0 ? null : 'Vale');
       assert.equal(p.reclamo, i === plano.length - 1 ? null : r.ancoras.find((a) => a.pagina === i + 1).texto);
       assert.equal(camada(sem, i, 'paginacao').tracos.length > 0, true);
     });
-    assert.equal(paginacao(r, { ...base, cabecalhoNaPrimeira: true })[0].cabecalho, 'Barovia');
+    assert.equal(paginacao(r, { ...base, cabecalhoNaPrimeira: true })[0].cabecalho, 'Vale');
     assert.equal(paginacao(r, { ...base, numeracao: false, reclamo: false })[0].numero, null);
 
     const G = geometria(A6, { ...base });
@@ -101,7 +101,7 @@ test('livro: colunas 3 lança; sem capitular em texto que não começa com letra
 });
 
 test('golden livro: A7, 2 colunas, capitular lombarda, 3 páginas', (t) => {
-  const doc = comporLivro(TEXTO.repeat(3), ctx, { papel: papel('A7'), tamanho: 3, entrelinha: 1.4, colunas: 2, titulo: 'Barovia', capitular: { estilo: 'lombarda', linhas: 3 } });
+  const doc = comporLivro(TEXTO.repeat(3), ctx, { papel: papel('A7'), tamanho: 3, entrelinha: 1.4, colunas: 2, titulo: 'Vale', capitular: { estilo: 'lombarda', linhas: 3 } });
   assert.ok(doc.paginas.length >= 3, `páginas: ${doc.paginas.length}`);
   assert.deepEqual(validarDocumento(doc), []);
   t.assert.snapshot(resumo(doc));
@@ -128,7 +128,7 @@ test('livro: exporta por camada (svg e gcode)', () => {
   const pg = doc.paginas[1];
   const svg = svgDocumento(pg, doc.papel, doc.canetas, { camadas: ['paginacao'] });
   assert.ok(svg.includes('<svg') && svg.includes('<path'));
-  assert.ok(!svgDocumento(pg, doc.papel, doc.canetas, { camadas: ['iluminura'] }).includes('Barovia'));
+  assert.ok(!svgDocumento(pg, doc.papel, doc.canetas, { camadas: ['iluminura'] }).includes('Vale'));
   const g = gcodeDocumento(pg, doc.papel, PERFIS.megaS, { camadas: ['paginacao'], canetas: doc.canetas });
   const tudo = gcodeDocumento(pg, doc.papel, PERFIS.megaS, { canetas: doc.canetas });
   assert.deepEqual(g.avisos, []);

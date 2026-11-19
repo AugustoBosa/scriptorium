@@ -52,7 +52,7 @@ A3, A4, A5, A6, A7, A8, carta, ofício e personalizado, em retrato ou paisagem, 
 - `dados/`: dados das magias. Fica fora do git.
 - `scripts/gerar-magias.mjs`: gera `dados/magias.json` a partir de 5etools (padrão: `../../dnd/data/spells`). A tradução é `dados/traducao-ptbr.txt` (uma linha `id|Nome|Resumo` por magia).
 - `test/`: testes de unidade. `e2e/`: testes Playwright.
-- `workflow/`: quadro de tarefas e definição de pronto.
+- `workflow/`: quadro do projeto (`QUADRO.md`) e pesquisa da P2S.
 
 ## Rodar
 

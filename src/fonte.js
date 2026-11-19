@@ -12,7 +12,7 @@ export const FONTES = [
   'HersheySerifMedItalic', 'MistralSingleLine', 'TwinSans',
 ];
 
-// Fontes cursivas em que "minimum" liga em 3 traços (1 corpo + 2 pingos); ver workflow/ciclos/18/projeto.md §1.
+// Fontes cursivas em que "minimum" liga em 3 traços (1 corpo + 2 pingos).
 export const CURSIVAS = ['EMSAllure', 'EMSBrush', 'EMSCapitol', 'EMSDecorousScript', 'EMSLeague', 'EMSSociety', 'EMSSwiss', 'MistralSingleLine'];
 
 // Fontes sem acentos (só maiúsculas ASCII).

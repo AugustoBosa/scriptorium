@@ -2,7 +2,7 @@ import { glifo } from './mao.js';
 import { CURSIVAS } from '../fonte.js';
 import { rng } from '../rng.js';
 
-// Ductus: junção de letras cursivas num traço só, adiamento de pingos e retoque (workflow/ciclos/18/projeto.md §2).
+// Ductus: junção de letras cursivas num traço só, adiamento de pingos e retoque.
 // Unidades em em, y para cima. Amplitudes são chute: calibrar no papel.
 const TOQUE = 0.03, CHEIO = 0.3, LIM = 0.6, DIAC = 0.8;
 const SAI_X = 0.2, SAI_ALTA = 0.2, ENT_X = 0.15, VIRA = 0.15, PASSO = 0.03;

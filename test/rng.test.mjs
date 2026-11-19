@@ -21,8 +21,8 @@ test('valores ficam em [0, 1)', () => {
 });
 
 test('seed string é repetível e distingue strings', () => {
-  assert.deepEqual(primeiros(rng('strahd'), 20), primeiros(rng('strahd'), 20));
-  assert.notDeepEqual(primeiros(rng('strahd'), 20), primeiros(rng('kolyan'), 20));
+  assert.deepEqual(primeiros(rng('alfa'), 20), primeiros(rng('alfa'), 20));
+  assert.notDeepEqual(primeiros(rng('alfa'), 20), primeiros(rng('beta'), 20));
 });
 
 test('valores fixos de rng(1)', () => {

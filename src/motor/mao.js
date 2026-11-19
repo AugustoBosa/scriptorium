@@ -134,7 +134,7 @@ export function mutar(mao, seed, forca) {
   return m;
 }
 
-// Parâmetros editáveis (contrato em workflow/ciclos/12/projeto.md). previa: traços em mm via ctx.escrever.
+// Parâmetros editáveis. previa: traços em mm via ctx.escrever.
 const viaMao = (chave, texto = 'minimum', extra = () => ({})) => (v, ctx) => ctx.escrever({ ...ctx.mao, ...extra(ctx), [chave]: v }, texto);
 const mutacao = (seed, forca, ctx) => ctx.escrever(mutar(ctx.mao, seed, forca), 'minimum');
 // Prévias de ligadura/adiamento precisam de fonte cursiva: primeira da mão, senão a primeira cursiva disponível.

@@ -3,7 +3,7 @@ import { novoPersonagem, validar } from '../personagem.js';
 import { especime } from './especime.js';
 
 const OFICINAS = [
-  ['carta', 'Carta', 'Caro viajante,', 'carta, nota ou diário'],
+  ['carta', 'Carta', 'Querida Elena,', 'carta, nota ou diário'],
   ['scroll', 'Scroll', 'Bola de Fogo', 'uma magia por folha'],
   ['grimorio', 'Grimório', 'Livro de magias', 'magias em sequência'],
   ['livro', 'Livro', 'Capítulo I', 'colunas e capitular'],

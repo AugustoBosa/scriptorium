@@ -129,7 +129,7 @@ for (const tema of ['claro', 'vela']) {
     // conteúdo longo em A6: 4 páginas numa folha A4 (2 passadas, 2 páginas cada)
     await page.locator('#grupos details', { hasText: /^Texto|^Papel e aparência/ }).evaluateAll(ds => ds.forEach(d => { d.open = true }))
     await page.getByRole('combobox', { name: 'formato', exact: true }).selectOption({ label: 'A6' })
-    await page.locator('#grupos textarea').first().fill(('A neblina cobre a aldeia e o castelo espera por você. '.repeat(8) + '\n\n').repeat(6))
+    await page.locator('#grupos textarea').first().fill(('O vento cobre o vale e o moinho espera por você. '.repeat(8) + '\n\n').repeat(6))
     await expect(page.locator('.mesa svg [data-slot]')).toHaveCount(4)
   }
   test(`captura mesa (${tema})`, async ({ page }, testInfo) => {

@@ -3,6 +3,7 @@ import { parseFonte, FONTES } from '../fonte.js';
 import { PERFIS, mesclarPerfil } from '../maquina/perfis.js';
 import { papel, deTracos } from '../materiais/documento.js';
 import { novoPersonagem } from '../personagem.js';
+import { EXEMPLOS, trocarExemplo } from '../materiais/exemplos.js';
 import { AJUDA } from '../ajuda.js';
 import { dica } from './controle.js';
 import { desenhar, listar } from './previa.js';
@@ -37,7 +38,7 @@ async function baixar(url) {
 function criarEscrita() {
   const estado = {
     fontes: {}, nomesFontes: FONTES, personagem: novoPersonagem(), variacao: 'normal', comparar: false, variacaoB: 'normal',
-    texto: 'Caro viajante,\n\nA neblina cobre {_Barovia_} e o castelo espera por você. {nota: chegar antes do anoitecer} Venha antes do pôr do sol.',
+    texto: EXEMPLOS.anotacao, exemplo: 'anotacao',
     paginaNome: 'A5', pagina: papel('A5'), opcoes: { tamanho: 6, entrelinha: 1.6, alinhamento: 'esquerda', colunas: 1 },
     perfil: structuredClone(PERFIS.megaS), perfilNome: 'megaS', otimizar: true, trajeto: false, paginaAtual: 0,
     carta: pMat.carta0(), livro: pMat.livro0(),
@@ -56,7 +57,12 @@ function criarEscrita() {
       { titulo: 'Papel e aparência', montar: pTexto.montarPapel },
       { titulo: 'Máquina', nivel: 'avancado', montar: pExportar.montar },
     ],
-    entrar(oficina) { estado.opcoes.colunas = oficina === 'livro' ? (estado.colunasLivro ?? 2) : 1; },
+    entrar(oficina) {
+      estado.opcoes.colunas = oficina === 'livro' ? (estado.colunasLivro ?? 2) : 1;
+      const tipo = oficina === 'livro' ? 'livro' : estado.carta.tipo;
+      estado.texto = trocarExemplo(estado.texto, estado.exemplo, tipo);
+      estado.exemplo = tipo;
+    },
     compor: () => pMat.comporEscrita(estado, estado.variacao),
     composB: () => pMat.comporEscrita(estado, estado.variacaoB),
     barra: pExportar.montarBarra,

@@ -22,7 +22,7 @@ const mao = { ...NEUTRA, seed: 7, base: [{ fonte: 'EMSBird', peso: 1 }] };
 const PARAGRAFOS = 'Aqui está o óleo.\n\nÀ noite, vovó ouviu.\n\nO castelo espera por você.';
 
 test('golden layout: multipagina, A6, mao neutra seed 7', (t) => {
-  const r = compor('A neblina cobre Barovia e o castelo espera por você, viajante. '.repeat(9), fontes, mao, papel('A6'), { tamanho: 10 });
+  const r = compor('O vento cobre o vale e o moinho espera por você, viajante. '.repeat(9), fontes, mao, papel('A6'), { tamanho: 10 });
   assert.ok(r.paginas.length >= 3, `esperava >= 3 paginas, veio ${r.paginas.length}`);
   t.assert.snapshot({ paginas: linhas(r.paginas), avisos: r.avisos, fim: r3(r.fim), ancoras: r3(r.ancoras) });
 });
