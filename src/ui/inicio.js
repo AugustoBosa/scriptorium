@@ -7,6 +7,9 @@ import { comporCarta } from '../materiais/carta.js';
 import { comporLivro } from '../materiais/livro.js';
 import { comporGrimorio } from '../materiais/scroll.js';
 import { comporSigilos } from '../materiais/sigilos.js';
+import { comporColeta } from '../letra/folha.js';
+import ptBR from '../letra/linguas/pt-BR.json';
+import { CANETAS } from '../materiais/documento.js';
 import { EXEMPLOS } from '../materiais/exemplos.js';
 import { gerarAlfabeto } from '../arcano/alfabeto.js';
 import { magiaVazia } from '../magia.js';
@@ -29,6 +32,8 @@ const OFICINAS = [
       maoArcana: { ...NEUTRA, base: [{ fonte: 'arcano', peso: 1 }], seed: 1 }, sigilos: {}, seed: 1 }, { papel: papel('A7'), tamanho: 3, completo: 'nao' })],
   ['sigilos', 'Sigilos', 'Frases viram selos, sigilos e círculos mágicos, arrumados em grade numa folha.',
     (ctx) => comporSigilos('luz\nmar\nsol\nlua', ctx, { papel: papel('A7'), tipo: 'selo', colunas: 2, legendas: true, seed: 1 })],
+  ['letra', 'Minha letra', 'A máquina plota folhas de coleta com guias; você escreve à mão nelas para virar a sua própria fonte.',
+    (ctx) => comporColeta(ptBR, ctx, { papel: papel('A7'), tipo: 'N', canetas: CANETAS })],
 ];
 
 function ler(chave, padrao) {

@@ -1,3 +1,6 @@
+import '@fontsource/eb-garamond/400.css';
+import '@fontsource/eb-garamond/500.css';
+import '@fontsource/eb-garamond/400-italic.css';
 import './tema.css';
 import { parseFonte, FONTES } from '../fonte.js';
 import { PERFIS, mesclarPerfil } from '../maquina/perfis.js';
@@ -292,7 +295,7 @@ function pintarTema() {
   const vela = temaEfetivo() === 'vela';
   $('tema').textContent = vela ? 'Claro' : 'Vela';
   $('tema').setAttribute('aria-label', `Mudar para tema ${vela ? 'claro' : 'vela'}`);
-  document.querySelector('meta[name=theme-color]')?.setAttribute('content', vela ? '#1e1812' : '#f4ecd8');
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', getComputedStyle(document.querySelector('header')).backgroundColor); // = --pergaminho do tema em uso
 }
 if (ui.tema) document.documentElement.dataset.tema = ui.tema;
 document.body.dataset.nivel = ui.nivel === 'avancado' ? 'avancado' : 'basico';

@@ -105,12 +105,18 @@ function arquivos(estado, p, f, k) {
 // Liga a vista da mesa com imposição? (sem imposição a vista mostra a página atual na posição da exportação normal)
 export const mesaLigada = (estado) => !!mesaDe(estado).ligada;
 
-// Cores da cena física: fixas nos dois temas (a mesa e o papel são objetos, não interface).
-const COR = { tampo: '#8b8479', grade: '#9c958a', borda: '#3b352d', janela: '#1d5fb8', papel: '#fdfaf2', papelBorda: '#5c5141', outra: '#c4bcac', ref: '#b3261e', rotulo: '#1c1611' };
+// Cores da cena física: tokens --mesa-* de tema.css, fixos nos dois temas (a mesa e o papel são objetos, não interface).
+// Lidas a cada cena porque o SVG recebe a cor em atributo, onde var() não vale.
+const cores = () => {
+  const s = getComputedStyle(document.documentElement), v = (n) => s.getPropertyValue('--mesa-' + n).trim();
+  return { tampo: v('tampo'), grade: v('grade'), borda: v('borda'), janela: v('janela'), papel: v('papel'), papelBorda: v('papel-borda'),
+    outra: v('outra'), ref: v('ref'), rotulo: v('rotulo'), num: v('num') };
+};
 
 // Cena da mesa em mm de máquina (x para a direita, y para trás); o SVG inverte y. folhas = polígonos do papel;
 // paginas = [{ t: página→máquina, papel, camadas, ativa, rotulo }]; canetas = cor de cada caneta.
 function cena({ mx, my, j, folhas, paginas, canetas, topo, refs = [], legenda }) {
+  const COR = cores();
   const pts = [[0, 0], [mx, my], ...folhas.flat()];
   const xs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]);
   const S = Math.max(mx, my) / 40, M = 3 * S; // tamanho do rótulo e margem, em mm
@@ -144,7 +150,7 @@ function cena({ mx, my, j, folhas, paginas, canetas, topo, refs = [], legenda })
       const dd = c.tracos.filter((t) => t.length > 1).map((t) => 'M' + t.map((q) => Y(pg.t(q))).join('L')).join('');
       if (dd) sv('path', { class: 'm-traco', d: dd, fill: 'none', stroke: pg.ativa ? (canetas?.[c.caneta]?.cor ?? '#000') : COR.outra, 'stroke-width': 0.35, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
     }
-    if (pg.rotulo) texto(pg.rotulo, pg.t(pg.vazio ? [w / 2, h / 2] : [w / 2, 2 + S * 0.8]), { ancora: 'middle', tam: 0.75, cor: pg.ativa ? COR.janela : '#5e574b', cls: 'm-num' });
+    if (pg.rotulo) texto(pg.rotulo, pg.t(pg.vazio ? [w / 2, h / 2] : [w / 2, 2 + S * 0.8]), { ancora: 'middle', tam: 0.75, cor: pg.ativa ? COR.janela : COR.num, cls: 'm-num' });
   }
   for (const r of refs) sv('path', { d: 'M' + r.map(Y).join('L'), fill: 'none', stroke: COR.ref, 'stroke-width': 1.6, 'stroke-linecap': 'round' }, d);
   // topo da folha: seta dentro do papel

@@ -5,7 +5,6 @@ import { readFile } from 'node:fs/promises'
 // perfil salvo com offsetX que empurra os traços do slot da direita para fora da janela (testes cujo título tem "offsetX")
 async function abrir(page, perfil) {
   if (perfil) await page.addInitScript(p => localStorage.setItem('writer.perfil', JSON.stringify(p)), perfil)
-  await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }))
   await page.goto('index.html#carta')
   await page.getByRole('radio', { name: 'Avançado' }).check().catch(() => {})
   await page.locator('#grupos details', { hasText: 'Papel e aparência' }).first().evaluate(d => { d.open = true })

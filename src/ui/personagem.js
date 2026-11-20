@@ -89,6 +89,7 @@ export function montar(elemento, estado, aoMudar, { galeria = false } = {}) {
 
   // Meus personagens (navegador)
   const selSalvos = document.createElement('select');
+  selSalvos.setAttribute('aria-label', 'Personagens salvos');
   const btnAbrirSalvo = botao('Abrir', () => {
     const p = lerSalvos()[selSalvos.value];
     const errs = p ? validar(p) : ['personagem não encontrado'];

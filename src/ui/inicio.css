@@ -42,6 +42,7 @@
 #vista-inicio .magias { --acento: var(--acento-magias); }
 #vista-inicio .sigilos { --acento: var(--acento-sigilos); }
 #vista-inicio .personagens { --acento: var(--acento-personagens); }
+#vista-inicio .letra { --acento: var(--acento-letra); }
 #vista-inicio .tracando path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: tracar .5s ease-out forwards; }
 @keyframes tracar { to { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) {

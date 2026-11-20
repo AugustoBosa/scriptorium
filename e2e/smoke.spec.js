@@ -1,10 +1,5 @@
 import { test, expect } from '@playwright/test'
 
-test.beforeEach(async ({ page }) => {
-  // determinismo: sem rede para a fonte web
-  await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }))
-})
-
 test('index.html abre sem erro de console e com prévia', async ({ page }) => {
   const erros = []
   page.on('console', m => m.type() === 'error' && erros.push(m.text()))

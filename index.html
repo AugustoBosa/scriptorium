@@ -5,9 +5,6 @@
 <meta name="theme-color" content="#f4ecd8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Scriptorium</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
 </head>
 <body data-nivel="basico">
 <header>
@@ -22,14 +19,16 @@
 <section id="vista-personagens" class="pagina" hidden></section>
 <section id="vista-biblioteca" class="pagina" hidden></section>
 <main>
-  <aside id="painel" aria-label="Parâmetros">
+  <aside id="painel" aria-labelledby="t-painel">
+    <h2 id="t-painel" class="so-leitor">Parâmetros</h2>
     <div id="nivel" role="radiogroup" aria-label="Nível">
       <label><input type="radio" name="nivel" value="basico" checked> Básico</label>
       <label><input type="radio" name="nivel" value="avancado"> Avançado</label>
     </div>
     <div id="grupos"></div>
   </aside>
-  <section id="area-previa">
+  <section id="area-previa" aria-labelledby="t-previa">
+    <h2 id="t-previa" class="so-leitor">Prévia</h2>
     <div class="barra-previa">
       <div class="vista-previa" role="group" aria-label="Vista da prévia"><button type="button" id="vista-pagina" aria-pressed="true">Página</button><button type="button" id="vista-mesa" aria-pressed="false">Mesa</button></div>
       <div class="paginas"><button type="button" id="pag-ant">‹ Anterior</button><span id="pag-info" aria-live="polite">Página 1 de 1</span><button type="button" id="pag-prox">Próxima ›</button></div>

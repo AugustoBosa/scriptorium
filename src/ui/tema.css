@@ -35,12 +35,27 @@
   --acento-magias:      light-dark(#6a2c8a, #c9a0e6);
   --acento-sigilos:     light-dark(#2f6a3a, #8fd19c);
   --acento-personagens: light-dark(#7a5a12, #e6c36a);
+  --acento-letra:       light-dark(#1f5f66, #7fcdd4); /* verdete: 6,2 claro, 9,7 vela */
   --sombra-cor: light-dark(rgb(40 28 12 / .20), rgb(0 0 0 / .60));
 
   /* dentro da folha e das miniaturas do popover: fixos nos dois temas (a folha é sempre clara) */
   --tinta-folha:    #1c1611;
   --fantasma-folha: #9a8a6c;
   --destaque-folha: #b3261e; /* o que o controle altera, na prévia */
+
+  /* vista Mesa: a cena é um desenho técnico da plotter, fixo nos dois temas como a folha (mesa.js lê estes valores) */
+  --mesa-cena:        #ece6d8; /* fundo da cena */
+  --mesa-tampo:       #8b8479;
+  --mesa-grade:       #9c958a;
+  --mesa-borda:       #3b352d;
+  --mesa-janela:      #1d5fb8; /* área que a caneta alcança */
+  --mesa-papel:       #fdfaf2;
+  --mesa-papel-borda: #5c5141;
+  --mesa-outra:       #c4bcac; /* traço de outra passada */
+  --mesa-ref:         #b3261e; /* X0 Y0 */
+  --mesa-rotulo:      #1c1611;
+  --mesa-num:         #5e574b; /* número da passada inativa */
+  --mesa-controle:    #85714f; /* borda de controle sobre a folha (= --contorno claro) */
 
   /* tipografia */
   --fonte-titulo: "EB Garamond", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
@@ -68,6 +83,10 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--mesa); color: var(--tinta); font: var(--t-ui)/var(--linha) var(--fonte-ui); }
+/* superfícies do navegador também na paleta: seleção, cursor de texto e barras de rolagem */
+:root { scrollbar-color: var(--contorno) var(--pergaminho); }
+::selection { background: var(--foco); color: var(--pergaminho); }
+textarea, input { caret-color: var(--rubrica); }
 a { color: var(--rubrica); text-underline-offset: .15em; }
 h1, nav.oficinas a, summary { font-family: var(--fonte-titulo); font-weight: 500; }
 h1 { margin: 0; font-size: var(--t-titulo); letter-spacing: .01em; }
@@ -90,7 +109,7 @@ body[data-nivel="basico"] main [data-nivel="avancado"] { display: none; }
 
 /* assinatura: pauta dupla de escriba separando os grupos do painel */
 details { border-bottom: 3px double var(--regua); padding: var(--e2) 0; }
-.folha { background: var(--folha); box-shadow: var(--sombra-folha); }
+.folha { position: relative; background: var(--folha); box-shadow: var(--sombra-folha); }
 .folha svg { display: block; width: 100%; height: auto; }
 @media (prefers-reduced-motion: no-preference) { [popover] { transition: opacity .12s ease-out; } }
 
@@ -144,6 +163,8 @@ footer#exportar { grid-area: exportar; position: sticky; bottom: 0; background: 
 #previas.comparando { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .folha { margin: 0 auto; }
 .folha .vazio { margin: 0; padding: var(--e5); text-align: center; color: var(--tinta-folha); }
+/* aviso de folha vazia por cima da página (a folha alta empurrava o aviso para fora da tela) */
+.folha > svg + .vazio { position: absolute; inset: 12% 0 auto; font: italic var(--t-grupo)/var(--linha) var(--fonte-titulo); }
 #avisos { margin: var(--e3) 0 0; padding-left: 0; list-style: none; color: var(--aviso); }
 dialog { background: var(--campo); color: var(--tinta); border: 1px solid var(--contorno); border-radius: var(--raio); max-width: 95vw; }
 dialog::backdrop { background: var(--sombra-cor); }
@@ -197,7 +218,8 @@ dialog::backdrop { background: var(--sombra-cor); }
 #previa-viva .pv-ajuda { margin: var(--e2) 0 0; color: var(--tinta-2); }
 
 @media (pointer: coarse) {
-  .dica { width: 32px; height: 32px; }
+  .dica { width: 32px; height: 32px; position: relative; }
+  .dica::after { content: ""; position: absolute; inset: -6px; } /* área de toque 44px sem alargar a grade */
   .controle { grid-template-columns: 1fr 1.3fr 4em 32px; }
   .controle[data-tipo="marca"] { grid-template-columns: auto 1fr 32px; }
   #exportar .controle { grid-template-columns: auto 12em 32px; }
@@ -206,7 +228,8 @@ dialog::backdrop { background: var(--sombra-cor); }
 @media (max-width: 800px) {
   header { flex-wrap: wrap; gap: var(--e2) var(--e4); padding-block: var(--e2); }
   #tema { margin-left: auto; }
-  main { grid-template-columns: minmax(0, 1fr); grid-template-areas: "previa" "painel" "exportar"; }
+  /* celular: ver, baixar, depois ajustar; o painel tem ~2400px e escondia o G-code três telas abaixo */
+  main { grid-template-columns: minmax(0, 1fr); grid-template-areas: "previa" "exportar" "painel"; }
   aside#painel { position: static; max-height: none; overflow: visible; }
   footer#exportar { position: static; }
   #previas, #previas.comparando { grid-template-columns: minmax(0, 1fr); }
@@ -215,8 +238,11 @@ dialog::backdrop { background: var(--sombra-cor); }
 }
 
 /* alça de arrastar nota solta na prévia (svg em mm) */
-.alca-nota { fill: transparent; stroke: var(--foco); stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-dasharray: 4 3; cursor: grab; opacity: 0; transition: opacity .15s; }
-#previa:hover .alca-nota, .alca-nota.arrastando { opacity: 1; }
+.alca-nota { fill: transparent; stroke: var(--foco); stroke-width: 1px; vector-effect: non-scaling-stroke; stroke-dasharray: 4 3; cursor: grab; opacity: 0; touch-action: none; }
+@media (prefers-reduced-motion: no-preference) { .alca-nota { transition: opacity .15s; } }
+#previa:hover .alca-nota, .alca-nota:focus-visible, .alca-nota.arrastando { opacity: 1; }
+.alca-nota:focus-visible { outline: none; stroke-width: 2px; stroke-dasharray: none; }
+@media (pointer: coarse) { .alca-nota { opacity: .7; } } /* sem hover no toque: a alça fica sempre à vista */
 .alca-nota.arrastando { cursor: grabbing; }
 
 #salvar-material { margin-left: auto; }

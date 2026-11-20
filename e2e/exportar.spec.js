@@ -4,8 +4,6 @@ import { readFile } from 'node:fs/promises'
 const TEXTO = 'Caro {_viajante_},\n\nO vento cobre o vale e o moinho espera por você.'
 
 test.beforeEach(async ({ page }) => {
-  // determinismo: sem rede para a fonte web
-  await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }))
   await page.goto('index.html#carta')
   // troca o texto da carta pelo de teste (o textarea é o que contém o texto padrão; o grupo "Texto" começa fechado)
   await page.getByText('Texto', { exact: true }).click()

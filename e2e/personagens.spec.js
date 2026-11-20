@@ -3,10 +3,6 @@ import { test, expect } from '@playwright/test'
 const mao = (extra = {}) => ({ base: [{ fonte: 'EMSDelight', peso: 1 }], inclinacao: 0, largura: 1, altura: 1, espacamento: 0, espacoPalavra: 0, idio: 0, pressa: 0, capricho: 1, tremor: 0, queda: 0, compressao: 1, variacao: 0, desleixo: 0, seed: 1, ...extra })
 const pers = (nome) => ({ nome, mao: mao(), variacoes: { normal: {} } })
 
-test.beforeEach(async ({ page }) => {
-  await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }))
-})
-
 async function abrir(page, salvos = {}) {
   await page.addInitScript((s) => {
     if (!localStorage.getItem('semear')) { localStorage.setItem('semear', '1'); if (Object.keys(s).length) localStorage.setItem('writer.personagens', JSON.stringify(s)) }

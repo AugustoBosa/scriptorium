@@ -1,5 +1,6 @@
 // Alças para arrastar as notas soltas na prévia. O SVG da página está em mm (viewBox), então a conta é direta.
 const NS = 'http://www.w3.org/2000/svg';
+let refocar = null; // ordem da nota movida pelo teclado: a prévia é refeita e a alça nova recebe o foco
 
 // notas = [{ ordem, caixa: { x, y, l, a }, ang }] da página; aoSoltar(ordem, { x, y, ang }) grava a posição nova (canto superior esquerdo, mm) mantendo o ângulo.
 export function ligarArrasto(el, notas, aoSoltar) {
@@ -8,10 +9,20 @@ export function ligarArrasto(el, notas, aoSoltar) {
   const emMm = (ev) => new DOMPoint(ev.clientX, ev.clientY).matrixTransform(svg.getScreenCTM().inverse());
   for (const { ordem, caixa: c, ang } of notas) {
     const r = document.createElementNS(NS, 'rect');
-    Object.entries({ x: c.x - 0.5, y: c.y - 0.5, width: c.l + 1, height: c.a + 1, class: 'alca-nota' }).forEach(([k, v]) => r.setAttribute(k, v));
+    Object.entries({ x: c.x - 0.5, y: c.y - 0.5, width: c.l + 1, height: c.a + 1, class: 'alca-nota', tabindex: 0, role: 'button',
+      'aria-label': `Nota ${ordem + 1}: arraste, ou use as setas para mover (Shift move 5 mm)` }).forEach(([k, v]) => r.setAttribute(k, v));
     const titulo = document.createElementNS(NS, 'title');
-    titulo.textContent = 'Arraste para mudar a posição da nota';
+    titulo.textContent = 'Arraste, ou foque e use as setas, para mudar a posição da nota';
     r.append(titulo);
+    const mover = (dx, dy) => aoSoltar(ordem, { x: Math.max(0, c.x + dx), y: Math.max(0, c.y + dy), ...(ang != null && { ang }) });
+    r.addEventListener('keydown', (ev) => {
+      const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[ev.key];
+      if (!d) return;
+      ev.preventDefault();
+      const passo = ev.shiftKey ? 5 : 1;
+      refocar = ordem;
+      mover(d[0] * passo, d[1] * passo);
+    });
     let ini = null;
     r.addEventListener('pointerdown', (ev) => { ini = emMm(ev); r.setPointerCapture(ev.pointerId); r.classList.add('arrastando'); ev.preventDefault(); });
     r.addEventListener('pointermove', (ev) => {
@@ -26,8 +37,9 @@ export function ligarArrasto(el, notas, aoSoltar) {
       ini = null;
       r.classList.remove('arrastando');
       if (Math.hypot(dx, dy) < 0.5) { r.removeAttribute('transform'); return; } // clique sem arrastar
-      aoSoltar(ordem, { x: Math.max(0, c.x + dx), y: Math.max(0, c.y + dy), ...(ang != null && { ang }) });
+      mover(dx, dy);
     });
     svg.append(r);
+    if (ordem === refocar) { refocar = null; r.focus({ preventScroll: true }); }
   }
 }

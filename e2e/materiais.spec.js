@@ -80,6 +80,16 @@ test('livro: nota do exemplo aparece na camada notas e o painel muda a posição
   await expect(page.locator('#previa .alca-nota').first()).toBeAttached()
 })
 
+test('livro: alça da nota anda pelo teclado e o foco volta para ela', async ({ page }) => {
+  await abrir(page, 'livro')
+  const alca = page.locator('#previa .alca-nota').first()
+  await alca.focus()
+  await page.keyboard.press('Shift+ArrowDown')
+  await expect.poll(() => page.locator('#painel textarea').evaluateAll((ts) => ts.some((t) => /\{nota@[\d.]+,[\d.]+/.test(t.value)))).toBe(true)
+  await expect(page.locator('#previa .alca-nota:focus')).toHaveCount(1)
+  await expect(alca).toHaveCSS('touch-action', 'none')
+})
+
 test('livro: ângulo da nota no painel vira /graus no texto e as setas usam os controles de mão', async ({ page }) => {
   await abrir(page, 'livro')
   const ang = page.locator('#grupos details:not([hidden]) .posicao input[type=number]').first()
