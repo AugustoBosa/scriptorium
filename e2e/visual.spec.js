@@ -51,6 +51,7 @@ test('captura personagens', async ({ page }, testInfo) => {
 test('captura avançado com popover aberto', async ({ page }, testInfo) => {
   await abrir(page, 'carta')
   await page.getByLabel('Avançado').check()
+  await page.locator('#grupos summary', { hasText: /^Fontes$/ }).click() // seção no topo: rolar fecharia o popover
   await page.locator('#grupos input[type=range]:visible').first().focus()
   await page.waitForSelector('#previa-viva:popover-open')
   await foto(page, testInfo, 'avancado-popover') // sem fullPage: resize fecha o popover
@@ -127,8 +128,10 @@ for (const tema of ['claro', 'vela']) {
     await page.waitForSelector('.mesa svg')
     await page.evaluate(() => document.fonts.ready)
     // conteúdo longo em A6: 4 páginas numa folha A4 (2 passadas, 2 páginas cada)
-    await page.locator('#grupos details', { hasText: /^Texto|^Papel e aparência/ }).evaluateAll(ds => ds.forEach(d => { d.open = true }))
+    const secao = t => page.locator('#grupos summary', { hasText: new RegExp(`^${t}$`) }).first().evaluate(s => { s.parentElement.open = true })
+    await secao('Papel e aparência')
     await page.getByRole('combobox', { name: 'formato', exact: true }).selectOption({ label: 'A6' })
+    await secao('Texto')
     await page.locator('#grupos textarea').first().fill(('O vento cobre o vale e o moinho espera por você. '.repeat(8) + '\n\n').repeat(6))
     await expect(page.locator('.mesa svg [data-slot]')).toHaveCount(4)
   }

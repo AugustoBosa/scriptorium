@@ -44,8 +44,11 @@ test('magias importadas ficam guardadas no navegador', async ({ page }) => {
   await abrir(page, 'magias')
   const magias = [{ id: 'teste-1', nome: 'Magia de Teste', nivel: 1, escola: 'V', classes: ['Mago'], linhaNivel: 'Evocação de 1º nível', tempo: '1 ação', alcance: '9 m', comp: 'V', duracao: 'Instantânea', texto: 'Um teste.', resumo: 'Teste.' }]
   await page.locator('#painel input[type=file][accept=".json"]').first().setInputFiles({ name: 'magias.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(magias)) })
+  const magiasAberto = () => page.locator('#grupos summary', { hasText: /^Magias$/ }).click()
+  await magiasAberto()
   await expect(page.locator('#painel button', { hasText: 'Magia de Teste' })).toBeVisible()
   await page.reload()
   await page.waitForSelector('#previa svg')
+  await magiasAberto()
   await expect(page.locator('#painel button', { hasText: 'Magia de Teste' })).toBeVisible()
 })

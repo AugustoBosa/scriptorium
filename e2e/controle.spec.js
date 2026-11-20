@@ -68,15 +68,17 @@ test('a 375 px o popover cabe na viewport', async ({ page }) => {
   expect(b.y + b.height).toBeLessThanOrEqual(812)
 })
 
-test('Básico esconde Salvar JSON; Avançado mostra; "?" com nome e fonte da mão com prévia', async ({ page }) => {
+test('Básico esconde Máquina; Avançado mostra; "?" com nome e fonte da mão com prévia', async ({ page }) => {
   await page.goto('index.html#carta')
+  await page.locator('#grupos summary', { hasText: /^Fontes$/ }).click()
   await page.locator('[data-chave="base"] select').first().focus()
   await expect(page.locator('#previa-viva figure')).toHaveCount(1)
-  const salvar = page.getByRole('button', { name: 'Salvar JSON' })
-  await expect(salvar).toBeHidden()
-  await expect(page.getByRole('button', { name: 'Ajuda: Nome' })).toBeVisible()
+  const maquina = page.locator('#grupos summary', { hasText: /^Máquina$/ })
+  await expect(maquina).toBeHidden()
+  await page.locator('#grupos summary', { hasText: /^Personagem$/ }).click()
+  await expect(page.getByRole('button', { name: 'Ajuda: Personagem' })).toBeVisible()
   await page.getByLabel('Avançado').check()
-  await expect(salvar).toBeVisible()
+  await expect(maquina).toBeVisible()
   await page.getByLabel('Básico').check()
   expect(page.erros).toEqual([])
 })

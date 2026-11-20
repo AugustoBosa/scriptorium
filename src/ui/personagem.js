@@ -3,7 +3,7 @@ import { rotulo, AJUDA } from '../ajuda.js';
 import { controle, dica } from './controle.js';
 import { PARAMS } from '../motor/mao.js';
 import { amostra } from '../layout.js';
-import { baixarJson, lerPersonagens as lerSalvos, gravarPersonagens as gravarSalvos } from './util.js';
+import { el, botao, lerPersonagens as lerSalvos } from './util.js';
 
 const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
 const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate', 'ligadura', 'adiamento'];
@@ -29,128 +29,82 @@ export function restaurar(estado) {
   } catch {}
 }
 
+const lembrar = (estado) => {
+  try { localStorage.setItem('writer.personagem', JSON.stringify({ personagem: estado.personagem, variacao: estado.variacao })); } catch {}
+};
+const linhaBotoes = (...itens) => { const d = el('div', 'linha-botoes'); d.append(...itens); return d; };
+// "?" irmão do label (não filho): o nome acessível do campo fica só o texto
+function campo(id, texto, entrada, ajuda) {
+  entrada.id = id;
+  const l = el('label', null, texto);
+  l.htmlFor = id;
+  return [linhaBotoes(l, dica(ajuda, texto)), entrada];
+}
+// Só reconstrói as opções quando a lista muda (reconstruir fecha o select aberto)
+function opcoes(sel, lista) {
+  const assinatura = JSON.stringify(lista);
+  if (sel.dataset.lista === assinatura) return;
+  sel.dataset.lista = assinatura;
+  sel.replaceChildren(...lista.map(([texto, valor]) => new Option(texto, valor)));
+}
+const opcoesVariacao = (chaves) => (chaves.length ? chaves.map((k) => [k, k]) : [['(mão base)', '']]);
+
 let montados = 0; // cada oficina monta o próprio painel: sufixo evita id repetido
-export function montar(elemento, estado, aoMudar, { galeria = false } = {}) {
-  const sufixo = galeria || ++montados === 1 ? '' : '-' + montados;
-  const erro = document.createElement('p');
-  erro.className = 'erro';
 
-  function botao(texto, fn) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = texto;
-    b.addEventListener('click', fn);
-    return b;
-  }
-  function linhaBotoes(...itens) {
-    const d = document.createElement('div');
-    d.className = 'linha-botoes';
-    d.append(...itens);
-    return d;
-  }
-  function titulo(...conteudo) {
-    const h = document.createElement('h3');
-    h.append(...conteudo);
-    return h;
-  }
-
-  // Personagem: nome, novo, salvar/abrir arquivo
-  const inputNome = document.createElement('input');
-  inputNome.type = 'text';
-  inputNome.addEventListener('input', () => {
-    estado.personagem.nome = inputNome.value;
-    aoMudar();
-  });
-
-  const inputArquivo = document.createElement('input');
-  inputArquivo.type = 'file';
-  inputArquivo.accept = '.json,application/json';
-  inputArquivo.hidden = true;
-  inputArquivo.addEventListener('change', async () => {
-    const arq = inputArquivo.files[0];
-    inputArquivo.value = '';
-    if (!arq) return;
-    let p, errs;
-    try {
-      p = JSON.parse(await arq.text());
-      errs = validar(p);
-    } catch (e) {
-      errs = ['arquivo inválido: ' + e.message];
-    }
-    if (errs.length) {
-      erro.textContent = errs.join('; ');
-      return;
-    }
-    erro.textContent = '';
-    estado.personagem = p;
-    estado.variacao = Object.keys(p.variacoes ?? {})[0] ?? '';
-    aoMudar();
-  });
-
-  // Meus personagens (navegador)
-  const selSalvos = document.createElement('select');
-  selSalvos.setAttribute('aria-label', 'Personagens salvos');
-  const btnAbrirSalvo = botao('Abrir', () => {
-    const p = lerSalvos()[selSalvos.value];
+// Oficinas: só escolhe a mão (personagem salvo) e o estilo (variação). Editar é na aba Personagens.
+export function montar(elemento, estado, aoMudar) {
+  const sufixo = ++montados === 1 ? '' : '-' + montados;
+  const erro = el('p', 'erro');
+  const selPers = el('select');
+  selPers.addEventListener('change', () => {
+    const p = lerSalvos()[selPers.value];
     const errs = p ? validar(p) : ['personagem não encontrado'];
-    if (errs.length) {
-      erro.textContent = errs.join('; ');
-      return;
-    }
+    if (errs.length) { erro.textContent = errs.join('; '); return; }
     erro.textContent = '';
     estado.personagem = structuredClone(p);
     estado.variacao = Object.keys(p.variacoes ?? {})[0] ?? '';
     aoMudar();
   });
-  const btnExcluir = botao('Excluir', () => {
-    const nome = selSalvos.value;
-    if (!confirm(`Excluir "${nome}" dos salvos?`)) return;
-    const salvos = lerSalvos();
-    delete salvos[nome];
-    try {
-      gravarSalvos(salvos);
-    } catch (e) {
-      erro.textContent = 'Não foi possível excluir: ' + e.message;
-      return;
-    }
-    erro.textContent = '';
-    reconstruirSalvos();
-  });
-  let assinaturaSalvos = null;
-  function reconstruirSalvos() {
-    const nomes = Object.keys(lerSalvos());
-    const assinatura = JSON.stringify(nomes);
-    if (assinatura === assinaturaSalvos) return;
-    assinaturaSalvos = assinatura;
-    if (!nomes.length) {
-      selSalvos.replaceChildren(new Option('(nenhum salvo)', ''));
-    } else {
-      selSalvos.replaceChildren(...nomes.map(n => new Option(n, n)));
-    }
-    selSalvos.disabled = btnAbrirSalvo.disabled = btnExcluir.disabled = !nomes.length;
-  }
+  const selVar = el('select');
+  selVar.addEventListener('change', () => { estado.variacao = selVar.value; aoMudar(); });
+  const editar = el('p'), link = el('a', null, 'Editar mãos em Personagens');
+  link.href = '#personagens';
+  editar.append(link);
 
-  // Variação
-  const selVar = document.createElement('select');
-  selVar.addEventListener('change', () => {
-    estado.variacao = selVar.value;
-    aoMudar();
-  });
-  let chavesVar = null;
-  function reconstruirVariacoes(chaves) {
-    if (JSON.stringify(chaves) === chavesVar) return;
-    chavesVar = JSON.stringify(chaves);
-    selVar.replaceChildren(...(chaves.length
-      ? chaves.map(k => new Option(k, k))
-      : [new Option('(mão base)', '')]));
+  elemento.append(
+    ...campo('p-personagem' + sufixo, 'Personagem', selPers, AJUDA.personagem),
+    ...campo('p-variacao' + sufixo, rotulo('variacaoSel'), selVar, AJUDA.variacaoSel),
+    editar, erro,
+  );
+
+  function atualizar() {
+    const p = estado.personagem, nomes = Object.keys(lerSalvos()), salvo = nomes.includes(p.nome);
+    const chaves = Object.keys(p.variacoes ?? {});
+    if (!chaves.includes(estado.variacao)) estado.variacao = chaves[0] ?? '';
+    opcoes(selPers, [...(salvo ? [] : [[`${p.nome || 'sem nome'} (não salvo)`, '']]), ...nomes.map((n) => [n, n])]);
+    selPers.value = salvo ? p.nome : '';
+    opcoes(selVar, opcoesVariacao(chaves));
+    selVar.value = estado.variacao;
+    lembrar(estado);
   }
+  atualizar();
+  return atualizar;
+}
+
+// Aba Personagens: edita a mão em uso (nome, variações, identidade, execução).
+export function editor(elemento, estado, aoMudar) {
+  const inputNome = el('input');
+  inputNome.type = 'text';
+  inputNome.addEventListener('input', () => { estado.personagem.nome = inputNome.value; aoMudar(); });
+
+  const selVar = el('select');
+  selVar.addEventListener('change', () => { estado.variacao = selVar.value; aoMudar(); });
   const btnRenomear = botao('Renomear', () => {
     const atual = estado.variacao;
     const nome = prompt('Nome da variação', atual)?.trim();
     const v = estado.personagem.variacoes;
     if (!nome || nome === atual || Object.hasOwn(v, nome)) return;
-    estado.personagem.variacoes = Object.fromEntries(
-      Object.entries(v).map(([k, val]) => [k === atual ? nome : k, val]));
+    estado.personagem.variacoes = Object.fromEntries(Object.entries(v).map(([k, val]) => [k === atual ? nome : k, val]));
     estado.variacao = nome;
     aoMudar();
   });
@@ -168,106 +122,56 @@ export function montar(elemento, estado, aoMudar, { galeria = false } = {}) {
     mao: resolver(estado.personagem, estado.variacao || null),
     escrever: (m, t, o) => amostra(estado.fontes, m, t, o),
   });
-  const ctrlIdentidade = CHAVES_IDENTIDADE.map((chave) =>
-    controle(P[chave], {
-      ler: () => estado.personagem.mao[chave] ?? P[chave].padrao,
-      gravar: (v) => { estado.personagem.mao[chave] = v; },
-      ctx,
-    }, aoMudar));
-  const ctrlExecucao = CHAVES_EXECUCAO.map((chave) =>
-    controle(P[chave], {
-      ler: () => resolver(estado.personagem, estado.variacao || null)[chave] ?? P[chave].padrao,
-      gravar: (v) => ajustarVariacao(estado.personagem, estado.variacao || null, chave, v),
-      ctx,
-    }, aoMudar));
-
-  // "?" irmão do label (não filho): o nome acessível do campo fica só "Nome"
-  function campo(texto, entrada, ajuda) {
-    entrada.id ||= (galeria ? 'pg-' : 'p-') + slug(texto) + sufixo; // prefixo próprio: o painel das oficinas também existe no DOM
-    const l = document.createElement('label');
-    l.htmlFor = entrada.id;
-    l.textContent = texto;
-    return [linhaBotoes(l, dica(ajuda, texto)), entrada];
-  }
-  const avancado = (...itens) => {
-    const d = document.createElement('div');
-    d.dataset.nivel = 'avancado';
-    d.append(...itens);
-    return d;
-  };
+  const ctrlIdentidade = CHAVES_IDENTIDADE.map((chave) => controle(P[chave], {
+    ler: () => estado.personagem.mao[chave] ?? P[chave].padrao,
+    gravar: (v) => { estado.personagem.mao[chave] = v; },
+    ctx,
+  }, aoMudar));
+  const ctrlExecucao = CHAVES_EXECUCAO.map((chave) => controle(P[chave], {
+    ler: () => resolver(estado.personagem, estado.variacao || null)[chave] ?? P[chave].padrao,
+    gravar: (v) => ajustarVariacao(estado.personagem, estado.variacao || null, chave, v),
+    ctx,
+  }, aoMudar));
+  const avancado = el('div');
+  avancado.dataset.nivel = 'avancado';
+  avancado.append(linhaBotoes(
+    botao('Adicionar', () => {
+      const nome = prompt('Nome da variação')?.trim();
+      if (!nome) return;
+      estado.personagem.variacoes ??= {};
+      if (Object.hasOwn(estado.personagem.variacoes, nome)) return;
+      estado.personagem.variacoes[nome] = {};
+      estado.variacao = nome;
+      aoMudar();
+    }),
+    btnRenomear,
+    btnRemover,
+  ));
 
   elemento.append(
-    ...campo('Nome', inputNome, AJUDA.personagem),
-    linhaBotoes(
-      botao('Novo personagem', () => {
-        estado.personagem = novoPersonagem();
-        estado.variacao = 'normal';
-        aoMudar();
-      }),
-    ),
-    ...galeria ? [] : [avancado(linhaBotoes(
-      botao('Salvar JSON', () => {
-        baixarJson(slug(estado.personagem.nome) + '.json', estado.personagem);
-      }),
-      botao('Abrir JSON', () => inputArquivo.click()),
-    ), inputArquivo),
-    avancado(titulo('Meus personagens (neste navegador)'), linhaBotoes(
-      selSalvos,
-      botao('Salvar aqui', () => {
-        const nome = estado.personagem.nome?.trim();
-        if (!nome) {
-          erro.textContent = 'Dê um nome ao personagem antes de salvar.';
-          return;
-        }
-        try {
-          const salvos = lerSalvos();
-          salvos[nome] = structuredClone(estado.personagem);
-          gravarSalvos(salvos);
-        } catch (e) {
-          erro.textContent = 'Não foi possível salvar neste navegador: ' + e.message;
-          return;
-        }
-        erro.textContent = '';
-        reconstruirSalvos();
-        selSalvos.value = nome;
-      }),
-      btnAbrirSalvo,
-      btnExcluir,
-    ))],
-    ...campo(rotulo('variacaoSel'), selVar, AJUDA.variacaoSel),
-    avancado(linhaBotoes(
-      botao('Adicionar', () => {
-        const nome = prompt('Nome da variação')?.trim();
-        if (!nome) return;
-        estado.personagem.variacoes ??= {};
-        if (Object.hasOwn(estado.personagem.variacoes, nome)) return;
-        estado.personagem.variacoes[nome] = {};
-        estado.variacao = nome;
-        aoMudar();
-      }),
-      btnRenomear,
-      btnRemover,
-    )),
-    titulo('Identidade'), ...ctrlIdentidade.map((c) => c.el),
-    titulo('Execução'), ...ctrlExecucao.map((c) => c.el),
-    erro,
+    ...campo('pg-nome', 'Nome', inputNome, AJUDA.personagem),
+    linhaBotoes(botao('Novo personagem', () => {
+      estado.personagem = novoPersonagem();
+      estado.variacao = 'normal';
+      aoMudar();
+    })),
+    ...campo('pg-variacao', rotulo('variacaoSel'), selVar, AJUDA.variacaoSel),
+    avancado,
+    el('h3', null, 'Identidade'), ...ctrlIdentidade.map((c) => c.el),
+    el('h3', null, 'Execução'), ...ctrlExecucao.map((c) => c.el),
   );
 
   function atualizar() {
     const p = estado.personagem;
     if (document.activeElement !== inputNome) inputNome.value = p.nome;
-    reconstruirSalvos();
     const chaves = Object.keys(p.variacoes ?? {});
     if (!chaves.includes(estado.variacao)) estado.variacao = chaves[0] ?? '';
-    reconstruirVariacoes(chaves);
+    opcoes(selVar, opcoesVariacao(chaves));
     selVar.value = estado.variacao;
     btnRenomear.disabled = btnRemover.disabled = !chaves.length;
     [...ctrlIdentidade, ...ctrlExecucao].forEach((c) => c.atualizar());
-    try {
-      localStorage.setItem('writer.personagem', JSON.stringify({ personagem: p, variacao: estado.variacao }));
-    } catch {}
+    lembrar(estado);
   }
-
   atualizar();
   return atualizar;
 }

@@ -25,14 +25,14 @@ test('personagem salvo aparece no select de salvos', async ({ page }) => {
   await expect(page.locator('#painel option', { hasText: 'Teste' }).first()).toBeAttached()
 })
 
-test('Avançado mostra parâmetros avançados; Básico os esconde', async ({ page }) => {
+test('só uma seção do painel fica aberta por vez', async ({ page }) => {
   await page.goto('index.html#carta')
-  const esp = page.locator('[data-chave="espacamento"]')
-  await expect(esp).toBeHidden()
-  await page.getByLabel('Avançado').check()
-  await expect(esp).toBeVisible()
-  await page.getByLabel('Básico').check()
-  await expect(esp).toBeHidden()
+  await page.waitForSelector('#previa svg')
+  const abertas = page.locator('#grupos details:not([hidden])[open]')
+  await expect(abertas).toHaveCount(1)
+  await page.locator('#grupos summary', { hasText: /^Texto$/ }).click()
+  await expect(abertas).toHaveCount(1)
+  await expect(abertas.locator('summary')).toHaveText('Texto')
 })
 
 test('menu ☰: some na home, abre nas oficinas, marca a rota atual e fecha ao navegar', async ({ page }) => {

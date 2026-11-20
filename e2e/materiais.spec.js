@@ -5,8 +5,11 @@ async function abrir(page, id) {
   await page.waitForSelector('#previa svg')
 }
 
+// Painel em acordeão: abrir uma seção fecha as outras
+const secao = (page, titulo) => page.locator('#grupos details:not([hidden])', { has: page.locator('summary', { hasText: new RegExp(`^${titulo}$`) }) }).evaluate((d) => { d.open = true })
+
 async function escrever(page, texto) {
-  await page.locator('#grupos summary', { hasText: /^Texto$/ }).click()
+  await secao(page, 'Texto')
   await page.locator('#painel textarea:visible').first().fill(texto)
 }
 
@@ -41,6 +44,7 @@ test('trocar de oficina não perde a variação das magias', async ({ page }) =>
     localStorage.setItem('writer.personagem', JSON.stringify({ personagem: { nome: 'Teste', mao, variacoes: { normal: {}, apressado: { pressa: 0.7 } } }, variacao: 'normal' }))
   })
   await abrir(page, 'magias')
+  await secao(page, 'Personagem')
   const sel = page.locator('#grupos details:not([hidden]) select[id^="p-variacao"]')
   const opcoes = await sel.locator('option').allTextContents()
   const atual = await sel.evaluate((s) => s.selectedOptions[0].textContent)
@@ -74,6 +78,7 @@ test('livro: marcação da Carta não vira texto literal', async ({ page }) => {
 test('livro: nota do exemplo aparece na camada notas e o painel muda a posição dela no texto', async ({ page }) => {
   await abrir(page, 'livro')
   await expect.poll(() => page.locator('#previa g[data-camada="notas"] path').count()).toBeGreaterThan(0)
+  await secao(page, 'Notas')
   const sel = page.locator('#grupos details:not([hidden]) .posicoes select').first()
   await sel.selectOption('esquerda')
   await expect.poll(() => page.locator('#painel textarea').evaluateAll((ts) => ts.some((t) => t.value.includes('{nota@esquerda:')))).toBe(true)
@@ -92,6 +97,7 @@ test('livro: alça da nota anda pelo teclado e o foco volta para ela', async ({ 
 
 test('livro: ângulo da nota no painel vira /graus no texto e as setas usam os controles de mão', async ({ page }) => {
   await abrir(page, 'livro')
+  await secao(page, 'Notas')
   const ang = page.locator('#grupos details:not([hidden]) .posicao input[type=number]').first()
   await ang.fill('30')
   await ang.dispatchEvent('change')

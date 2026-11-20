@@ -63,7 +63,8 @@ test('Usar e ir à Carta: o painel mostra o nome escolhido', async ({ page }) =>
   await v.getByRole('button', { name: 'Usar Bram' }).click()
   await expect(v.getByLabel('Nome', { exact: true })).toHaveValue('Bram')
   await page.evaluate(() => { location.hash = '#carta' })
-  await expect(page.locator('#painel input#p-nome')).toHaveValue('Bram')
+  await expect(page.locator('#painel select#p-personagem')).toHaveValue('Bram')
+  await expect(page.locator('#painel [data-chave="espacamento"]')).toHaveCount(0) // ajuste da mão só na aba Personagens
 })
 
 test('um slider muda writer.personagem; sem Salvar JSON na aba', async ({ page }) => {

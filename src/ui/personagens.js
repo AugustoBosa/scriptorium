@@ -40,14 +40,14 @@ export function montar(raiz, { fontes }) {
     return true;
   }
 
-  // Editor existente, sem as linhas de arquivo/salvos (a página oferece essas ações)
+  // Editor da mão em uso (arquivo e galeria ficam nos botões da página)
   const detalhes = el('details');
   detalhes.open = true;
   const corpo = el('div');
   detalhes.append(el('summary', null, 'Mão em uso'), corpo);
   const aside = el('aside', 'pers-editor');
   aside.append(detalhes);
-  const atualizarEditor = pPersonagem.montar(corpo, estado, aoMudar, { galeria: true });
+  const atualizarEditor = pPersonagem.editor(corpo, estado, aoMudar);
 
   let agendado = false;
   function aoMudar() {

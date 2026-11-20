@@ -62,7 +62,7 @@ function criarEscrita() {
     grupos: [
       { titulo: 'Personagem', montar: pPersonagem.montar },
       { titulo: 'Fontes', montar: pFontes.montar },
-      { titulo: 'Texto', fechado: true, montar: pTexto.montar },
+      { titulo: 'Texto', montar: pTexto.montar },
       { titulo: 'Papel e aparência', montar: pTexto.montarPapel },
       { titulo: 'Notas', aberto: true, montar: pMat.montarCarta },
       { titulo: 'Livro', so: 'livro', aberto: true, montar: pMat.montarLivro },
@@ -96,7 +96,7 @@ function criarSigilos() {
     estado,
     grupos: [
       { titulo: 'Personagem', montar: pPersonagem.montar },
-      { titulo: 'Sigilos', montar: pMat.montarSigilos },
+      { titulo: 'Sigilos', aberto: true, montar: pMat.montarSigilos },
       { titulo: 'Papel', montar: pTexto.montarSoPapel },
       { titulo: 'Tradição', montar: pMat.montarTradicao },
       { titulo: 'Máquina', nivel: 'avancado', montar: pExportar.montar },
@@ -203,11 +203,12 @@ function aoMudar() {
 // ---- roteamento ----
 function montarVista(inst) {
   const v = { detalhes: [], atualizar: [], barra: document.createElement('div') };
-  inst.grupos.flatMap((g) => (g.titulo === 'Máquina' ? [{ titulo: 'Mesa e folha', nivel: 'basico', montar: montarMesa }, g] : [g])).forEach((g, i) => {
+  inst.grupos.flatMap((g) => (g.titulo === 'Máquina' ? [{ titulo: 'Mesa e folha', nivel: 'basico', montar: montarMesa }, g] : [g])).forEach((g) => {
     const d = document.createElement('details'), s = document.createElement('summary'), corpo = document.createElement('div');
     s.textContent = g.titulo;
     d.append(s, corpo);
-    d.open = (i < 2 && !g.fechado) || !!g.aberto;
+    d.name = 'grupos-' + inst.nome; // acordeão nativo: abrir uma seção fecha as outras
+    if (g.aberto) d.dataset.aberto = '';
     if (g.nivel === 'avancado') d.dataset.nivel = 'avancado';
     if (g.so) d.dataset.so = g.so;
     $('grupos').append(d);
@@ -254,6 +255,8 @@ async function rotear() {
     v.barra.hidden = i !== inst;
     v.detalhes.forEach((d) => { d.hidden = i !== inst || (!!d.dataset.so && d.dataset.so !== id); });
   }
+  const visiveis = vistas.get(inst).detalhes.filter((d) => !d.hidden);
+  if (!visiveis.some((d) => d.open)) (visiveis.findLast((d) => 'aberto' in d.dataset) ?? visiveis[0]).open = true;
   atual = inst;
   marcar();
   $('rotulo-comparar').hidden = nome !== 'escrita';

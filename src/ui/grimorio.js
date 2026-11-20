@@ -351,7 +351,7 @@ export function criar() {
     grupos: [
       { titulo: 'Personagem', montar: pPersonagem.montar },
       grupo('Magias', painelMagias),
-      grupo('Editar magia', painelEditar, { fechado: true }),
+      grupo('Editar magia', painelEditar),
       { titulo: 'Papel', montar: montarSoPapel },
       grupo('Magia na folha', painelFolha, { aberto: true }),
       grupo('Arcano', painelEscrita),

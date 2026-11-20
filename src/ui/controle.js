@@ -93,7 +93,7 @@ function render() {
     const fant = a.fant || [];
     if (atual && fant.every(Boolean)) {
       filhos.push(folha(desenhar([
-        { tracos: atual.fundo, cls: 'pv-fundo' }, { tracos: fant[0].foco, cls: 'pv-fantasma' }, { tracos: fant[1].foco, cls: 'pv-fantasma' }, { tracos: atual.foco, cls: 'pv-foco' },
+        { tracos: atual.fundo, cls: 'pv-fundo' }, ...fant.map((f) => ({ tracos: f.foco, cls: 'pv-fantasma' })), { tracos: atual.foco, cls: 'pv-foco' },
       ], W, H, !def.semEscala)));
       if (def.tipo === 'faixa') filhos.push(...regua(def, v));
     }
