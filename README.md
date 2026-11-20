@@ -10,7 +10,7 @@ Caligrafia de traço único para plotter de caneta. O app gera a letra com uma m
 
 ## Oficinas
 
-Cada oficina é uma rota do `index.html`: `#carta`, `#livro`, `#magias`, `#sigilos`. A rota padrão é `#inicio`: a home tem um cartão por oficina, com a miniatura real desenhada traço a traço. `#personagens` cria, edita e escolhe a mão em uso. Dentro de uma oficina, o menu ☰ do cabeçalho leva às outras. As rotas antigas `#scroll` e `#grimorio` levam a `#magias`.
+Cada oficina é uma rota do `index.html`: `#carta`, `#livro`, `#magias`, `#sigilos`, `#letra`. A rota padrão é `#inicio`: a home tem um cartão por oficina, com a miniatura real desenhada traço a traço. `#personagens` cria, edita e escolhe a mão em uso. Dentro de uma oficina, o menu ☰ do cabeçalho leva às outras. As rotas antigas `#scroll` e `#grimorio` levam a `#magias`.
 
 Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, painel próprio, Mesa e folha, Máquina. Cada tipo abre com um texto de exemplo e um visual padrão próprios.
 
@@ -18,6 +18,7 @@ Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, 
 - **Magias** (`#magias`): magias de D&D. Ligado "uma magia por página", cada magia vira um pergaminho avulso; desligado, as magias seguem como num grimório, com ou sem separador decorado entre elas (losango, asteriscos ou onda). O bloco marcado sai em alfabeto arcano, com chave opcional. O sigilo de cada magia codifica nível, escola, concentração, ritual e componentes.
 - **Livro** (`#livro`): colunas, título corrente, numeração, reclamo, rubrica, capitular e borda. Usa o mesmo texto da Carta e aceita as mesmas marcações: notas soltas com seta, correções, sublinhados, laços e rabiscos nas margens, sem tocar a paginação, a borda nem a capitular.
 - **Sigilos** (`#sigilos`): cada frase vira um selo, um sigilo (método kamea, roda ou fusão) ou um círculo, com legenda. Os sigilos ficam em grade numa folha.
+- **Minha letra** (`#letra`): a máquina plota as folhas de coleta (texto modelo por língua e letras soltas, com marcas de canto e código da folha) para você escrever à mão. A leitura da foto e a geração da fonte são as próximas etapas (`workflow/experimentos/fonte-propria/PESQUISA.md`).
 
 ## Interface
 
@@ -37,7 +38,7 @@ Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, 
 - **p2s**: Bambu P2S, experimental. Janela útil de cerca de 207 × 200 mm. Nunca testada no equipamento.
 - **personalizado**: perfil editável, a partir do megaS.
 
-O papel máximo é a janela útil do perfil. Papel maior que a janela é bloqueado na exportação, com mensagem. A troca de caneta gera `M0` com aviso. A exportação é por página e por camada (SVG e G-code), ou por "Todas as páginas".
+O papel máximo é a janela útil do perfil. Papel maior que a janela é bloqueado na exportação, com mensagem. Depois do header, a caneta sobe para `zLevantada` antes da 1ª viagem; `zLevantada` tem que ficar acima de `zEscrita`, senão a exportação recusa. A troca de caneta gera `M0` com aviso. A exportação é por página e por camada (SVG e G-code), ou por "Todas as páginas".
 
 ## Papéis (`src/materiais/documento.js`)
 
@@ -49,21 +50,24 @@ A3, A4, A5, A6, A7, A8, carta, ofício e personalizado, em retrato ou paisagem, 
 - `src/ornamento/`: bordas, vinhas, capitulares, filigranas.
 - `src/arcano/`: alfabeto, círculo, sigilo.
 - `src/materiais/`: carta, livro, scroll (magias), sigilos, notas, documento, exemplos (texto e visual padrão de cada tipo).
-- `src/maquina/`: perfis, G-code, otimização do trajeto.
-- `src/ui/`: interface (DOM e CSS). Fora de `src/ui/` o código não usa DOM.
+- `src/maquina/`: perfis, G-code, otimização do trajeto, imposição na mesa.
+- `src/letra/`: folhas de coleta da Minha letra e textos modelo por língua (`linguas/`).
+- `src/geo.js`: geometria comum (`dist`, `comprimento`, `clamp`, `ret`, `VAO`, `valido`, recortes, hachura). Não copiar esses helpers em outro arquivo.
+- `src/ui/`: interface (DOM e CSS). Fora de `src/ui/` o código não usa DOM. Ajudantes de DOM e armazenamento em `src/ui/util.js`.
 - `fontes/`: 43 fontes de traço único (EMS, Hershey, Relief, Mistral, TwinSans). Licenças em `fontes/LICENCAS.md`.
 - `dados/`: dados das magias. Fica fora do git.
 - `scripts/gerar-magias.mjs`: gera `dados/magias.json` a partir de 5etools (padrão: `../../dnd/data/spells`). A tradução é `dados/traducao-ptbr.txt` (uma linha `id|Nome|Resumo` por magia).
 - `test/`: testes de unidade. `e2e/`: testes Playwright.
-- `workflow/`: quadro do projeto (`QUADRO.md`) e pesquisa da P2S.
+- `workflow/`: quadro do projeto (`QUADRO.md`) e experimentos (P2S, fonte própria).
+- `PRODUCT.md` e `DESIGN.md`: regras do produto e do design; ler antes de mexer na interface.
 
 ## Rodar
 
-Requisito: Node 25, a mesma versão do CI. Depois de `npm ci`:
+Requisito: Node 24 ou mais novo (o CI usa o 24 LTS). Depois de `npm ci`:
 
 - `npm run dev`: servidor em `http://localhost:8765/`. A porta é fixa (`--strictPort`): se estiver ocupada, o comando falha.
 - `npm test`: testes de unidade (`node --test`), com snapshots em `test/*.snapshot`.
-- `npm run e2e`: Playwright (Chromium), nos projetos `claro` e `vela`. Sobe o `npm run dev` sozinho se ele não estiver rodando.
+- `npm run e2e`: Playwright (Chromium). O projeto `claro` roda tudo; o `vela` (tema escuro) roda só `visual.spec.js`. Sobe o `npm run dev` sozinho se ele não estiver rodando.
 - `npm run build`: gera `dist/` e copia `fontes/` e `dados/` (se existirem).
 - `npm run golden`: regrava os snapshots. Use só de propósito e revise o diff.
 
@@ -71,4 +75,4 @@ Roteiro manual da interface: `test/ui-smoke.md`.
 
 ## Publicação
 
-`.github/workflows/pages.yml` publica no GitHub Pages a cada push em `main`: `npm ci`, `npm test`, `npm run build` e envio de `dist/`. Pré-requisito único no GitHub: Settings › Pages › Source = "GitHub Actions". `dados/` não vai para o Pages (está no `.gitignore`); sem `dados/magias.json`, a oficina Magias oferece importar o JSON ou criar magias em branco.
+`.github/workflows/pages.yml` publica no GitHub Pages a cada push em `main`: `npm ci`, `npm test`, `npm run build` e envio de `dist/`. Em pull request roda os mesmos testes e o build, sem publicar. Pré-requisito único no GitHub: Settings › Pages › Source = "GitHub Actions". `dados/` não vai para o Pages (está no `.gitignore`); sem `dados/magias.json`, a oficina Magias oferece importar o JSON ou criar magias em branco.

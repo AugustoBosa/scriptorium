@@ -4,7 +4,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 
 ## Retomada (2026-11-19) — LEIA PRIMEIRO
 
-- Auditoria completa e redesenho estrutural (2026-11-19) commitados no `main` local; publicar = `git push` (só com OK do usuário).
+- Auditoria completa e redesenho estrutural (2026-11-19) PUBLICADOS: `main` = `origin/main`, Pages verde, árvore limpa.
 - Gates na última entrega: `npm test` 839/0; `npx playwright test` 97/97 (tema escuro só roda `visual.spec.js`); build ok.
 - Regras de design em `DESIGN.md` e do produto em `PRODUCT.md`: ler antes de mexer em UI. Cor nova = token em `tema.css`.
 - O usuário vai voltar com **adições**. Trabalhar em branch, um commit por etapa, gates, merge em `main`, push e conferir o site (`curl -s https://augustobosa.github.io/scriptorium/ | grep '<script'` deve apontar para `./assets/…`).

@@ -6,6 +6,10 @@ O Scriptorium desenha com fontes de **traço único** em formato SVG font (`font
 A meta é uma ferramenta que transforma a letra do próprio usuário numa fonte desse tipo.
 Isto muda a escolha de ferramenta: quase todo gerador de fonte de letra (Calligraphr, handwrite, draw-your-font) produz **contorno** (TTF). A plotter desenha o contorno duas vezes, e a letra fica "oca". Precisamos do **eixo do traço** (linha central).
 
+## Folhas de coleta (como saem da máquina)
+
+Prévias geradas pela oficina `#letra`: [texto natural N1](material/folha-N1.png) e [letras soltas cursivas LC1](material/folha-LC1.png). Marcas de canto para corrigir a perspectiva; o código de 16 bits embaixo identifica tipo, parte, altura do x e papel (`src/letra/folha.js`).
+
 ## O papel das fotos
 
 - Tilibra, refil argolado, **pontilhado cinza**, 200 × 275 mm, 63 g/m², 80 folhas.
