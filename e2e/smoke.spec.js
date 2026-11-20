@@ -55,7 +55,11 @@ test('menu ☰: some na home, abre nas oficinas, marca a rota atual e fecha ao n
 
 test('Básico na aba Personagens ainda mostra espaçamento', async ({ page }) => {
   await page.goto('index.html#personagens')
-  await expect(page.locator('#vista-personagens [data-chave="espacamento"]').first()).toBeVisible()
+  const v = page.locator('#vista-personagens')
+  await expect(v.locator('details[open] summary')).toHaveText('Mão em uso')
+  await v.locator('summary', { hasText: /^Identidade$/ }).click()
+  await expect(v.locator('details[open] summary')).toHaveText('Identidade') // uma seção por vez
+  await expect(v.locator('[data-chave="espacamento"]').first()).toBeVisible()
 })
 
 for (const [antiga, porPagina] of [['scroll', true], ['grimorio', false]]) {

@@ -71,6 +71,7 @@ test('um slider muda writer.personagem; sem Salvar JSON na aba', async ({ page }
   const v = await abrir(page, { Elara: pers('Elara') })
   await expect(v.getByRole('button', { name: 'Salvar JSON' })).toHaveCount(0)
   const antes = await page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem('writer.personagem'))))
+  await v.locator('.pers-editor summary', { hasText: /^Identidade$/ }).click()
   const slider = v.locator('.pers-editor [data-chave="espacamento"] input[type=range]')
   await slider.focus()
   await slider.press('ArrowRight')

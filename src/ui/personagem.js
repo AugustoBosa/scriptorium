@@ -148,7 +148,14 @@ export function editor(elemento, estado, aoMudar) {
     btnRemover,
   ));
 
-  elemento.append(
+  // acordeão nativo: abrir uma seção fecha as outras
+  const secao = (titulo, ...itens) => {
+    const d = el('details');
+    d.name = 'pers-editor';
+    d.append(el('summary', null, titulo), ...itens);
+    return d;
+  };
+  const mao = secao('Mão em uso',
     ...campo('pg-nome', 'Nome', inputNome, AJUDA.personagem),
     linhaBotoes(botao('Novo personagem', () => {
       estado.personagem = novoPersonagem();
@@ -156,9 +163,12 @@ export function editor(elemento, estado, aoMudar) {
       aoMudar();
     })),
     ...campo('pg-variacao', rotulo('variacaoSel'), selVar, AJUDA.variacaoSel),
-    avancado,
-    el('h3', null, 'Identidade'), ...ctrlIdentidade.map((c) => c.el),
-    el('h3', null, 'Execução'), ...ctrlExecucao.map((c) => c.el),
+    avancado);
+  mao.open = true;
+  elemento.append(
+    mao,
+    secao('Identidade', ...ctrlIdentidade.map((c) => c.el)),
+    secao('Execução', ...ctrlExecucao.map((c) => c.el)),
   );
 
   function atualizar() {

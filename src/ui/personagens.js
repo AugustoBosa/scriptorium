@@ -40,14 +40,9 @@ export function montar(raiz, { fontes }) {
     return true;
   }
 
-  // Editor da mão em uso (arquivo e galeria ficam nos botões da página)
-  const detalhes = el('details');
-  detalhes.open = true;
-  const corpo = el('div');
-  detalhes.append(el('summary', null, 'Mão em uso'), corpo);
+  // Editor da mão em uso, em seções (arquivo e galeria ficam nos botões da página)
   const aside = el('aside', 'pers-editor');
-  aside.append(detalhes);
-  const atualizarEditor = pPersonagem.editor(corpo, estado, aoMudar);
+  const atualizarEditor = pPersonagem.editor(aside, estado, aoMudar);
 
   let agendado = false;
   function aoMudar() {
