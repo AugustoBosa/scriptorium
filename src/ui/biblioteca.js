@@ -47,31 +47,44 @@ export function montar(raiz, { abrir }) {
     erro, vazio, lista,
   );
 
+  // Uma seção por oficina, só uma aberta por vez (acordeão nativo); abre a do material mais recente.
+  let aberta = null;
   async function atualizar() {
     const ms = await materiais();
     vazio.hidden = ms.length > 0;
-    lista.replaceChildren(...ms.map((m) => {
-      const c = el('article', 'bib-cartao');
-      c.append(el('h3', 'nome', m.nome), el('p', 'bib-meta', `${NOMES[m.oficina] ?? m.oficina} · ${data(m.quando)}${m.estado?.personagem?.nome ? ' · ' + m.estado.personagem.nome : ''}`));
-      const acoes = el('div', 'linha-botoes');
-      acoes.append(
-        botao('Abrir', () => abrir(m), `Abrir ${m.nome}`),
-        botao('Baixar', () => baixarJson(`${slug(m.nome)}.json`, { tipo: 'scriptorium-material', versao: 1, ...m }), `Baixar ${m.nome}`),
-        botao('Renomear', async () => {
-          const nome = prompt('Novo nome do material', m.nome)?.trim();
-          if (!nome) return;
-          try { await gravarMaterial({ ...m, nome }); } catch (e) { erro.textContent = `Não foi possível renomear: ${e.message}`; return; }
-          atualizar();
-        }, `Renomear ${m.nome}`),
-        botao('Apagar', async () => {
-          if (!confirm(`Apagar "${m.nome}" da biblioteca? Não dá para desfazer (baixe antes se quiser guardar).`)) return;
-          try { await armazem.apagar('material:' + m.id); } catch (e) { erro.textContent = `Não foi possível apagar: ${e.message}`; return; }
-          atualizar();
-        }, `Apagar ${m.nome}`),
-      );
-      c.append(acoes);
-      return c;
+    const grupos = Map.groupBy(ms, (m) => m.oficina);
+    if (!grupos.has(aberta)) aberta = ms[0]?.oficina;
+    lista.replaceChildren(...[...grupos].map(([oficina, itens]) => {
+      const d = el('details', 'bib-grupo'), grade = el('div', 'bib-grade');
+      d.name = 'biblioteca';
+      d.open = oficina === aberta;
+      d.addEventListener('toggle', () => { if (d.open) aberta = oficina; });
+      grade.append(...itens.map(cartao));
+      d.append(el('summary', null, `${NOMES[oficina] ?? oficina} (${itens.length})`), grade);
+      return d;
     }));
+  }
+  function cartao(m) {
+    const c = el('article', 'bib-cartao');
+    c.append(el('h3', 'nome', m.nome), el('p', 'bib-meta', `${data(m.quando)}${m.estado?.personagem?.nome ? ' · ' + m.estado.personagem.nome : ''}`)); // a oficina já é o título da seção
+    const acoes = el('div', 'linha-botoes');
+    acoes.append(
+      botao('Abrir', () => abrir(m), `Abrir ${m.nome}`),
+      botao('Baixar', () => baixarJson(`${slug(m.nome)}.json`, { tipo: 'scriptorium-material', versao: 1, ...m }), `Baixar ${m.nome}`),
+      botao('Renomear', async () => {
+        const nome = prompt('Novo nome do material', m.nome)?.trim();
+        if (!nome) return;
+        try { await gravarMaterial({ ...m, nome }); } catch (e) { erro.textContent = `Não foi possível renomear: ${e.message}`; return; }
+        atualizar();
+      }, `Renomear ${m.nome}`),
+      botao('Apagar', async () => {
+        if (!confirm(`Apagar "${m.nome}" da biblioteca? Não dá para desfazer (baixe antes se quiser guardar).`)) return;
+        try { await armazem.apagar('material:' + m.id); } catch (e) { erro.textContent = `Não foi possível apagar: ${e.message}`; return; }
+        atualizar();
+      }, `Apagar ${m.nome}`),
+    );
+    c.append(acoes);
+    return c;
   }
   return atualizar;
 }

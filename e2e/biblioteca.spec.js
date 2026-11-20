@@ -30,6 +30,7 @@ test('salvar na biblioteca, mudar o texto e reabrir o material', async ({ page }
   await expect(page.locator('#salvo')).toContainText('Meu material')
   await escrever(page, 'versão nova, não guardada')
   await page.goto('index.html#biblioteca')
+  await expect(page.locator('#vista-biblioteca details[open] summary')).toHaveText('Carta (1)') // seção por oficina, só a do mais recente aberta
   const cartao = page.locator('.bib-cartao', { hasText: 'Meu material' })
   await expect(cartao).toBeVisible()
   await cartao.getByRole('button', { name: 'Abrir Meu material' }).click()

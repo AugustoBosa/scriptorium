@@ -2,7 +2,8 @@
 #vista-biblioteca { max-width: 1120px; margin: 0 auto; padding: var(--e5); }
 #vista-biblioteca h2 { margin: 0 0 var(--e3); font: 600 var(--t-grupo) var(--fonte-titulo); font-variant: small-caps; letter-spacing: .04em; color: var(--rubrica); }
 .bib-intro { margin: 0 0 var(--e3); color: var(--tinta-2); max-width: 70ch; }
-.bib-lista { display: grid; gap: var(--e4); grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); margin-top: var(--e4); }
+.bib-lista { margin-top: var(--e4); }
+.bib-grade { display: grid; gap: var(--e4); grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); padding: var(--e3) 0; }
 .bib-cartao { display: flex; flex-direction: column; gap: var(--e2); min-width: 0; padding: var(--e3); background: var(--pergaminho); border: 1px solid var(--regua); border-radius: var(--raio); }
 .bib-cartao .nome { margin: 0; font: 500 var(--t-grupo)/var(--linha) var(--fonte-titulo); color: var(--tinta); overflow-wrap: anywhere; }
 .bib-meta { margin: 0; font-size: var(--t-pequeno); color: var(--tinta-2); }

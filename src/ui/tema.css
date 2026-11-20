@@ -73,7 +73,7 @@
   --alvo: 28px;          /* altura mínima de controle; 44px em tela de toque (abaixo) */
   --painel: 360px;
   --sombra-folha: 0 1px 2px var(--sombra-cor), 0 10px 28px var(--sombra-cor);
-  --sombra-pop:   0 2px 6px var(--sombra-cor), 0 12px 32px var(--sombra-cor);
+  --sombra-pop:   0 2px 6px var(--sombra-cor); /* popover já tem borda: só uma sombra curta, sem halo largo */
 }
 :root[data-tema="claro"] { color-scheme: light; }
 :root[data-tema="vela"]  { color-scheme: dark; }
@@ -109,7 +109,8 @@ body[data-nivel="basico"] main [data-nivel="avancado"] { display: none; }
 
 /* assinatura: pauta dupla de escriba separando os grupos do painel */
 details { border-bottom: 3px double var(--regua); padding: var(--e2) 0; }
-.folha { position: relative; background: var(--folha); box-shadow: var(--sombra-folha); }
+.folha { position: relative; background: var(--folha); color: var(--tinta-folha); box-shadow: var(--sombra-folha); } /* papel claro nos dois temas: texto da folha nunca herda a tinta da interface */
+::placeholder { color: var(--tinta-2); opacity: 1; }
 .folha svg { display: block; width: 100%; height: auto; }
 @media (prefers-reduced-motion: no-preference) { [popover] { transition: opacity .12s ease-out; } }
 
@@ -133,7 +134,7 @@ h1 a { color: inherit; text-decoration: none; }
 #menu { min-width: var(--alvo); min-height: var(--alvo); font-size: 1.4rem; line-height: 1; }
 /* menu ☰: popover nativo (Esc e clique fora fecham), abre abaixo do cabeçalho */
 nav.oficinas[popover] { position: fixed; inset: 60px auto auto var(--e4); margin: 0; padding: var(--e3) var(--e4); min-width: 220px;
-  flex-direction: column; gap: var(--e2); background: var(--pergaminho); color: var(--tinta); border: 1px solid var(--contorno); border-radius: var(--raio); box-shadow: 0 8px 24px var(--sombra-cor); }
+  flex-direction: column; gap: var(--e2); background: var(--pergaminho); color: var(--tinta); border: 1px solid var(--contorno); border-radius: var(--raio); box-shadow: var(--sombra-pop); }
 nav.oficinas[popover]:popover-open { display: flex; }
 nav.oficinas a { font-size: var(--t-grupo); color: var(--tinta); text-decoration: none; padding: var(--e1) 0; border-bottom: 2px solid transparent; }
 nav.oficinas a.sep { margin-top: var(--e2); padding-top: var(--e3); border-top: 1px solid var(--regua); }
