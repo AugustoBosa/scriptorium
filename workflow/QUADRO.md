@@ -4,8 +4,9 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 
 ## Retomada (2026-11-19) — LEIA PRIMEIRO
 
-- Auditoria completa (2026-11-19) commitada no `main` local; publicar = `git push` (só com OK do usuário).
-- Gates na última entrega: `npm test` 839/0; `npx playwright test` 95/95 (tema escuro só roda `visual.spec.js`); build ok.
+- Auditoria completa e redesenho estrutural (2026-11-19) commitados no `main` local; publicar = `git push` (só com OK do usuário).
+- Gates na última entrega: `npm test` 839/0; `npx playwright test` 97/97 (tema escuro só roda `visual.spec.js`); build ok.
+- Regras de design em `DESIGN.md` e do produto em `PRODUCT.md`: ler antes de mexer em UI. Cor nova = token em `tema.css`.
 - O usuário vai voltar com **adições**. Trabalhar em branch, um commit por etapa, gates, merge em `main`, push e conferir o site (`curl -s https://augustobosa.github.io/scriptorium/ | grep '<script'` deve apontar para `./assets/…`).
 - O Claude age como dono do repositório: decide e organiza; pergunta só o que muda o produto. Respostas em pt-BR simples, com tabelas.
 
@@ -45,6 +46,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 - 2026-11-19 — Site quebrado (no celular e no desktop): o Pages estava em "Deploy from branch". Voltou para GitHub Actions.
 - 2026-11-19 — Mesa: texto projetado sobre a mesa (com e sem imposição), cena legível (tampo com grade, área da caneta, papel, parte fora da mesa, FRENTE/TRÁS, X0 Y0, topo), passadas vazias marcadas e fora do "Baixar todas", legenda e botão Ampliar.
 - 2026-11-19 — Auditoria completa (ponytail): G-code sobe a caneta para `zLevantada` logo após o header e recusa `zLevantada <= zEscrita`; pontos NaN não viram `XNaN`; sigilo de 1 coluna em papel deitado cabe; grimório ajusta quando tamanho < mínimo e "sempre completo" avisa se não cabe; bloco empilhado que transborda na 1ª linha vai para a página seguinte; XSS no editor de símbolos fechado; erros do grimório aparecem; importação da biblioteca valida materiais e personagens; ids únicos e rótulos acessíveis; CI em Node 24 e testes em PR; helpers duplicados unificados (`geo.js`, `ui/util.js`); shims e código morto fora; `ilustracoes/*/saida/` fora do git.
+- 2026-11-19 — Redesenho estrutural (impeccable, identidade mantida): no celular a barra Exportar vem logo após a prévia (antes ficava 3 telas abaixo); alça de nota anda pelo teclado (setas, Shift = 5 mm), fica à vista no toque e não briga com a rolagem; EB Garamond servido pelo próprio site (`@fontsource`, sem Google Fonts); cores da Mesa viram tokens `--mesa-*` e o halo dos rótulos da cena voltou (`mesa.css` estava quebrado); aviso de folha vazia sobre a página; cartão Minha letra na home; `h2` de Parâmetros e Prévia; seleção, cursor e barras de rolagem na paleta; `PRODUCT.md` e `DESIGN.md`.
 
 ## Pendências de hardware (usuário)
 
