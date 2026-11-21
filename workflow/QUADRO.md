@@ -2,12 +2,16 @@
 
 Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no git, até o commit `156fdca`.
 
-## Retomada (2026-11-19) — LEIA PRIMEIRO
+## Retomada (2026-11-21) — LEIA PRIMEIRO
 
-- Auditoria completa e redesenho estrutural (2026-11-19) PUBLICADOS: `main` = `origin/main`, Pages verde, árvore limpa.
-- Gates na última entrega: `npm test` 839/0; `npx playwright test` 97/97 (tema escuro só roda `visual.spec.js`); build ok.
+- Tudo PUBLICADO até `3efc803` (2026-11-21): auditoria, redesenho estrutural e os acordeões. Pages verde.
+- Gates na última entrega: `npm test` 838 ok + 1 pulado; `npx playwright test` 98/98 (tema escuro só roda `visual.spec.js`); build ok; `impeccable detect` com zero achados.
 - Regras de design em `DESIGN.md` e do produto em `PRODUCT.md`: ler antes de mexer em UI. Cor nova = token em `tema.css`.
-- O usuário vai voltar com **adições**. Trabalhar em branch, um commit por etapa, gates, merge em `main`, push e conferir o site (`curl -s https://augustobosa.github.io/scriptorium/ | grep '<script'` deve apontar para `./assets/…`).
+- **Painéis em acordeão** (regra do usuário): toda tela abre uma seção por vez com `<details name>` nativo. São as oficinas (`app.js`, nome `grupos-<instância>`), Personagens (`pers-editor`), Biblioteca (uma seção por oficina) e as subseções de "Mesa e folha" (`details.subsecao`). Seção nova entra no mesmo esquema. Testes e2e abrem a seção antes de usar um controle.
+- **Personagem nas oficinas** só escolhe a mão salva e a variação (`pPersonagem.montar`). Ajustar a mão é só na aba Personagens (`pPersonagem.editor`).
+- **Pasta principal**: está na branch `hardware-pen-holder`, com `hardware/` e `.gitignore` sem commit, de outro trabalho. Não mexer. Trabalhar em worktree: `git worktree add -b <nome> .claude/worktrees/<nome> main`, rodar `npm ci` dentro dela (junction de `node_modules` faz o Vite dar 403 nas fontes) e usar uma entrada temporária no `.claude/launch.json` com `npm --prefix <worktree> run dev -- --port 8766`. No fim: `git push origin <nome>:main`, `git branch -f main <sha>`, remover a worktree e a branch e tirar a entrada do `launch.json`.
+- **Push no `main` só com o OK do usuário** (o modo automático bloqueia sem ele). Depois do push, conferir o Pages (`gh run watch`) e o bundle novo no site.
+- **impeccable**: o launcher voltou a funcionar. Rodar o detector na prévia, não no arquivo: `~/.claude/skills/impeccable/scripts/impeccable detect --viewport 1280x800 http://localhost:8766/#carta …` (repetir com `390x844`). O scan estático de `index.html` acusa `flat-type-hierarchy` falso, porque não carrega o CSS.
 - O Claude age como dono do repositório: decide e organiza; pergunta só o que muda o produto. Respostas em pt-BR simples, com tabelas.
 
 ## Estado
