@@ -12,7 +12,7 @@ const texto = readFileSync(corpus, 'utf8');
 const vocab = vocabulario(texto);
 const lista = alvos(vocab, Number(cob));
 const { palavras, faltando } = escolher(vocab, lista, Number(rep));
-const letras = [...new Set(texto.toLowerCase().match(/\p{Ll}/gu))].sort((a, b) => a.localeCompare(b, lingua));
+const letras = [...new Set([...'abcdefghijklmnopqrstuvwxyz', ...texto.toLowerCase().match(/\p{Ll}/gu)])].sort((a, b) => a.localeCompare(b, lingua));
 const saida = {
   lingua, cobertura: Number(cob), repeticoes: Number(rep), letras: letras.join(''),
   alvos: lista.length, faltando, palavras: embaralhar(palavras, 'texto-modelo|' + lingua),
