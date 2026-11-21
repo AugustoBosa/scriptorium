@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porta-caneta 3D</title>
+<style>
+  :root { --bg: #eceae6; --ink: #1d1d1f; --muted: #6b6b70; --card: rgba(255,255,255,.88); --line: #c9c6c0; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #18181a; --ink: #ececee; --muted: #9a9aa0; --card: rgba(30,30,33,.9); --line: #3a3a3e; } }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, sans-serif; overflow: hidden; }
+  #c { position: fixed; inset: 0; }
+  .bar { position: fixed; left: 12px; right: 12px; bottom: 12px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .bar > * { pointer-events: auto; }
+  .btns { display: flex; gap: 6px; }
+  button { flex: 1; min-height: 44px; font: inherit; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+  button[aria-pressed="true"] { border-color: var(--ink); font-weight: 600; }
+  #say { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-family: ui-monospace, monospace; font-size: 13px; min-height: 20px; }
+  h1 { position: fixed; top: 10px; left: 14px; margin: 0; font-size: 15px; font-weight: 600; }
+  h1 small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+  .lbl { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; font-size: 12px; white-space: nowrap; }
+  .lbl b { display: block; font-size: 13px; }
+</style>
+<script type="importmap">{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<h1><span id="tit"></span><small>arraste para girar · pinça para zoom · medidas provisórias</small></h1>
+<div class="bar">
+  <div id="say">carregando…</div>
+  <div class="btns">
+    <button id="bSis" aria-pressed="true">Sistema</button>
+    <button id="bPec" aria-pressed="false">Peças</button>
+    <button id="bPlay">Pausar</button>
+  </div>
+</div>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { STLLoader } from "three/addons/loaders/STLLoader.js";
+import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+
+const D = /*DADOS*/, STL = /*STLS*/;
+const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+const canvas = document.getElementById("c"), say = document.getElementById("say");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const labels = new CSS2DRenderer(); labels.domElement.style.cssText = "position:fixed;inset:0;pointer-events:none"; document.body.appendChild(labels.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(dark ? 0x18181a : 0xeceae6);
+const camera = new THREE.PerspectiveCamera(35, 1, 1, 5000); camera.up.set(0, 0, 1);
+const controls = new OrbitControls(camera, canvas); controls.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x777777, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(-200, -300, 400); scene.add(sun);
+
+// ---------- malhas ----------
+const loader = new STLLoader();
+const geo = {};
+for (const [n, b64] of Object.entries(STL)) { const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); geo[n] = loader.parse(bin.buffer); }
+const edgeMat = new THREE.LineBasicMaterial({ color: dark ? 0x0c0c0d : 0x2a2a2c, transparent: true, opacity: 0.55 });
+function mesh(g, color, opts = {}) {
+  const o = new THREE.Group();
+  o.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color, roughness: 0.75, metalness: opts.metal ?? 0, transparent: !!opts.alpha, opacity: opts.alpha ?? 1 })));
+  if (!opts.noEdges) o.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 25), edgeMat));
+  return o;
+}
+const box = (x0, y0, z0, x1, y1, z1) => { const g = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0); g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); return g; };
+const cyl = (x, y, z0, z1, r, n = 16) => { const g = new THREE.CylinderGeometry(r, r, z1 - z0, n); g.rotateX(Math.PI / 2); g.translate(x, y, (z0 + z1) / 2); return g; };
+const SCREW = 0xe0a040, PLA = 0xd9d6cf, GREY = 0x8d8f94, DARKG = 0x4a4c52;
+const COLORS = [0xd94141, 0x2f6fd6, 0x2f9e5b, 0x8e44ad], NAMES = ["vermelha", "azul", "verde", "roxa"];
+
+// ---------- sistema ----------
+const sys = new THREE.Group(); scene.add(sys);
+const PZ = -D.BASE_H + 0.3, LIFT = D.PINO_BASE_H + 6, WZ = PZ + 20 - D.BRACO_H - 2; // 2 mm de pressão no papel
+// mesa (anda em Y) com papel, base de troca e pregos
+const bed = new THREE.Group(); sys.add(bed);
+const BED_Y0 = D.BASE_Y0 + 5;
+bed.add(mesh(box(-110, BED_Y0, -D.BASE_H - D.MESA_T, 110, BED_Y0 + 220, -D.BASE_H), 0x3b3d42));
+bed.add(mesh(box(-55, 45, -D.BASE_H, 55, 165, PZ - 0.05), 0xffffff, { noEdges: false }));
+bed.add(mesh(geo.base, DARKG));
+bed.add(mesh(geo.v_mesa, SCREW));
+const ink = new THREE.Group(); bed.add(ink);
+// pórtico X (sobe e desce em Z na megaS) + cabeça
+const gantry = new THREE.Group(); sys.add(gantry);
+for (const z of [D.ZT - 12, D.ZT + 22]) gantry.add(mesh(cyl(0, 0, -170, 170, 4, 20).rotateY(Math.PI / 2).translate(0, D.Y_CAB + 52, z), 0xa9abb0, { metal: 0.5, noEdges: true }));
+const head = new THREE.Group(); sys.add(head);
+head.add(mesh(geo.morsa, GREY), mesh(geo.v_cabeca, SCREW));
+if (geo.v_cabeca_cinza) head.add(mesh(geo.v_cabeca_cinza, GREY));
+document.getElementById("tit").textContent = D.TITULO;
+const hw = D.CABECA_W, hd = D.CABECA_D;
+head.add(mesh(box(-hw / 2, D.Y_CAB, D.ZT - D.CABECA_H, hw / 2, D.Y_CAB + hd, D.ZT), 0x2b2d31));
+head.add(mesh(new THREE.ConeGeometry(3, D.ZT - D.CABECA_H - D.Z_BICO, 16).rotateX(-Math.PI / 2).translate(0, D.Y_CAB + hd / 2, (D.ZT - D.CABECA_H + D.Z_BICO) / 2), 0xc9a227, { metal: 0.7 }));
+// porta-canetas: suporte + bloco com caneta
+const holders = COLORS.map((c) => {
+  const h = new THREE.Group(), blk = new THREE.Group();
+  h.add(mesh(geo.suporte, c), mesh(geo.v_varetas, 0xf2f0ea));
+  blk.add(mesh(geo.bloco, PLA), mesh(geo.v_bloco, SCREW), mesh(geo.caneta, c, { alpha: 0.45 }));
+  h.add(blk); sys.add(h); return { h, blk };
+});
+
+// ---------- traços no papel (coordenadas da mesa) ----------
+const TRACES = COLORS.map((_, n) => { const pts = []; for (let i = 0; i <= 80; i++) { const u = i / 80; pts.push([-42 + u * 84, 62 + n * 24 + 6 * Math.sin(u * Math.PI * (4 + n))]); } return pts; });
+
+// ---------- máquina de passos ----------
+const m = { hx: 0, hz: LIFT, by: -80 }, slotOf = [-1, 1, 2, 3];
+let on = 0, steps = [], cur = null, t = 0, paused = false, line = null, pts = [];
+const go = (to, secs, text, then) => steps.push({ to, secs, text, then });
+function plan() {
+  const tr = TRACES[on], [x0, y0] = tr[0];
+  go({ by: -y0 }, 1.0, "G0 Y · a mesa leva o papel");
+  go({ hx: x0 }, 0.7, "G0 X · início do traço");
+  go({ hz: WZ }, 0.5, "G1 Z · desce: o elástico pressiona a caneta " + NAMES[on], () => { pts = []; line = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: COLORS[on] })); ink.add(line); });
+  for (const [x, y] of tr.slice(1)) go({ hx: x, by: -y }, 0.04, "plotando · caneta " + NAMES[on]);
+  go({ hz: LIFT }, 0.5, "G0 Z · sobe", () => { line = null; });
+  const free = [0, 1, 2, 3].find((s) => !slotOf.includes(s)), next = (on + 1) % 4;
+  go({ hx: D.XS[free] }, 1.0, "G0 X · alinha com a vaga livre " + (free + 1));
+  go({ by: 0 }, 1.2, "G0 Y · a mesa traz a base de troca");
+  go({ hz: 0 }, 0.9, "G1 Z0 F300 · os pinos da base entram nos furos do suporte", () => { slotOf[on] = free; });
+  go({ by: -12 }, 0.9, "G1 Y−12 · a cabeça sai para trás: ímãs soltam");
+  go({ hx: D.XS[slotOf[next]] }, 1.1, "G0 X · atrás da caneta " + NAMES[next]);
+  go({ by: 0 }, 0.9, "G1 Y+12 F300 · pinos encaixam, ímãs pegam", () => { slotOf[next] = -1; on = next; });
+  go({ hz: LIFT }, 0.9, "G0 Z · sobe: o suporte sai dos pinos");
+}
+const ease = (u) => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
+function step(dt) {
+  let left = dt;
+  while (left > 0) {
+    if (!cur) { if (!steps.length) { if (ink.children.length >= 4) ink.clear(); plan(); } cur = steps.shift(); cur.from = { ...m }; t = 0; say.textContent = cur.text; }
+    const use = Math.min(left, (1 - t) * cur.secs); t += use / cur.secs; left -= use;
+    const w = cur.secs < 0.1 ? t : ease(t);
+    for (const k in cur.to) m[k] = cur.from[k] + (cur.to[k] - cur.from[k]) * w;
+    if (line && m.hz < WZ + 0.5) { pts.push(new THREE.Vector3(m.hx, -m.by, PZ + 0.05)); line.geometry.setFromPoints(pts); }
+    if (t >= 1) { cur.then?.(); cur = null; }
+  }
+}
+function pose() {
+  bed.position.y = m.by; head.position.set(m.hx, 0, m.hz); gantry.position.z = m.hz;
+  holders.forEach(({ h, blk }, i) => {
+    const s = slotOf[i];
+    if (s < 0) { h.position.set(m.hx, 0, m.hz); blk.position.z = D.BRACO_H + Math.min(D.CURSO, Math.max(0, PZ - (m.hz + D.BRACO_H - 20))); }
+    else { h.position.set(D.XS[s], m.by, 0); blk.position.z = D.BRACO_H; }
+  });
+}
+
+// ---------- peças separadas ----------
+const parts = new THREE.Group(); parts.visible = false; scene.add(parts);
+const CORES = { PLA, SCREW, GREY, DARKG, BLUE: COLORS[1], ROD: 0xf2f0ea };
+const INFO = D.INFO.map(([n, t, sub, c]) => [n, t, sub, CORES[c]]);
+// linha da frente: as 4 peças do porta-caneta; linha do meio: morsa e parafusos; atrás: a base
+const layout = INFO.map((_, i) => i < 4 ? [[-175, -115, -80, -25][i], -120] : i < INFO.length - 1 ? [-170 + (i - 4) * 85, 10] : [-20, 140]);
+INFO.forEach(([n, title, sub, color], i) => {
+  const g = geo[n].clone(); g.computeBoundingBox(); const bb = g.boundingBox, c = bb.getCenter(new THREE.Vector3());
+  g.translate(-c.x, -c.y, -bb.min.z);
+  const o = mesh(g, color); o.position.set(layout[i][0], layout[i][1], 0); parts.add(o);
+  const size = bb.getSize(new THREE.Vector3());
+  const el = document.createElement("div"); el.className = "lbl"; el.innerHTML = `<b>${title}</b>${sub}<br>${size.x.toFixed(0)}×${size.y.toFixed(0)}×${size.z.toFixed(0)} mm`;
+  const lb = new CSS2DObject(el); lb.position.set(0, 0, size.z + 12); o.add(lb);
+});
+
+// ---------- interface ----------
+const bSis = document.getElementById("bSis"), bPec = document.getElementById("bPec"), bPlay = document.getElementById("bPlay");
+function mode(p) {
+  sys.visible = !p; parts.visible = p; labels.domElement.style.display = p ? "" : "none"; bSis.setAttribute("aria-pressed", String(!p)); bPec.setAttribute("aria-pressed", String(p));
+  bPlay.hidden = p; say.textContent = p ? "Tudo impresso. Só os ímãs (4 por placa) e o elástico são comprados." : (cur?.text ?? "");
+  frame(p);
+}
+function frame(p) {
+  const k = innerWidth < innerHeight ? 1.5 : 1;
+  if (p) { camera.position.set(-260 * k, -470 * k, 380 * k); controls.target.set(-20, -50, 0); }
+  else { camera.position.set(-300 * k, -330 * k, 230 * k); controls.target.set(0, 30, 10); }
+}
+bSis.onclick = () => mode(false); bPec.onclick = () => mode(true);
+bPlay.onclick = () => { paused = !paused; bPlay.textContent = paused ? "Continuar" : "Pausar"; };
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) { paused = true; bPlay.textContent = "Continuar"; }
+function resize() {
+  const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); labels.setSize(w, h);
+  camera.aspect = w / h; camera.fov = w < h ? 55 : 35; camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize); resize(); mode(false);
+let last = 0;
+renderer.setAnimationLoop((now) => {
+  const dt = last ? Math.min((now - last) / 1000, 1 / 20) : 0; last = now;
+  if (!paused && sys.visible) step(dt);
+  pose(); controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
+});
+window.__estado = () => ({ ...m, slotOf: [...slotOf], on, texto: say.textContent });
+</script>
+</body>
+</html>

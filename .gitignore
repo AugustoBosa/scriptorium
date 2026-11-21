@@ -8,3 +8,7 @@ playwright-report/
 .superpowers/
 
 ilustracoes/*/saida/
+hardware/.venv/
+hardware/**/saida/
+__pycache__/
+hardware/**/shots/
