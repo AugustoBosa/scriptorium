@@ -35,7 +35,7 @@ Regras:
 - Alvo mínimo `--alvo`: 28 px com mouse, 44 px em tela de toque. Botões pequenos (`.dica`) ampliam a área de toque com `::after`.
 - Sombra só na folha e nos popovers (`--sombra-folha`, `--sombra-pop`). Popover tem borda, então leva só sombra curta, sem halo largo.
 - A `.folha` define a própria cor de texto (`--tinta-folha`): nada escrito sobre o papel herda a tinta da interface.
-- Painéis em acordeão: oficinas, Personagens e Biblioteca abrem uma seção por vez (`<details name>`).
+- Painéis em acordeão: oficinas, Personagens e Biblioteca abrem uma seção por vez (`<details name>`). Subseção dentro de um grupo (`details.subsecao`, hoje só em "Mesa e folha") usa linha simples e título no tamanho da interface, abaixo da pauta dupla.
 
 ## Verificação
 - `impeccable detect --viewport 1280x800` e `--viewport 390x844` nas 8 rotas com a prévia rodando: zero achados em 2026-11-20.

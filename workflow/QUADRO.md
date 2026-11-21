@@ -50,6 +50,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 - 2026-11-19 — Painel em acordeão: em todas as oficinas só uma seção fica aberta por vez (`<details name>` nativo; abre a seção marcada `aberto`, senão a primeira). Painel Personagem das oficinas só escolhe a mão salva e a variação (`pPersonagem.montar`); o ajuste da mão ficou só na aba Personagens (`pPersonagem.editor`). Corrigida a prévia de controle numérico sem fantasmas (`reading 'foco'`).
 - 2026-11-20 — Aba Personagens em acordeão: o editor virou três seções (Mão em uso, Identidade, Execução), uma aberta por vez.
 - 2026-11-20 — Biblioteca em acordeão (uma seção por oficina, abre a do material mais recente). Detector do impeccable (agora ativo) rodado nas 8 rotas, desktop e celular: corrigidos placeholder sem contraste no tema Vela, "Carregando fontes…" em sépia sem margem sobre o papel, `.folha` herdando a tinta da interface e sombra larga + borda no menu ☰; terminou com zero achados.
+- 2026-11-21 — "Mesa e folha" dividida em subseções em acordeão: Folha (abre sozinha), Posição na mesa (só no Avançado) e Arquivos (`details.subsecao`, linha simples e título menor).
 
 ## Pendências de hardware (usuário)
 

@@ -9,12 +9,22 @@ async function abrir(page, perfil) {
   await page.getByRole('radio', { name: 'Avançado' }).check().catch(() => {})
   await page.locator('#grupos details', { hasText: 'Papel e aparência' }).first().evaluate(d => { d.open = true })
   await page.getByRole('combobox', { name: 'formato', exact: true }).selectOption({ label: 'A6' })
-  const grupo = page.locator('#grupos details', { hasText: 'Mesa e folha' })
-  if (!(await grupo.getAttribute('open'))) await grupo.locator('summary').click()
+  const grupo = page.locator('#grupos > details:not([hidden])', { hasText: 'Mesa e folha' })
+  if (!(await grupo.getAttribute('open'))) await grupo.locator(':scope > summary').click()
   await page.getByRole('checkbox', { name: 'imposição na mesa' }).check()
   await page.getByRole('combobox', { name: 'folha', exact: true }).selectOption({ label: 'A4' })
   await page.getByRole('button', { name: 'Mesa', exact: true }).click()
 }
+// "Mesa e folha" tem subseções em acordeão (Folha abre sozinha)
+const subsecao = (page, t) => page.locator('#grupos > details:not([hidden]) details.subsecao > summary', { hasText: t }).click()
+
+test('subseções da Mesa e folha: abrir uma fecha a outra', async ({ page }) => {
+  const abertas = page.locator('#grupos > details:not([hidden]) details.subsecao[open] > summary')
+  await expect(abertas).toHaveText(['Folha'])
+  await subsecao(page, 'Arquivos')
+  await expect(abertas).toHaveText(['Arquivos'])
+})
+
 test.beforeEach(({ page }) => {
   const t = test.info().title
   return abrir(page, t.includes('offsetX') ? { offsetX: 40, experimental: t.includes('experimental') } : undefined)
@@ -58,6 +68,7 @@ test('"Baixar todas as passadas" pula a passada sem página e põe a instrução
 })
 
 test('modo "um por página" baixa um arquivo por slot com página', async ({ page }) => {
+  await subsecao(page, 'Arquivos')
   await page.getByRole('combobox', { name: 'arquivos', exact: true }).selectOption({ label: 'um por página' })
   const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Baixar todas as passadas', exact: true }).click()])
   expect(dl.suggestedFilename()).toMatch(/^carta-p1-f1-pa[12]\.gcode$/) // a carta tem 1 página: só o slot dela gera arquivo
@@ -98,6 +109,7 @@ test('camada "notas" escolhida: "Baixar esta passada" gera …-notas.gcode (pass
 })
 
 test('"borda que encosta" persiste em writer.mesa e muda a instrução (longa)', async ({ page }) => {
+  await subsecao(page, 'Posição na mesa')
   await page.getByRole('combobox', { name: 'borda que encosta', exact: true }).selectOption('longa')
   await expect(page.locator('.mesa-instrucao')).toContainText('borda longa')
   expect((await page.evaluate(() => JSON.parse(localStorage.getItem('writer.mesa')))).encosto).toBe('longa')

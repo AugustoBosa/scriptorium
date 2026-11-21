@@ -36,10 +36,21 @@ function carregar() {
 const mesaDe = (estado) => (estado.mesa ??= carregar());
 const gravar = (m) => { try { localStorage.setItem(CHAVE, JSON.stringify(m)); } catch { /* vale só nesta sessão */ } };
 
+// Subseções do painel, uma aberta por vez (acordeão nativo; nome único por oficina)
+const SECOES = [['Folha', ['ligada', 'folha', 'paisagem', 'largura', 'altura']], ['Posição na mesa', ['canto', 'encosto', 'dx', 'dy', 'espaco', 'origem']], ['Arquivos', ['modo']]];
+let montados = 0;
+
 export function montar(elemento, estado, aoMudar) {
-  const m = mesaDe(estado);
+  const m = mesaDe(estado), nome = 'mesa-' + ++montados;
   const cs = DEFS.map((d) => controle(d, { ler: () => m[d.chave], gravar: (v) => { m[d.chave] = v; gravar(m); } }, aoMudar));
-  elemento.replaceChildren(...cs.map((c) => c.el));
+  elemento.replaceChildren(...SECOES.map(([titulo, chaves], i) => {
+    const d = el('details', 'subsecao'), doGrupo = cs.filter((c) => chaves.includes(c.el.dataset.chave));
+    d.name = nome;
+    d.open = i === 0;
+    if (DEFS.every((x) => !chaves.includes(x.chave) || x.nivel === 'avancado')) d.dataset.nivel = 'avancado'; // só ajustes finos: some no Básico
+    d.append(el('summary', null, titulo), ...doGrupo.map((c) => c.el));
+    return d;
+  }));
   const atualizar = () => {
     cs.forEach((c) => { c.atualizar(); const k = c.el.dataset.chave; c.el.hidden = (k === 'largura' || k === 'altura') && m.folha !== 'personalizado'; });
   };

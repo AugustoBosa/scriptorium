@@ -109,6 +109,10 @@ body[data-nivel="basico"] main [data-nivel="avancado"] { display: none; }
 
 /* assinatura: pauta dupla de escriba separando os grupos do painel */
 details { border-bottom: 3px double var(--regua); padding: var(--e2) 0; }
+/* subseção dentro de um grupo: linha simples e título menor, abaixo da pauta dupla na hierarquia */
+details.subsecao { border-bottom-width: 1px; border-bottom-style: solid; padding: var(--e1) 0; }
+details.subsecao:last-child { border-bottom: 0; }
+details.subsecao > summary { font-size: var(--t-ui); }
 .folha { position: relative; background: var(--folha); color: var(--tinta-folha); box-shadow: var(--sombra-folha); } /* papel claro nos dois temas: texto da folha nunca herda a tinta da interface */
 ::placeholder { color: var(--tinta-2); opacity: 1; }
 .folha svg { display: block; width: 100%; height: auto; }
