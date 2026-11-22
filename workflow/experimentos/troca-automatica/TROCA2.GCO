@@ -1,0 +1,59 @@
+; TROCA2: ciclo passo a passo (suportes nas vagas 1 e 2, canetas montadas)
+; Gerado por scripts/gerar-teste-troca.mjs. Valores: {"vagasX":[60,90,120,150],"yBase":36,"afastaY":40,"recuoY":12,"subida":10,"fLento":300}
+; M0 = a Mega S para e espera um clique no botão.
+G21
+G91
+G0 Z10 F500
+G90
+M412 S0
+G28 X Y
+G28 Z
+G0 Z6 F500
+G0 Z13 F500
+; pegar caneta da vaga 1
+G0 Z13.000 F500
+G0 Y76.000 F6000
+M0 Prox X60.000
+G0 X60.000 F6000
+G0 Y48.000 F6000
+M0 Prox Z3.000
+G1 Z3.000 F300
+M0 Prox Y36.000
+G1 Y36.000 F300
+M0 Prox Z13.000
+G1 Z13.000 F300
+G0 Y76.000 F6000
+; largar caneta na vaga 1
+G0 Z13.000 F500
+G0 Y76.000 F6000
+M0 Prox X60.000
+G0 X60.000 F6000
+G0 Y36.000 F6000
+M0 Prox Z3.000
+G1 Z3.000 F300
+M0 Prox Y48.000
+G1 Y48.000 F300
+; pegar caneta da vaga 2
+M0 Prox X90.000
+G1 X90.000 F6000
+M0 Prox Y36.000
+G1 Y36.000 F300
+M0 Prox Z13.000
+G1 Z13.000 F300
+G0 Y76.000 F6000
+; largar caneta na vaga 2
+G0 Z13.000 F500
+G0 Y76.000 F6000
+M0 Prox X90.000
+G0 X90.000 F6000
+G0 Y36.000 F6000
+M0 Prox Z3.000
+G1 Z3.000 F300
+M0 Prox Y48.000
+G1 Y48.000 F300
+M0 Prox Z13.000
+G1 Z13.000 F300
+G0 Y76.000 F6000
+G0 Z15 F500
+G0 X0 Y200 F6000
+M84

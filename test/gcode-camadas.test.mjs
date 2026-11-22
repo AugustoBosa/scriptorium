@@ -96,3 +96,17 @@ test('troca automática (megaSTroca): pega a 1ª, troca entre camadas, devolve a
   assert.throws(() => gcodeDocumento(duas, A6, PERFIS.megaSTroca, { canetas: { preta: {} } }), /sem vaga/);
   assert.equal(gcodeDocumento(duas, A6, PERFIS.megaS, { canetas: cn }).trocas, 1);
 });
+
+test('gerar-teste-troca: 3 arquivos, sem NaN, TROCA3 sem pausa e 2 trocas', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const { mkdtempSync, readFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const dir = mkdtempSync(`${tmpdir()}/troca-`);
+  execFileSync(process.execPath, ['scripts/gerar-teste-troca.mjs', dir, '{"yBase":38}']);
+  const [a, b, c] = ['TROCA1.GCO', 'TROCA2.GCO', 'TROCA3.GCO'].map((n) => readFileSync(`${dir}/${n}`, 'utf8'));
+  for (const t of [a, b, c]) { assert.doesNotMatch(t, /NaN|undefined/); assert.match(t, /Y38\.000/); }
+  assert.ok((a.match(/^M0 /gm) ?? []).length >= 9);
+  assert.ok((b.match(/^M0 Prox/gm) ?? []).length >= 10);
+  assert.equal((c.match(/^M0 /gm) ?? []).length, 0);
+  assert.equal((c.match(/^; (largar|pegar)/gm) ?? []).length, 6);
+});
