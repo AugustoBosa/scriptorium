@@ -35,6 +35,7 @@ Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, 
 ## Máquinas (`src/maquina/perfis.js`)
 
 - **megaS**: Anycubic i3 Mega S como plotter, mesa 210 × 210 mm. É o único perfil testado no equipamento.
+- **megaSTroca**: Mega S com o porta-caneta de troca automática (4 vagas, ímãs; modelo em `hardware/pen_holder`, branch `hardware-pen-holder`). Experimental: as posições (`troca` em `src/maquina/perfis.js`) são estimativas do modelo 3D, nada medido. A caneta de cada camada vai para a vaga da sua posição em `canetas` (preta = vaga 1, vermelha = vaga 2…). No lugar do `M0`, o G-code pega a primeira caneta, troca entre camadas e devolve a última.
 - **p2s**: Bambu P2S, experimental. Janela útil de cerca de 207 × 200 mm. Nunca testada no equipamento.
 - **personalizado**: perfil editável, a partir do megaS.
 

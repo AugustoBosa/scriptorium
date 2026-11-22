@@ -28,7 +28,22 @@ const p2s = {
   footer: "G0 Z30 F500\nG0 X150 Y250 F6000\nM400 U1\n",
 };
 
-export const PERFIS = { megaS, p2s, personalizado: { ...structuredClone(megaS), nome: 'personalizado' } };
+// Mega S com o porta-caneta de troca automática (hardware/pen_holder, branch hardware-pen-holder): 4 vagas na base, ímãs.
+// ponytail: tudo ESTIMATIVA do modelo 3D, nada medido nem impresso. Medir na máquina (cabeça à mão) antes do 1º uso e testar sem papel.
+// Sinais: Y cresce para o fundo da mesa; recuoY > 0 afasta a mesa da cabeça ao soltar. Mudou o sentido? Troque o sinal de recuoY.
+const megaSTroca = {
+  ...structuredClone(megaS), nome: 'megaSTroca', experimental: true,
+  troca: {
+    vagasX: [60, 90, 120, 150], // X do bico sobre cada vaga (base de 118 mm centrada na mesa)
+    yBase: 36,                  // Y com o suporte nos pinos
+    afastaY: 40,                // quanto a base se afasta da cabeça para andar em X sem bater nas canetas pousadas
+    recuoY: 12,                 // curso lento para soltar/pegar pelos ímãs
+    subida: 10,                 // altura acima do assento para tirar o suporte dos pinos
+    fLento: 300,                // mm/min nos movimentos de encaixe
+  },
+};
+
+export const PERFIS = { megaS, megaSTroca, p2s, personalizado: { ...structuredClone(megaS), nome: 'personalizado' } };
 
 // Perfil salvo (parcial, do localStorage) sobre os padrões do megaS; nunca compartilha objetos com PERFIS.
 export function mesclarPerfil(salvo) {
@@ -60,7 +75,7 @@ const num = (chave, min, max, passo, unidade, previa, extra = {}) => ({ chave, g
 export const PARAMS = [
   { chave: 'perfil', grupo: 'maquina', nivel: 'basico', tipo: 'opcao', padrao: 'megaS', rotulo: 'máquina',
     ajuda: 'Escolhe a impressora que vai desenhar. Muda o tamanho da mesa, a janela útil para o papel e as alturas Z. A P2S ainda não foi testada.',
-    opcoes: [{ valor: 'megaS', rotulo: 'Anycubic Mega S' }, { valor: 'p2s', rotulo: 'Bambu P2S (experimental)' }, { valor: 'personalizado', rotulo: 'Personalizado' }],
+    opcoes: [{ valor: 'megaS', rotulo: 'Anycubic Mega S' }, { valor: 'megaSTroca', rotulo: 'Mega S + porta-caneta (experimental)' }, { valor: 'p2s', rotulo: 'Bambu P2S (experimental)' }, { valor: 'personalizado', rotulo: 'Personalizado' }],
     previa: (v) => { const m = mesaEJanela(PERFIS[v]); return [...m.fundo, ...m.foco]; } },
   num('zEscrita', 0, 30, 0.1, 'mm', haste, { semEscala: true }),
   num('zLevantada', 0, 30, 0.1, 'mm', haste, { semEscala: true }),

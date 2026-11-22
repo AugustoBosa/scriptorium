@@ -46,6 +46,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 
 - 2026-11-18 — Reorganização: oficina Magias (pergaminho + grimório, separador entre magias), oficinas com a mesma ordem de painéis e a mesma lista de papéis, texto de exemplo e visual padrão por tipo, valores com 2 casas, destaque em vermelho na prévia dos controles, menu ☰ nas oficinas e home com cartões animados. Os textos do teste inicial e o histórico antigo saíram.
 - 2026-11-18 — Notas livres e biblioteca: notas com posição automática, por lado ou livre (arrastar) na Carta e no Livro; Livro com notas e rabiscos; trabalho salvo sozinho; aba Biblioteca com materiais (.json) e cópia de tudo; magias importadas guardadas no navegador.
+- 2026-11-21 — Sistema multicor: perfil `megaSTroca` (`src/maquina/perfis.js`) e `trocaAuto` em `src/maquina/gcode.js` geram largar/pegar caneta no porta-caneta de 4 vagas no lugar do `M0`; vaga = posição da caneta em `canetas`; falta medir tudo na máquina.
 - 2026-11-21 — Acabamento: Livro em 2 colunas equilibra a última página (`equilibrar` em `compor`, 2 passes); notas da faixa de margem (anotação/diário) se inclinam como as soltas.
 - 2026-11-21 — Texto modelo pt-BR gerado de Dom Casmurro (Wikisource, domínio público; `dados/corpus/`, fora do git): 168 padrões, só "nã" sem cobertura (antes 3). O gerador sempre inclui a–z.
 - 2026-11-19 — Mão natural nas notas: setas curvas e irregulares, notas inclinadas e giradas para caber, ângulo por nota (`{nota@lado/graus: …}`), controles com prévia; a nota só fica onde a seta tem caminho livre.
@@ -59,6 +60,8 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 - 2026-11-21 — "Mesa e folha" dividida em subseções em acordeão: Folha (abre sozinha), Posição na mesa (só no Avançado) e Arquivos (`details.subsecao`, linha simples e título menor).
 
 ## Pendências de hardware (usuário)
+
+0. Troca automática (perfil `megaSTroca`): imprimir a mesa 1, medir `vagasX`, `yBase`, `afastaY`, `recuoY` (sinal!) e `subida` com a cabeça à mão, e rodar a 1ª vez **sem papel e com a mão no botão de parar**. Valores atuais são estimativas de `hardware/pen_holder/README.md`.
 
 1. Na Mega S, `G0 X0 Y0` deve levar a caneta ao canto frente-esquerda (o ponto X0 Y0 da vista Mesa). Se não levar, ajustar "origem" no painel Mesa e folha.
 2. Imposição: Carta → A6 → Mesa e folha → folha A4 → baixar a passada → rodar com a caneta levantada, depois com a caneta. Conferir que a folha real bate com a vista Mesa.

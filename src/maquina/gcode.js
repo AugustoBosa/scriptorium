@@ -60,6 +60,25 @@ export function gcode(tracos, pagina, perfil = PERFIL_PADRAO) {
   return { texto, avisos, nTracos: validos.length, comprimento };
 }
 
+// Troca automática no porta-caneta (perfil.troca): solta a caneta da vaga `de` e pega a da vaga `para` (null = cabeça vazia / não pega).
+// Sequência de hardware/pen_holder/README.md: afasta a base em Y antes de andar em X; Z e Y de encaixe em F lento.
+export function trocaAuto(p, de, para) {
+  const t = p.troca, f = (v) => v.toFixed(3), zA = t.zAssento ?? p.zEscrita, zS = zA + t.subida, yL = t.yBase + t.afastaY;
+  const v = (y) => `G0 Y${f(y)} F${p.fViagem}`, lento = (eixo, valor) => `G1 ${eixo}${f(valor)} F${t.fLento}`;
+  const ir = (x, y) => [`G0 Z${f(zS)} F${p.fZ}`, v(yL), `G0 X${f(x)} F${p.fViagem}`, v(y)]; // afasta a base antes de andar em X
+  const L = [];
+  if (de != null) { // larga: pinos entram nos furos, a cabeça recua e os ímãs soltam
+    L.push(`; largar caneta na vaga ${de + 1}`, ...ir(t.vagasX[de], t.yBase), lento('Z', zA), lento('Y', t.yBase + t.recuoY));
+    if (para == null) L.push(lento('Z', zS), v(yL)); // fim do trabalho: cabeça vazia sobe e se afasta
+  }
+  if (para != null) { // pega: por trás das canetas pousadas, avança até os ímãs, sobe e afasta
+    L.push(`; pegar caneta da vaga ${para + 1}`);
+    if (de != null) L.push(`G1 X${f(t.vagasX[para])} F${p.fViagem}`); else L.push(...ir(t.vagasX[para], t.yBase + t.recuoY), lento('Z', zA));
+    L.push(lento('Y', t.yBase), lento('Z', zS), v(yL));
+  }
+  return L.map((l) => `${l}\n`).join('');
+}
+
 export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, canetas = {} } = {}) {
   const zMin = perfil.zMin ?? 0;
   for (const [campo, z] of [['zEscrita', perfil.zEscrita], ['zLevantada', perfil.zLevantada], ['estaciona.z', perfil.estaciona.z]]) {
@@ -71,6 +90,12 @@ export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, 
   const j = janelaDe(perfil);
   const { estaciona: e, fZ, fViagem, fDesenho, zEscrita, zLevantada } = perfil;
   const avisos = [];
+  // troca automática: cada caneta de `canetas` tem a vaga da sua posição na lista
+  const nomesCanetas = Object.keys(canetas), vaga = (c) => nomesCanetas.indexOf(c);
+  if (perfil.troca) {
+    const usadas = pagina.camadas.filter((k) => (!camadas || camadas.includes(k.id)) && k.tracos.some(valido)).map((k) => k.caneta);
+    for (const c of new Set(usadas)) if (vaga(c) < 0 || vaga(c) >= perfil.troca.vagasX.length) throw new Error(`caneta ${c} sem vaga no porta-caneta (${perfil.troca.vagasX.length} vagas)`);
+  }
   // o header termina numa altura fixa; sobe para zLevantada antes da 1ª viagem
   let texto = `${perfil.header}G0 Z${zLevantada} F${fZ}
 `, nTracos = 0, comprimento = 0, trocas = 0, anterior = null;
@@ -79,7 +104,10 @@ export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, 
     if (!validos.length) continue;
     const id = String(camada.id).replace(/[\r\n]/g, ' ');
     const nome = (canetas[camada.caneta]?.nome ?? camada.caneta).replace(/[\r\n]/g, ' ');
-    if (anterior !== null && camada.caneta !== anterior) {
+    if (perfil.troca && camada.caneta !== anterior) {
+      texto += trocaAuto({ ...perfil, fZ, fViagem }, anterior === null ? null : vaga(anterior), vaga(camada.caneta));
+      if (anterior !== null) trocas++;
+    } else if (anterior !== null && camada.caneta !== anterior) {
       texto += `G0 Z${e.z} F${fZ}\nG0 X${e.x.toFixed(3)} Y${e.y.toFixed(3)} F${fViagem}\n`;
       texto += perfil.trocaCaneta.replace('{nome}', () => nome) + '\n';
       trocas++;
@@ -97,6 +125,8 @@ export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, 
     });
     nTracos += validos.length;
   }
+  if (perfil.troca && anterior !== null) texto += trocaAuto(perfil, vaga(anterior), null) + `G0 Z${zLevantada} F${fZ}
+`; // devolve a última caneta
   return { texto: texto + perfil.footer, avisos, nTracos, comprimento, trocas };
 }
 

@@ -80,3 +80,19 @@ test('traço com NaN não vira XNaN', () => {
   assert.doesNotMatch(r.texto, /NaN/);
   assert.equal(r.nTracos, 1);
 });
+
+test('troca automática (megaSTroca): pega a 1ª, troca entre camadas, devolve a última; megaS segue com M0', () => {
+  const cn = { preta: { nome: 'Preta' }, vermelha: { nome: 'Vermelha' } };
+  const r = gcodeDocumento(duas, A6, PERFIS.megaSTroca, { canetas: cn });
+  assert.equal(r.trocas, 1);
+  assert.doesNotMatch(r.texto, /M0 /);
+  assert.deepEqual([...r.texto.matchAll(/^; (largar|pegar)[^\n]*/gm)].map((m) => m[0]),
+    ['; pegar caneta da vaga 1', '; largar caneta na vaga 1', '; pegar caneta da vaga 2', '; largar caneta na vaga 2']);
+  // X só muda com a base afastada: antes de cada G0 X de vaga, o Y anterior é yBase + afastaY
+  const L = r.texto.split('\n');
+  L.forEach((l, i) => { if (/^G0 X(60|90)\.000 F6000$/.test(l)) assert.equal(L[i - 1], 'G0 Y76.000 F6000', l); });
+  assert.ok(r.texto.indexOf('; pegar caneta da vaga 1') < r.texto.indexOf('; camada texto'));
+  assert.ok(r.texto.lastIndexOf('; largar caneta na vaga 2') < r.texto.indexOf(PERFIS.megaS.footer));
+  assert.throws(() => gcodeDocumento(duas, A6, PERFIS.megaSTroca, { canetas: { preta: {} } }), /sem vaga/);
+  assert.equal(gcodeDocumento(duas, A6, PERFIS.megaS, { canetas: cn }).trocas, 1);
+});
