@@ -78,7 +78,7 @@ export function comporLivro(bruto, ctx, cfg) {
 
   const papelTexto = { largura: papel.largura, altura: papel.altura,
     margens: { topo: G.texto.y, esq: G.texto.x, dir: papel.largura - G.texto.x - G.texto.l, base: papel.altura - G.texto.y - G.texto.a } };
-  const r = compor(corpo, ctx.fontes, ctx.mao, papelTexto, { tamanho, entrelinha, alinhamento: c.alinhamento, colunas: c.colunas, vaoColunas: c.vaoColunas, obstaculos });
+  const r = compor(corpo, ctx.fontes, ctx.mao, papelTexto, { tamanho, entrelinha, alinhamento: c.alinhamento, colunas: c.colunas, vaoColunas: c.vaoColunas, obstaculos, equilibrar: true });
   avisos.unshift(...r.avisos.filter((a) => !a.startsWith('tolerancia')), ...avisosMarca);
   // a capitular tira a 1ª letra: se ela era uma palavra inteira, os índices das marcas andam uma palavra
   const desl = contar(texto) - contar(corpo);

@@ -9,7 +9,23 @@ export const PAGINAS = {
   mesa: { largura: 210, altura: 210, margens: { topo: 15, dir: 15, base: 15, esq: 15 } },
 };
 
+// Equilíbrio de 2 colunas: compõe uma vez; se a última página tem a 2ª coluna parcial, recompõe com as duas colunas do mesmo tamanho.
+// ponytail: não equilibra a página com obstáculo (capitular); se a paginação mudar, fica com o 1º passe.
+function equilibrada(texto, fontes, mao, pagina, opcoes) {
+  const r1 = compor(texto, fontes, mao, pagina, { ...opcoes, equilibrar: false });
+  const pag = r1.paginas.length - 1, a = r1.ancoras.filter((x) => x.pagina === pag);
+  if (!a.some((x) => x.coluna === 1) || (opcoes.obstaculos ?? []).some((o) => (o.pagina ?? 0) === pag)) return r1;
+  const linhas = (c) => Math.max(...a.filter((x) => x.coluna === c).map((x) => x.linha)) + 1;
+  const metade = Math.ceil((linhas(0) + linhas(1)) / 2);
+  const m = { ...NEUTRA, ...mao }, t = opcoes.tamanho ?? 6, k = metade - 1;
+  const topo = pag === 0 ? opcoes.topo ?? pagina.margens.topo : pagina.margens.topo;
+  const limite = topo + t + k * t * (opcoes.entrelinha ?? 1.6) + m.queda * k + 0.01;
+  const r2 = compor(texto, fontes, mao, pagina, { ...opcoes, equilibrar: false, _eq: { pag, limite } });
+  return r2.paginas.length === r1.paginas.length ? r2 : r1;
+}
+
 export function compor(texto, fontes, mao, pagina, opcoes = {}) {
+  if (opcoes.equilibrar && opcoes.colunas === 2 && !opcoes._eq) return equilibrada(texto, fontes, mao, pagina, opcoes);
   mao = { ...NEUTRA, ...mao }; // personagem antigo pode não ter os campos novos
   const tamanho = opcoes.tamanho ?? 6;
   const entrelinha = opcoes.entrelinha ?? 1.6;
@@ -17,6 +33,8 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
   const { margens } = pagina;
   const W = pagina.largura - margens.esq - margens.dir;
   const limite = pagina.altura - margens.base;
+  const eq = opcoes._eq; // 2º passe do equilíbrio: a última página fecha mais cedo
+  const lim = () => (eq && cur.pag === eq.pag ? eq.limite : limite);
   const tol = tamanho * 0.3;
   const avisos = [`tolerancia de limites: ${tol} mm`];
 
@@ -57,7 +75,7 @@ export function compor(texto, fontes, mao, pagina, opcoes = {}) {
 
   const avancar = () => {
     // bloco empilhado (topo abaixo da margem) pode transbordar já na 1ª linha
-    if (!(base(cur.k) > limite && (cur.k > 0 || cur.topo > margens.topo))) return false;
+    if (!(base(cur.k) > lim() && (cur.k > 0 || cur.topo > margens.topo))) return false;
     if (cur.k > 0) fimPag = Math.max(fimPag, base(cur.k - 1));
     cur.k = 0;
     if (++cur.col === cols.length) {

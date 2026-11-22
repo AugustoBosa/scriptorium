@@ -76,3 +76,13 @@ test('8. opções vazias explícitas = sem opções', () => {
   assert.deepEqual(a.paginas, b.paginas);
   assert.equal(a.fim, b.fim);
 });
+
+test('8. equilibrar: última página com 2 colunas de alturas quase iguais; sem a opção, a 1ª enche', () => {
+  const linhas = (r, c) => new Set(r.ancoras.filter((a) => a.pagina === r.paginas.length - 1 && a.coluna === c).map((a) => a.linha)).size;
+  const op = { colunas: 2 };
+  const sem = compor(texto.repeat(3), fontes, mao, A5, op), com = compor(texto.repeat(3), fontes, mao, A5, { ...op, equilibrar: true });
+  assert.equal(com.paginas.length, sem.paginas.length);
+  assert.ok(linhas(sem, 0) - linhas(sem, 1) > 1, 'precisa começar desequilibrado');
+  assert.ok(Math.abs(linhas(com, 0) - linhas(com, 1)) <= 1);
+  assert.equal(com.ancoras.length, sem.ancoras.length);
+});

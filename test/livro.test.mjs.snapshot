@@ -3782,9 +3782,9 @@ exports[`golden livro: A7, 2 colunas, capitular lombarda, 3 páginas 1`] = `
       "n": 978,
       "caixa": {
         "x": 6.1038,
-        "y": 12.934000000000001,
+        "y": 13.219,
         "l": 61.98320000000003,
-        "a": 78.624
+        "a": 74.16
       },
       "primeiros": [
         [
