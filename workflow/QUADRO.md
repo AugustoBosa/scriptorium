@@ -46,6 +46,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 
 - 2026-11-18 — Reorganização: oficina Magias (pergaminho + grimório, separador entre magias), oficinas com a mesma ordem de painéis e a mesma lista de papéis, texto de exemplo e visual padrão por tipo, valores com 2 casas, destaque em vermelho na prévia dos controles, menu ☰ nas oficinas e home com cartões animados. Os textos do teste inicial e o histórico antigo saíram.
 - 2026-11-18 — Notas livres e biblioteca: notas com posição automática, por lado ou livre (arrastar) na Carta e no Livro; Livro com notas e rabiscos; trabalho salvo sozinho; aba Biblioteca com materiais (.json) e cópia de tudo; magias importadas guardadas no navegador.
+- 2026-11-21 — Acabamento: Livro em 2 colunas equilibra a última página (`equilibrar` em `compor`, 2 passes); notas da faixa de margem (anotação/diário) se inclinam como as soltas.
 - 2026-11-21 — Texto modelo pt-BR gerado de Dom Casmurro (Wikisource, domínio público; `dados/corpus/`, fora do git): 168 padrões, só "nã" sem cobertura (antes 3). O gerador sempre inclui a–z.
 - 2026-11-19 — Mão natural nas notas: setas curvas e irregulares, notas inclinadas e giradas para caber, ângulo por nota (`{nota@lado/graus: …}`), controles com prévia; a nota só fica onde a seta tem caminho livre.
 - 2026-11-19 — Site quebrado (no celular e no desktop): o Pages estava em "Deploy from branch". Voltou para GitHub Actions.
@@ -68,9 +69,8 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 ## Pendências técnicas
 
 - Mesa: faixas intermediárias; `M0` entre passadas.
-- Notas na faixa de margem (anotação/diário) ainda saem retas; inclinação e giro valem só para notas soltas.
+- Notas na faixa de margem: ganharam inclinação (não giram para caber, só inclinam se ainda cabem na faixa).
 - Motor: 2-opt de blocos (a ordem de escrita viaja 1,6 a 1,7× mais); `PARES` por fonte (z da EMSSwiss).
-- Livro: 2 colunas sem equilíbrio na última página.
-- Arcano: ogham e curvo empastam abaixo de 5 mm.
+- Arcano: `estilo.forma` (angular/curvo/ogham/pontilhado) não tem seletor na UI; só entra por arquivo de tradição importado. Ogham (entalhes a 0,8 mm em 5 mm) e curvo (arcos a 0,43 mm) empastam abaixo de 5 mm. Só vale mexer se a forma ganhar seletor.
 - CI: `actions/deploy-pages@v4` roda em Node 20; atualizar quando sair versão nova.
 - Auditoria, deixado de propósito: traço fora da janela só avisa (Marlin limita pelos endstops); a 1ª camada não pede troca de caneta (teste `por('notas').trocas === 0` documenta); ornamentos `filigrana`/`peDeMosca`/`manicula` e `PARAMS` de `no`/`vinha` sem uso na UI (catálogo para o futuro); API antiga `gcode()`/`svg()` só nos goldens; `circulo` do alfabeto (n=12) separado do `geo.circulo` para não mexer nos goldens.
