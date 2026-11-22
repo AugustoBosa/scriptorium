@@ -139,3 +139,10 @@ test('carta: golden anotação A6 seed 1', (t) => {
   const doc = comporCarta(TEXTO.split(' ').slice(0, 45).join(' ').replace(/\{nota: a terceira\}|\{nota: esta[^}]*\}/g, ''), ctx, { papel: fabricaPapel('A6'), tipo: 'anotacao', seed: 1 });
   t.assert.snapshot(JSON.stringify(resumo(doc), null, 1));
 });
+
+test('carta anotação: a inclinação inclina também as notas da faixa (0 = retas)', () => {
+  const caixa = (inclinacao) => { const doc = comporCarta(TEXTO, ctx, { papel: A5, tipo: 'anotacao', inclinacao, seed: 1 }); return doc.paginas[0].camadas.find((c) => c.id === 'notas').tracos; };
+  const reta = caixa(0), torta = caixa(12);
+  assert.notDeepEqual(torta, reta);
+  assert.equal(torta.length > 0, true);
+});

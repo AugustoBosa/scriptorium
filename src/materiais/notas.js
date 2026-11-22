@@ -328,10 +328,14 @@ export function comporNotas(marcas, base, ctx, cfg = {}) {
     const y = Math.max(p.y - tamanho, faixa.y, fimNota + VAO + 0.5 * tn);
     const pf = { largura: papel.largura, altura: papel.altura, margens: { topo: faixa.y, dir: papel.largura - faixa.x - faixa.l, base: papel.altura - faixa.y - faixa.a, esq: faixa.x } };
     const r = compor(texto, ctx.fontes, maoN, pf, { tamanho: tn, entrelinha: 1.3, topo: y });
-    const tr = r.paginas[0], b = caixaDe(tr);
+    let tr = r.paginas[0], b = caixaDe(tr);
     if (r.paginas.length > 1 || b.y + b.a > faixa.y + faixa.a + 1e-6) { avisos.push(`nota não coube na página ${pagina + 1}: "${resumo(texto)}"`); continue; }
     if (!tr.length) continue;
     if (!livre(tr)) { avisos.push(`nota descartada: tocaria texto ou outra nota: "${resumo(texto)}"`); continue; }
+    // inclinação de mão também na faixa: só vale se a nota inclinada ainda cabe na faixa (com a tolerância do compor, 0,3 do corpo) e não toca nada
+    const e = 0.3 * tn;
+    const inc = girarEm(tr, (rr(`faixa|${p.k}|${item.ordem ?? texto}`)() * 2 - 1) * inclinacao), bi = caixaDe(inc);
+    if (bi.x >= faixa.x - e && bi.x + bi.l <= faixa.x + faixa.l + e && bi.y >= faixa.y - e && bi.y + bi.a <= faixa.y + faixa.a + e && livre(inc)) { tr = inc; b = bi; }
     pôr(tr, [b]);
     fimNota = b.y + b.a;
     if (!calha) continue;
