@@ -25,57 +25,60 @@ Peças (quantidade por sistema):
 import sys
 from pathlib import Path
 from bd_warehouse.thread import IsoThread
-from build123d import (Axis, Box, Compound, Cone, Cylinder, Plane, Polygon, Pos, Rot, chamfer, export_step, export_stl, extrude)
+from build123d import (Axis, Box, Compound, Cone, Cylinder, Mesher, Plane, Polygon, Pos, Rot, chamfer, export_step, export_stl, extrude)
 
 # ---------- medidas provisórias (MEDIR) ----------
-IMA_D, IMA_H = 6.0, 3.0          # MEDIR: ímã de disco
+IMA_D, IMA_H = 3.0, 3.0          # CONFIRMADO: ímã de disco 3x1 mm (±0,1), 3 empilhados por cava
 CANETA_D = 8.0                   # MEDIR: BIC Cristal 1,0 (corpo sextavado, medida entre cantos)
 CABECA_W, CABECA_D, CABECA_H = 64.3, 50.3, 52.5  # MEDIR: caixa do cabeçote da Mega S (fonte: tampas da comunidade)
 BICO_ABAIXO = 5                  # MEDIR: quanto o bico sai abaixo da caixa
 FOLGA_X_FIM = 6                  # MEDIR: menor vão entre a lateral do cabeçote e a estrutura no fim do curso X
 MESA_T = 8                       # MEDIR: espessura da mesa (alumínio + Ultrabase)
 FOLGA = 0.3                      # folga de encaixe (ajustar após imprimir um teste)
-ROSCA_D, ROSCA_P, FOLGA_ROSCA = 10, 1.5, 0.5  # parafusos impressos M10x1,5; a rosca fêmea fica 0,5 mm maior
+PAREDE = 1.6                     # parede mínima: 4 voltas do bico 0,4
+GANCHO = 4                       # quanto o gancho do elástico sai da face
+ROSCA_D, ROSCA_P, FOLGA_ROSCA = 8, 1.25, 0.5  # borboletas dos grampos M8x1,25; a rosca fêmea fica 0,5 mm maior
 
 # ---------- (1) bloco + cunha + varetas ----------
-BW, BD, BH = 32, 18, 12          # largura, profundidade, altura
-TRILHO_X, TRILHO_D = 11, 4       # varetas impressas em x = ±11
+BW, BD, BH = 24, 18, 12          # largura, profundidade, altura (BD: rosca M6 de ~5 mm; BH: guia nas varetas)
+TRILHO_X, TRILHO_D = 8, 4        # varetas impressas em x = ±8 (o mais perto da caneta que a parede deixa)
 CURSO = 6                        # quanto o bloco pode subir quando a ponta toca o papel
 CUNHA_W = 8                      # largura do canal da cunha (X)
 CUNHA_B, CUNHA_T = 1.2, 2.6      # vão entre a caneta e a parede do canal, embaixo e em cima (~7°: trava sozinha)
 
 # ---------- (2) suporte ----------
-SW, ST = 48, 10                  # largura e espessura da placa traseira
-BRACO_W, BRACO_H = 8, 6          # abas do "C" (largura em X, altura em Z)
+SW, ST = 24, 8                   # largura e espessura da placa traseira (= largura do bloco)
+BRACO_W, BRACO_H = 7, 4          # abas do "C" (largura em X, altura em Z)
 VAO = BH + CURSO                 # vão entre as abas
 SH = 2 * BRACO_H + VAO           # altura do suporte
 Y_PLACA = BD / 2 + 1             # face da frente da placa traseira (1 mm de folga para o bloco)
 Y_COSTAS = Y_PLACA + ST          # costas do suporte (encosta na placa da morsa)
 PINO, PINO_L = 4, 3              # pinos quadrados das costas
-PINOS = [(x, z) for x in (-5, 5) for z in (9, SH - 9)]
-IMA_X = 12
+PINO_X = 3.5
+PINOS = [(x, z) for x in (-PINO_X, PINO_X) for z in (9, SH - 9)]
+IMA_X = 8.5
 IMAS = [(x, z) for x in (-IMA_X, IMA_X) for z in (6, SH - 6)]
-FURO2_X, FURO2_Y = 19.5, Y_PLACA + ST / 2  # furos verticais p/ os pinos da base de troca
+FURO2_X, FURO2_Y = 3.5, Y_PLACA + ST / 2     # furos verticais p/ os pinos da base de troca (entre os ímãs: a placa fica estreita)
 
 # ---------- morsa ----------
-JT, JAW_D, JAW_H = 3, 30, 30     # parede, profundidade e altura das mandíbulas (descem pela lateral do cabeçote)
+JT, JAW_D, JAW_H = 2.5, 20, 20     # parede, profundidade e altura das mandíbulas (descem pela lateral do cabeçote)
 PLACA_T, RECUO = 5, 2            # placa negativa; vão até a frente do cabeçote (grade da ventoinha)
 LIP, LIP_T = 5, 3                # abas que apoiam no topo do cabeçote (referência de altura)
 CM_B, CM_T = 1.0, 2.5            # vão da cunha da morsa embaixo e em cima (~2,9°: trava sozinha)
 MARGEM_BICO = 5                  # o bico fica 5 mm acima da ponta da caneta
 # variante parafuso: barra por cima da borda da frente do cabeçote, mandíbula esquerda corre num rabo-de-andorinha
-BARRA_T, BARRA_D = 6, 12         # barra apoiada no topo (espessura, profundidade a partir da frente)
-RABO = (6, 9, 4)                 # rabo-de-andorinha no topo da barra: base, topo, altura
+BARRA_T, BARRA_D = 4, 12         # barra apoiada no topo (espessura, profundidade a partir da frente)
+RABO = (5, 11, 3)                # rabo-de-andorinha no topo da barra: base, topo, altura (45°: imprime deitado sem suporte)
 CARRO_W, CARRO_H = 18, 17        # carro da mandíbula móvel
 JOGO, CURSO_M = 1, 4             # folga nominal da mandíbula e quanto ela ainda pode apertar
-BATENTE_W = 8
+BATENTE_W = 6
 
 # ---------- base de troca ----------
-VAGAS, PASSO = 4, SW + 4
-BASE_D, BASE_H = 12, 14           # altura: o bico não chega perto da mesa ao largar a caneta
-PINO_BASE_D, PINO_BASE_H = 4, 8  # pinos impressos que entram nos furos do suporte
-GRAMPO_W, GRAMPO_D = 22, 28      # grampos ficam embaixo das vagas das pontas (nada além do comprimento da base)
-GRAMPO_ROSCA = 10                # espessura da mandíbula de baixo (comprimento da rosca)
+VAGAS, PASSO = 4, max(SW, BW) + 4  # 4 mm entre canetas vizinhas
+BASE_D, BASE_H = 8, 14           # altura: o bico não chega perto da mesa ao largar a caneta; 5 mm apoiados na mesa
+PINO_BASE_D, PINO_BASE_H = 4, 6  # pinos impressos que entram nos furos do suporte
+GRAMPO_W, GRAMPO_D = 16, 18      # grampos ficam embaixo das vagas das pontas (nada além do comprimento da base)
+GRAMPO_ROSCA = 8                 # espessura da mandíbula de baixo (comprimento da rosca)
 
 VAR = sys.argv[1] if len(sys.argv) > 1 else "cunha"
 assert VAR in ("cunha", "parafuso"), "variante: cunha ou parafuso"
@@ -99,11 +102,9 @@ def cil_y(x, z, y0, y1, d):
     return Pos(x, (y0 + y1) / 2, z) * Rot(90, 0, 0) * Cylinder(d / 2, y1 - y0)
 
 
-def gancho(x, y, z, lado):
-    """Gancho p/ elástico: pino com cabeça saindo da face x, para o lado (+1/-1)."""
-    a, b = sorted((x, x + lado * 4))
-    c0, c1 = sorted((x + lado * 4, x + lado * 5.2))
-    return cil_x(y, z, a, b, 3) + cil_x(y, z, c0, c1, 5)
+def gancho(x, y, z):
+    """Gancho p/ elástico: pino com cabeça saindo da face da frente (y) para -Y; não aumenta a largura da peça."""
+    return cil_y(x, z, y - GANCHO + 1, y + 0.01, 2.5) + cil_y(x, z, y - GANCHO, y - GANCHO + 1, 3.6)
 
 
 def prisma(plano, pts, a0, a1):
@@ -168,7 +169,7 @@ def bloco():
     else:
         p = rosca_femea(p, Pos(0, -BD / 2, BH / 2) * Rot(-90, 0, 0), BD / 2 - R_FURO + 0.01, 6, 1)  # M6 pela frente até a caneta
     for s in (-1, 1):
-        p += gancho(s * BW / 2, 0, BH / 2, s)
+        p += gancho(s * (BW / 2 - 2.5), -BD / 2, BH / 2)
     return p
 
 
@@ -194,7 +195,7 @@ def suporte():
             p += caixa(x - BRACO_W / 2, -5, z0, x + BRACO_W / 2, Y_PLACA + 0.01, z0 + BRACO_H)
         p -= cil_z(x, 0, -1, SH + 1, TRILHO_D - 0.1)            # vareta entra justa nas abas
     for s in (-1, 1):
-        p += gancho(s * (TRILHO_X + BRACO_W / 2), 0, BRACO_H / 2, s)
+        p += gancho(s * TRILHO_X, -5, BRACO_H / 2)
         p -= cil_z(s * FURO2_X, FURO2_Y, -1, SH + 1, PINO_BASE_D + 0.6)  # pinos da base de troca
     for x, z in PINOS:
         pino = caixa(x - PINO / 2, Y_COSTAS - 0.01, z - PINO / 2, x + PINO / 2, Y_COSTAS + PINO_L, z + PINO / 2)
@@ -205,7 +206,8 @@ def suporte():
 
 
 # morsa: "U" pela frente do cabeçote; nada passa da lateral além da parede (JT) e da cunha
-Z_PONTA = BRACO_H - 20                                   # ponta da caneta, bloco em repouso (ver caneta())
+CANETA_SAI = 18                                          # quanto a ponta sai abaixo do bloco (ajusta ao prender a caneta)
+Z_PONTA = BRACO_H - CANETA_SAI                           # ponta da caneta, bloco em repouso
 ZT = Z_PONTA + MARGEM_BICO + BICO_ABAIXO + CABECA_H      # topo do cabeçote
 Z_BICO = ZT - CABECA_H - BICO_ABAIXO
 Y_CAB = Y_COSTAS + PLACA_T + RECUO                       # frente do cabeçote
@@ -251,7 +253,9 @@ def furos_placa(p):
 
 def morsa_parafuso():
     x0, x1 = X_MORSA
-    p = caixa(x0, Y_COSTAS, 0, x1, Y_COSTAS + PLACA_T, Z_BARRA)                         # placa negativa
+    p = caixa(-SW / 2, Y_COSTAS, 0, SW / 2, Y_COSTAS + PLACA_T, Z_BARRA)                 # placa negativa: só atrás do suporte
+    p += caixa(SW / 2 - 0.01, Y_COSTAS, Z_MANDIB, x1, Y_COSTAS + PLACA_T, Z_BARRA)      # liga a mandíbula direita à placa
+    p -= caixa(-SW / 2 + 6, Y_COSTAS - 1, SH + 3, SW / 2 - 6, Y_COSTAS + PLACA_T + 1, ZT - 3)  # janela: acima do suporte a placa só liga à barra
     p += caixa(XL + 0.5, Y_COSTAS, ZT, x1, Y_BARRA[1], Z_BARRA)                         # barra sobre o topo
     p += caixa(XR, Y_COSTAS, Z_MANDIB, x1, Y_CAB + JAW_D, Z_BARRA)                      # mandíbula direita (fixa)
     p += caixa(X_BATENTE, Y_COSTAS, Z_BARRA, X_BATENTE + BATENTE_W, Y_BARRA[1] + 2, Z_BARRA + CARRO_H)  # batente
@@ -265,7 +269,7 @@ def mandibula():
     xa, xb = X_CARRO
     p = caixa(xa, Y_COSTAS, Z_BARRA, xb, Y_BARRA[1] + 2, Z_BARRA + CARRO_H)              # carro (passa por cima da placa)
     p += caixa(xa, Y_CAB + 0.5, Z_MANDIB, xa + JT, Y_CAB + JAW_D, Z_BARRA + CARRO_H)    # mandíbula
-    p -= rabo(xa - 1, xb + 1, FOLGA)
+    p -= rabo(xa + JT, xb + 1, FOLGA)
     return rosca_femea(p, Pos(xb, YS, ZS) * Rot(0, -90, 0), xb - (xa + JT), 8, 1.25)
 
 
@@ -292,21 +296,24 @@ XS = [(i - (VAGAS - 1) / 2) * PASSO for i in range(VAGAS)]
 BX0, BX1 = XS[0] - SW / 2 - 1, XS[-1] + SW / 2 + 1
 BY0 = FURO2_Y - BASE_D / 2
 ZB = -BASE_H - MESA_T - 3            # topo da mandíbula de baixo (3 mm de folga sob a mesa)
-YC = BY0 + GRAMPO_D - 9              # eixo do parafuso do grampo
+YC = BY0 + GRAMPO_D - 6.5            # eixo do parafuso do grampo (logo depois da borda da mesa)
 GRAMPOS = [(BX0, BX0 + GRAMPO_W), (BX1 - GRAMPO_W, BX1)]
 L_PARAF_MESA = GRAMPO_ROSCA + 3 + 7  # rosca + folga + 7 mm p/ mesas mais finas
 
 
 def base():
     p = caixa(BX0, BY0, -BASE_H, BX1, BY0 + BASE_D, 0)
+    for x0, x1 in zip(XS, XS[1:]):                                                         # entre as vagas a barra vira uma tira de 5 mm
+        p -= caixa(x0 + FURO2_X + 4, BY0 - 1, -BASE_H - 1, x1 - FURO2_X - 4, BY0 + BASE_D + 1, -4)
     for xc in XS:
         for s in (-1, 1):
             x = xc + s * FURO2_X
             p += cil_z(x, FURO2_Y, -0.01, PINO_BASE_H - 2, PINO_BASE_D)
+            quilha = [(-0.63, -2.2), (0.63, -2.2), (1.2, -1.2), (-1.2, -1.2)]  # lado -Y vira o de baixo na impressão; cabe no furo (raio 2,3)
+            p += extrude(Pos(x, FURO2_Y, -0.01) * Polygon(*quilha, align=None), amount=PINO_BASE_H - 2)
             p += Pos(x, FURO2_Y, PINO_BASE_H - 1) * Cone(PINO_BASE_D / 2, 1, 2)          # ponta cônica centraliza
     # grampos: abraçam a borda da frente da mesa (a mesa fica em +Y, topo em z = -BASE_H)
     for a, b in GRAMPOS:
-        p += caixa(a, BY0, -BASE_H, b, BY0 + GRAMPO_D, 0)                                  # mandíbula de cima
         p += caixa(a, BY0, ZB - GRAMPO_ROSCA, b, BY0 + 5, -BASE_H)                         # costas do C
         p += caixa(a, BY0, ZB - GRAMPO_ROSCA, b, BY0 + GRAMPO_D, ZB)                       # mandíbula de baixo
         p = rosca_femea(p, Pos((a + b) / 2, YC, ZB - GRAMPO_ROSCA), GRAMPO_ROSCA)
@@ -314,8 +321,8 @@ def base():
 
 
 def caneta():
-    """Só para o visor, em coordenadas do bloco: BIC com a ponta 20 mm abaixo do bloco."""
-    return cil_z(0, 0, -18, 110, CANETA_D) + Pos(0, 0, -19) * Cylinder(1.2, 2)
+    """Só para o visor, em coordenadas do bloco: BIC com a ponta CANETA_SAI mm abaixo do bloco."""
+    return cil_z(0, 0, 2 - CANETA_SAI, 110, CANETA_D) + Pos(0, 0, 1 - CANETA_SAI) * Cylinder(1.2, 2)
 
 
 def exportar(s, nome, imprimir=True):
@@ -335,6 +342,56 @@ def visor(cenas, info):
     html = (AQUI / "visor_modelo.html").read_text(encoding="utf8")
     html = html.replace("/*DADOS*/", json.dumps(dados)).replace("/*STLS*/", json.dumps(stls))
     (SAIDA / "visor.html").write_text(html, encoding="utf8")
+
+
+# ---------- impressão (variante parafuso) ----------
+MESA_IMP = 200                   # área útil da mesa da Mega S (210 mm menos a saia)
+DEITAR = {                       # posição de impressão de cada peça (sem rotação = como no modelo)
+    "morsa": Rot(90, 0, 0),             # deitada na placa negativa: furos dos pinos e dos ímãs virados para a mesa
+    "mandibula": Rot(0, -90, 0),        # deitada na face de fora: M8 e canal do rabo-de-andorinha ficam na vertical
+    "base": Rot(90, 0, 0),              # deitada na frente: grampos sem suporte
+}
+MESAS = {                        # mesa -> [(peça, quantidade)]
+    "1_caneta": [("suporte+apoio", 1), ("bloco", 1), ("parafuso_caneta", 1), ("vareta", 2)],  # imprimir 4x, uma em cada cor
+    "2_morsa": [("morsa", 1), ("mandibula", 1), ("parafuso_morsa", 1), ("parafuso_mesa", 2)],
+    "3_base": [("base", 1)],
+}
+
+
+APOIO_VAO = 0.2                  # vão de 1 camada (0,2 mm) entre o apoio e a peça: o apoio sai com a mão
+
+
+def apoio_suporte():
+    """Apoio descartável sob as 2 abas de cima do suporte: tubo de parede 0,8 mm, solto da peça (vão de 1 camada em cima e embaixo)."""
+    z0, z1 = BRACO_H + APOIO_VAO, SH - BRACO_H - APOIO_VAO
+    tubos = []
+    for x in (-TRILHO_X, TRILHO_X):
+        fora = caixa(x - BRACO_W / 2 + 0.4, -5 + 0.4, z0, x + BRACO_W / 2 - 0.4, Y_PLACA - 0.4, z1)
+        tubos.append(fora - caixa(x - BRACO_W / 2 + 1.2, -5 + 1.2, z0 - 1, x + BRACO_W / 2 - 1.2, Y_PLACA - 1.2, z1 + 1))
+    return tubos
+
+
+def mesas(pecas):
+    """Arruma as peças em fileiras e grava saida/<variante>/impressao/<mesa>.3mf (um objeto por peça, já na posição de impressão)."""
+    pasta = SAIDA / "impressao"
+    pasta.mkdir(exist_ok=True)
+    for nome, itens in MESAS.items():
+        x = y = fila = larg = 0
+        m, vol = Mesher(), 0
+        for peca, qtd in itens:
+            for i in range(qtd):
+                s = DEITAR.get(peca, Rot(0, 0, 0)) * pecas[peca]
+                bb = s.bounding_box()
+                if x + bb.size.X > MESA_IMP:
+                    x, y, fila = 0, y + fila + 6, 0
+                s = Pos(x - bb.min.X, y - bb.min.Y, -bb.min.Z) * s
+                s.label = peca if qtd == 1 else f"{peca}_{i + 1}"
+                m.add_shape(s, linear_deflection=0.05, angular_deflection=0.3)
+                x, fila, vol = x + bb.size.X + 6, max(fila, bb.size.Y), vol + s.volume
+                larg = max(larg, x - 6)
+        assert y + fila <= MESA_IMP, f"mesa {nome} não cabe na Mega S"
+        m.write(str(pasta / f"{nome}.3mf"))
+        print(f"mesa {nome:9s} {larg:5.0f} x {y + fila:5.0f} mm  {vol / 1000 * 1.24:5.1f} g de PLA maciço")
 
 
 ABAS = {"cunha": "Cunha (padrão)", "parafuso": "Parafuso"}
@@ -400,13 +457,15 @@ if __name__ == "__main__":
     # conferências mínimas
     sobra_esq, sobra_dir = XL - X_MORSA[0], X_MORSA[1] - XR
     assert max(sobra_esq, sobra_dir) <= FOLGA_X_FIM, f"morsa sai {max(sobra_esq, sobra_dir):.1f} mm da lateral: bate na estrutura"
-    assert SW <= CABECA_W and BW + 2 * 5.2 <= CABECA_W, "suporte mais largo que o cabeçote"
+    assert max(SW, BW) <= CABECA_W and SW / 2 >= TRILHO_X + BRACO_W / 2, "suporte mais largo que o cabeçote ou estreito para as abas"
     assert VAO >= BH + CURSO, "curso do bloco"
-    assert FURO2_X - (IMA_X + IMA_D / 2) - (PINO_BASE_D + 0.6) / 2 > 1, "ímã encosta no furo do pino da base"
-    assert SW / 2 - FURO2_X - (PINO_BASE_D + 0.6) / 2 >= 2, "parede fina na borda do suporte"
-    assert IMA_X - IMA_D / 2 - (5 + PINO / 2) >= 1.5, "ímã encosta no pino quadrado"
-    assert (ST - PINO_BASE_D - 0.6) / 2 >= 2, "parede fina em volta do furo do pino da base"
-    assert TRILHO_X - R_FURO - (TRILHO_D + 0.4) / 2 >= 2, "parede fina entre a caneta e a vareta"
+    assert IMA_X - IMA_D / 2 - FURO2_X - (PINO_BASE_D + 0.6) / 2 >= 1, "ímã encosta no furo do pino da base"
+    assert SW / 2 - IMA_X - IMA_D / 2 >= PAREDE, "parede fina na borda do suporte"
+    assert BASE_D > 5 + 2 and YC - (ROSCA_D + FOLGA_ROSCA) / 2 > BY0 + 5, "base não apoia na mesa ou a borboleta não pega embaixo da mesa"
+    assert PASSO - max(SW, BW) >= 3 and BW / 2 - 2.5 - 2 >= 11 / 2 + 1, "canetas vizinhas se tocam ou o gancho pega no botão M6"
+    assert IMA_X - IMA_D / 2 - (PINO_X + PINO / 2) >= 1.5, "ímã encosta no pino quadrado"
+    assert (ST - PINO_BASE_D - 0.6) / 2 >= PAREDE, "parede fina em volta do furo do pino da base"
+    assert TRILHO_X - R_FURO - (TRILHO_D + 0.4) / 2 >= PAREDE and BW / 2 - TRILHO_X - (TRILHO_D + 0.4) / 2 >= PAREDE, "parede fina entre a caneta e a vareta"
     assert Z_BICO >= -BASE_H + 4, "bico perto demais da mesa ao largar a caneta"
     assert BX1 - BX0 <= 210, "base de troca maior que a mesa"
     assert GRAMPO_W - ROSCA_D - FOLGA_ROSCA >= 6, "grampo estreito para a rosca"
@@ -424,9 +483,9 @@ if __name__ == "__main__":
     if VAR == "cunha":
         pecas |= {"cunha": cunha(), "cunha_morsa": cunha_morsa()}
     else:
-        pecas |= {"parafuso_caneta": parafuso(L_PARAF_CANETA, 6, 1, 12, 5), "mandibula": mandibula(),
-                  "parafuso_morsa": parafuso(L_PARAF_MORSA, 8, 1.25, 16, 6)}
-    pecas |= {"base": base(), "parafuso_mesa": parafuso(L_PARAF_MESA)}
+        pecas |= {"parafuso_caneta": parafuso(L_PARAF_CANETA, 6, 1, 11, 4), "mandibula": mandibula(),
+                  "parafuso_morsa": parafuso(L_PARAF_MORSA, 8, 1.25, 14, 5)}
+    pecas |= {"base": base(), "parafuso_mesa": parafuso(L_PARAF_MESA, botao=16, botao_h=5)}
     for nome, s in pecas.items():
         bb = s.bounding_box()
         assert s.is_valid and s.volume > 0, nome
@@ -448,6 +507,8 @@ if __name__ == "__main__":
     exportar(caneta(), "caneta", False)
     for nome, s in pecas.items():                               # por último: o OCC guarda a malha fina e o visor ficaria pesado
         export_stl(s, str(SAIDA / f"{nome}.stl"), tolerance=0.05, angular_tolerance=0.3)
+    if VAR == "parafuso":
+        mesas(pecas | {"suporte+apoio": Compound([pecas["suporte"], *apoio_suporte()])})
     extras = [n for n in ("v_cabeca", "v_cabeca_cinza", "v_bloco", "v_mesa", "v_varetas", "caneta") if (SAIDA / "visor" / f"{n}.stl").exists()]
     visor(list(pecas) + extras, informacoes(f"sai {sobra_esq:.1f} / {sobra_dir:.1f} mm das laterais"))
     print(f"ok: saida/{VAR}/" + (" e visor.html (as duas variantes)" if visor_unico() else " (gere a outra variante para o visor.html)"))
