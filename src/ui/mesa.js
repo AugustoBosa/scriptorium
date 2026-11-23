@@ -216,7 +216,7 @@ export function desenharMesa(elemento, estado) {
       topo: [t([pp.largura - 8, Math.min(16, pp.altura * 0.2)]), t([pp.largura - 8, 3])], legenda: 'Simulação da mesa com a página' });
     raiz.append(
       ampliar(svg),
-      el('p', 'mesa-instrucao', `Ponha a folha (${pp.largura} × ${pp.altura} mm) com o topo para trás, encostada no canto frente-esquerda da área da caneta (X0 Y0 — confira com G0 X0 Y0). Página ${i + 1} de ${doc.paginas.length}.`),
+      el('p', 'mesa-instrucao', `Ponha a folha (${pp.largura} × ${pp.altura} mm) com o topo para trás, encostada no canto frente-esquerda da área da caneta (confira com G0 X${j.x0 - (perfil.caneta?.x ?? 0)} Y${j.y0 - (perfil.caneta?.y ?? 0)}: a ponta pára nesse canto). Página ${i + 1} de ${doc.paginas.length}.`),
       svg,
       legenda(),
       el('p', 'mesa-aviso', 'Para várias páginas numa folha maior, ligue "imposição na mesa" no painel "Mesa e folha".'),

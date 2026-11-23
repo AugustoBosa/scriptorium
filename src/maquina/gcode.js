@@ -61,20 +61,21 @@ export function gcode(tracos, pagina, perfil = PERFIL_PADRAO) {
 }
 
 // Troca automática no porta-caneta (perfil.troca): solta a caneta da vaga `de` e pega a da vaga `para` (null = cabeça vazia / não pega).
-// Sequência de hardware/pen_holder/README.md: afasta a base em Y antes de andar em X; Z e Y de encaixe em F lento.
+// Sequência de hardware/pen_holder/README.md: afasta da base (eixo N) antes de andar entre as vagas (eixo t.eixo); Z e N de encaixe em F lento.
 export function trocaAuto(p, de, para) {
-  const t = p.troca, f = (v) => v.toFixed(3), zA = t.zAssento ?? p.zEscrita, zS = zA + t.subida, yL = t.yBase + t.afastaY;
-  const v = (y) => `G0 Y${f(y)} F${p.fViagem}`, lento = (eixo, valor) => `G1 ${eixo}${f(valor)} F${t.fLento}`;
-  const ir = (x, y) => [`G0 Z${f(zS)} F${p.fZ}`, v(yL), `G0 X${f(x)} F${p.fViagem}`, v(y)]; // afasta a base antes de andar em X
+  const t = p.troca, f = (v) => v.toFixed(3), zA = t.zAssento ?? p.zEscrita, zS = zA + t.subida, longe = t.base + t.afasta;
+  const E = t.eixo, N = E === 'X' ? 'Y' : 'X';
+  const v = (n) => `G0 ${N}${f(n)} F${p.fViagem}`, lento = (eixo, valor) => `G1 ${eixo}${f(valor)} F${t.fLento}`;
+  const ir = (e, n) => [`G0 Z${f(zS)} F${p.fZ}`, v(longe), `G0 ${E}${f(e)} F${p.fViagem}`, v(n)]; // afasta da base antes de andar entre as vagas
   const L = [];
   if (de != null) { // larga: pinos entram nos furos, a cabeça recua e os ímãs soltam
-    L.push(`; largar caneta na vaga ${de + 1}`, ...ir(t.vagasX[de], t.yBase), lento('Z', zA), lento('Y', t.yBase + t.recuoY));
-    if (para == null) L.push(lento('Z', zS), v(yL)); // fim do trabalho: cabeça vazia sobe e se afasta
+    L.push(`; largar caneta na vaga ${de + 1}`, ...ir(t.vagas[de], t.base), lento('Z', zA), lento(N, t.base + t.recuo));
+    if (para == null) L.push(lento('Z', zS), v(longe)); // fim do trabalho: cabeça vazia sobe e se afasta
   }
   if (para != null) { // pega: por trás das canetas pousadas, avança até os ímãs, sobe e afasta
     L.push(`; pegar caneta da vaga ${para + 1}`);
-    if (de != null) L.push(`G1 X${f(t.vagasX[para])} F${p.fViagem}`); else L.push(...ir(t.vagasX[para], t.yBase + t.recuoY), lento('Z', zA));
-    L.push(lento('Y', t.yBase), lento('Z', zS), v(yL));
+    if (de != null) L.push(`G1 ${E}${f(t.vagas[para])} F${p.fViagem}`); else L.push(...ir(t.vagas[para], t.base + t.recuo), lento('Z', zA));
+    L.push(lento(N, t.base), lento('Z', zS), v(longe));
   }
   return L.map((l) => `${l}\n`).join('');
 }
@@ -87,14 +88,14 @@ export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, 
   if (!(perfil.zLevantada > perfil.zEscrita)) throw new Error(`Z levantada (${perfil.zLevantada}) tem que ficar acima do Z de escrita (${perfil.zEscrita}): a caneta arrastaria nas viagens`);
   const c = cabeNaMaquina(papel, perfil);
   if (!c.ok) throw new Error(c.motivo);
-  const j = janelaDe(perfil);
+  const j = janelaDe(perfil), { x: cx, y: cy } = perfil.caneta ?? { x: 0, y: 0 };
   const { estaciona: e, fZ, fViagem, fDesenho, zEscrita, zLevantada } = perfil;
   const avisos = [];
   // troca automática: cada caneta de `canetas` tem a vaga da sua posição na lista
   const nomesCanetas = Object.keys(canetas), vaga = (c) => nomesCanetas.indexOf(c);
   if (perfil.troca) {
     const usadas = pagina.camadas.filter((k) => (!camadas || camadas.includes(k.id)) && k.tracos.some(valido)).map((k) => k.caneta);
-    for (const c of new Set(usadas)) if (vaga(c) < 0 || vaga(c) >= perfil.troca.vagasX.length) throw new Error(`caneta ${c} sem vaga no porta-caneta (${perfil.troca.vagasX.length} vagas)`);
+    for (const c of new Set(usadas)) if (vaga(c) < 0 || vaga(c) >= perfil.troca.vagas.length) throw new Error(`caneta ${c} sem vaga no porta-caneta (${perfil.troca.vagas.length} vagas)`);
   }
   // o header termina numa altura fixa; sobe para zLevantada antes da 1ª viagem
   let texto = `${perfil.header}G0 Z${zLevantada} F${fZ}
@@ -115,8 +116,9 @@ export function gcodeDocumento(pagina, papel, perfil = PERFIS.megaS, { camadas, 
     anterior = camada.caneta;
     texto += `; camada ${id} caneta ${nome}\n`;
     validos.forEach((t, i) => {
-      const maq = t.map(([x, y]) => [j.x0 + perfil.offsetX + x, j.y0 + perfil.offsetY + (papel.altura - y)]);
-      if (maq.some(([x, y]) => x < j.x0 || x > j.x1 || y < j.y0 || y > j.y1)) avisos.push(`camada ${id}: traço ${i + 1} fora da janela`);
+      const ponta = t.map(([x, y]) => [j.x0 + perfil.offsetX + x, j.y0 + perfil.offsetY + (papel.altura - y)]);
+      if (ponta.some(([x, y]) => x < j.x0 || x > j.x1 || y < j.y0 || y > j.y1)) avisos.push(`camada ${id}: traço ${i + 1} fora da janela`);
+      const maq = ponta.map(([x, y]) => [x - cx, y - cy]); // o bico fica atrás da ponta (porta-caneta na frente ou no lado)
       const [ini, ...resto] = maq;
       texto += `G0 X${ini[0].toFixed(3)} Y${ini[1].toFixed(3)} F${fViagem}\nG1 Z${zEscrita} F${fZ}\n`;
       for (const [x, y] of resto) texto += `G1 X${x.toFixed(3)} Y${y.toFixed(3)} F${fDesenho}\n`;

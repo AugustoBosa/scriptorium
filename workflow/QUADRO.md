@@ -62,7 +62,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 
 ## Pendências de hardware (usuário)
 
-0. Troca automática (perfil `megaSTroca`): imprimir a mesa 1, medir `vagasX`, `yBase`, `afastaY`, `recuoY` (sinal!) e `subida` com a cabeça à mão, e rodar a 1ª vez **sem papel e com a mão no botão de parar**. Valores atuais são estimativas de `hardware/pen_holder/README.md`.
+0. Troca automática (perfil `megaSTroca` na frente ou `megaSTrocaLado` no lado): imprimir a mesa 1, medir `vagas`, `base`, `afasta`, `recuo` (sinal!) e `subida` com a cabeça à mão, e rodar a 1ª vez **sem papel e com a mão no botão de parar**. Valores atuais são estimativas de `hardware/pen_holder/README.md`.
 
 1. Na Mega S, `G0 X0 Y0` deve levar a caneta ao canto frente-esquerda (o ponto X0 Y0 da vista Mesa). Se não levar, ajustar "origem" no painel Mesa e folha.
 2. Imposição: Carta → A6 → Mesa e folha → folha A4 → baixar a passada → rodar com a caneta levantada, depois com a caneta. Conferir que a folha real bate com a vista Mesa.

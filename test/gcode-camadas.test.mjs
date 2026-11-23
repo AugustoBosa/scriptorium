@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { gcode, gcodeDocumento } from '../src/maquina/gcode.js';
-import { PERFIS } from '../src/maquina/perfis.js';
+import { PERFIS, janelaDe } from '../src/maquina/perfis.js';
 
 const A6 = { largura: 105, altura: 148 };
+const Q = { largura: 100, altura: 100 }; // cabe no porta-caneta na frente (210 × 145) e no lado (145 × 210)
 const cam = (id, caneta, tracos) => ({ id, caneta, personagem: null, ordem: 'otimizada', tracos });
 const T = [[[10, 20], [30, 20]]];
 const pag = (...camadas) => ({ camadas });
@@ -83,18 +84,37 @@ test('traço com NaN não vira XNaN', () => {
 
 test('troca automática (megaSTroca): pega a 1ª, troca entre camadas, devolve a última; megaS segue com M0', () => {
   const cn = { preta: { nome: 'Preta' }, vermelha: { nome: 'Vermelha' } };
-  const r = gcodeDocumento(duas, A6, PERFIS.megaSTroca, { canetas: cn });
+  const r = gcodeDocumento(duas, Q, PERFIS.megaSTroca, { canetas: cn });
   assert.equal(r.trocas, 1);
   assert.doesNotMatch(r.texto, /M0 /);
   assert.deepEqual([...r.texto.matchAll(/^; (largar|pegar)[^\n]*/gm)].map((m) => m[0]),
     ['; pegar caneta da vaga 1', '; largar caneta na vaga 1', '; pegar caneta da vaga 2', '; largar caneta na vaga 2']);
-  // X só muda com a base afastada: antes de cada G0 X de vaga, o Y anterior é yBase + afastaY
+  // X só muda com a base afastada: antes de cada G0 X de vaga, o Y anterior é base + afasta
   const L = r.texto.split('\n');
-  L.forEach((l, i) => { if (/^G0 X(60|90)\.000 F6000$/.test(l)) assert.equal(L[i - 1], 'G0 Y76.000 F6000', l); });
+  assert.ok(L.includes('G0 X39.600 F6000'));
+  L.forEach((l, i) => { if (/^G0 X(39\.6|83\.2)00 F6000$/.test(l)) assert.equal(L[i - 1], 'G0 Y76.000 F6000', l); });
   assert.ok(r.texto.indexOf('; pegar caneta da vaga 1') < r.texto.indexOf('; camada texto'));
   assert.ok(r.texto.lastIndexOf('; largar caneta na vaga 2') < r.texto.indexOf(PERFIS.megaS.footer));
-  assert.throws(() => gcodeDocumento(duas, A6, PERFIS.megaSTroca, { canetas: { preta: {} } }), /sem vaga/);
+  assert.throws(() => gcodeDocumento(duas, Q, PERFIS.megaSTroca, { canetas: { preta: {} } }), /sem vaga/);
   assert.equal(gcodeDocumento(duas, A6, PERFIS.megaS, { canetas: cn }).trocas, 1);
+});
+
+test('porta-caneta na frente ou no lado: janela onde a ponta escreve, bico atrás da ponta, troca no eixo certo', () => {
+  const { megaSTroca: F, megaSTrocaLado: L } = PERFIS;
+  assert.deepEqual(janelaDe(F), { x0: 0, y0: 15, x1: 210, y1: 160 }); // 210 × 145
+  assert.deepEqual(janelaDe(L), { x0: 50, y0: 0, x1: 195, y1: 210 }); // 145 × 210
+  const ponto = pag(cam('t', 'preta', [[[0, Q.altura], [1, Q.altura]]])); // canto (x0, y0) da janela
+  const cn = { preta: {} };
+  assert.match(gcodeDocumento(ponto, Q, F, { canetas: cn }).texto, /^G0 X0\.000 Y65\.000 /m); // ponta em y 15, bico 50 atrás
+  const lado = gcodeDocumento(ponto, Q, L, { canetas: cn });
+  assert.match(lado.texto, /^G0 X0\.000 Y0\.000 /m); // ponta em x 50, bico 50 à esquerda
+  assert.deepEqual(lado.avisos, []);
+  // lado: vagas em Y; afasta em X (174 - 40) antes de andar em Y
+  const T = lado.texto.split('\n');
+  const i = T.indexOf('G0 Y39.600 F6000');
+  assert.ok(i > 0);
+  assert.equal(T[i - 1], 'G0 X134.000 F6000');
+  assert.ok(T.includes('G1 X162.000 F300')); // recuo de 12 para a esquerda solta os ímãs
 });
 
 test('gerar-teste-troca: 3 arquivos, sem NaN, TROCA3 sem pausa e 2 trocas', async () => {
@@ -102,7 +122,7 @@ test('gerar-teste-troca: 3 arquivos, sem NaN, TROCA3 sem pausa e 2 trocas', asyn
   const { mkdtempSync, readFileSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
   const dir = mkdtempSync(`${tmpdir()}/troca-`);
-  execFileSync(process.execPath, ['scripts/gerar-teste-troca.mjs', dir, '{"yBase":38}']);
+  execFileSync(process.execPath, ['scripts/gerar-teste-troca.mjs', dir, '{"base":38}']);
   const [a, b, c] = ['TROCA1.GCO', 'TROCA2.GCO', 'TROCA3.GCO'].map((n) => readFileSync(`${dir}/${n}`, 'utf8'));
   for (const t of [a, b, c]) { assert.doesNotMatch(t, /NaN|undefined/); assert.match(t, /Y38\.000/); }
   assert.ok((a.match(/^M0 /gm) ?? []).length >= 9);
