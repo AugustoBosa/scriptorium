@@ -63,7 +63,7 @@ export function gcode(tracos, pagina, perfil = PERFIL_PADRAO) {
 // Troca automática no porta-caneta (perfil.troca): solta a caneta da vaga `de` e pega a da vaga `para` (null = cabeça vazia / não pega).
 // Sequência de hardware/pen_holder/README.md: afasta da base (eixo N) antes de andar entre as vagas (eixo t.eixo); Z e N de encaixe em F lento.
 export function trocaAuto(p, de, para) {
-  const t = p.troca, f = (v) => v.toFixed(3), zA = t.zAssento ?? p.zEscrita, zS = zA + t.subida, longe = t.base + t.afasta;
+  const t = p.troca, f = (v) => v.toFixed(3), zA = t.zAssento ?? p.zEscrita + (t.assento ?? 0), zS = zA + t.subida, longe = t.base + t.afasta;
   const E = t.eixo, N = E === 'X' ? 'Y' : 'X';
   const v = (n) => `G0 ${N}${f(n)} F${p.fViagem}`, lento = (eixo, valor) => `G1 ${eixo}${f(valor)} F${t.fLento}`;
   const ir = (e, n) => [`G0 Z${f(zS)} F${p.fZ}`, v(longe), `G0 ${E}${f(e)} F${p.fViagem}`, v(n)]; // afasta da base antes de andar entre as vagas

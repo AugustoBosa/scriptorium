@@ -9,7 +9,7 @@ import { gcodeDocumento, trocaAuto } from '../src/maquina/gcode.js';
 const [pasta = 'workflow/experimentos/troca-automatica', json = '{}', nomePerfil = 'megaSTroca'] = process.argv.slice(2);
 const perfil = structuredClone(PERFIS[nomePerfil]);
 Object.assign(perfil.troca, JSON.parse(json));
-const t = perfil.troca, f = (v) => v.toFixed(3), zA = t.zAssento ?? perfil.zEscrita, zS = zA + t.subida, longe = t.base + t.afasta;
+const t = perfil.troca, f = (v) => v.toFixed(3), zA = t.zAssento ?? perfil.zEscrita + (t.assento ?? 0), zS = zA + t.subida, longe = t.base + t.afasta;
 const E = t.eixo, N = E === 'X' ? 'Y' : 'X';
 const cab = (titulo) => `; ${titulo}\n; Gerado por scripts/gerar-teste-troca.mjs. Valores: ${JSON.stringify(t)}\n; M0 = a Mega S para e espera um clique no botão.\n${perfil.header}G0 Z${zS} F${perfil.fZ}\n`;
 const m0 = (msg) => `M0 ${msg.replace(/[\r\n;]/g, ' ').slice(0, 60)}\n`;
@@ -18,11 +18,11 @@ const m0 = (msg) => `M0 ${msg.replace(/[\r\n;]/g, ' ').slice(0, 60)}\n`;
 let a = cab('TROCA1: posições das vagas, a seco (sem caneta no porta-caneta, base de troca na mesa)');
 t.vagas.forEach((e, i) => {
   a += `; vaga ${i + 1}\nG0 ${N}${f(longe)} F${perfil.fViagem}\nG0 ${E}${f(e)} F${perfil.fViagem}\n` + m0(`Vaga ${i + 1}: ${E} certo? bico sobre o centro`);
-  a += `G0 ${N}${f(t.base)} F${perfil.fViagem}\n` + m0(`Vaga ${i + 1}: ${N} certo? na frente dos pinos`);
+  a += `G0 ${N}${f(t.base)} F${perfil.fViagem}\n` + m0(`Vaga ${i + 1}: ${N} certo? suporte entre os postes`);
   a += `G0 ${N}${f(longe)} F${perfil.fViagem}\n`;
 });
 a += `; descida na vaga 1: confira a altura do assento\nG0 ${E}${f(t.vagas[0])} F${perfil.fViagem}\nG0 ${N}${f(t.base)} F${perfil.fViagem}\n`;
-a += m0('Z: vai descer devagar. Mao no botao!') + `G1 Z${f(zA)} F${t.fLento}\n` + m0('Z de assento certo? ponta no nivel da mesa') + `G1 Z${f(zS)} F${t.fLento}\nG0 ${N}${f(longe)} F${perfil.fViagem}\n`;
+a += m0('Z: vai descer devagar. Mao no botao!') + `G1 Z${f(zA)} F${t.fLento}\n` + m0('Z de assento certo? suporte apoiado na base') + `G1 Z${f(zS)} F${t.fLento}\nG0 ${N}${f(longe)} F${perfil.fViagem}\n`;
 a += `G0 Z15 F${perfil.fZ}\nG0 X0 Y200 F${perfil.fViagem}\nM84\n`;
 
 // 2) Ciclo passo a passo: pega a vaga 1, larga, pega a 2, larga; M0 antes de cada movimento de encaixe e de cada ida entre vagas.

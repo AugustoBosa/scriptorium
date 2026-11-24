@@ -28,23 +28,26 @@ const p2s = {
   footer: "G0 Z30 F500\nG0 X150 Y250 F6000\nM400 U1\n",
 };
 
-// Mega S com o porta-caneta de troca automática (hardware/pen_holder v2, branch hardware-pen-holder): 4 vagas na base, ímãs.
-// A caneta fica na frente do cabeçote ou do lado direito; o usuário escolhe o perfil. Tudo sai das medidas abaixo.
+// Mega S com o porta-caneta de troca automática (hardware/pen_holder v4, branch hardware-pen-holder): 4 vagas na base, ímãs,
+// doca D2 (munhões do suporte descem num trilho em "U" de postes de 40 mm). A caneta fica na frente do cabeçote ou do lado direito.
 // ponytail: tudo ESTIMATIVA do modelo 3D, nada medido. Medir na máquina (cabeça à mão) antes do 1º uso e testar sem papel.
 const PORTA = {
-  bico: 50,        // eixo da caneta até o bico: Y_CAB + CABECA_D / 2 (MEDIR)
+  bico: 41.5,      // eixo da caneta até o bico: Y_CAB + CABECA_D / 2 = 16,35 + 25,15 (MEDIR)
   vagas: [-65.4, -21.8, 21.8, 65.4], // XS: vagas a partir do centro da base (PASSO 43,6)
-  pousada: 14,     // eixo da caneta pousada, fora da mesa, a partir da borda onde a base prende
-  livre: 15,       // da mesma borda até onde a caneta ativa escreve sem bater nas pousadas (3 na mesa + 9 do bloco + 3 de folga)
-  lateral: 34,     // [lado] quanto o porta-caneta sai do lado do cabeçote; no fim do X sobram 6 mm (FOLGA_X_FIM, MEDIR)
+  pousada: 8.5,    // eixo da caneta pousada, fora da mesa, até a borda onde a base prende (BY0 + 5 = 3,5 + 5)
+  livre: 16,       // da mesma borda até onde a caneta ativa escreve sem bater nas pousadas (3 na mesa + 10 da cunha + 3 de folga)
+  lateral: 26.4,   // [lado] quanto o porta-caneta sai do lado do cabeçote (Y_CAB + 10 da cunha); no fim do X sobram 6 mm (FOLGA_X_FIM, MEDIR)
+  assento: 6,      // bico com o suporte assentado na base, acima do Z de escrita: BASE_H 14 − ponta 8 abaixo do suporte
+  subida: 46.5,    // do assento até o suporte passar sobre os postes da doca: POSTE_H 40,45 + 6
 };
-// troca: `eixo` = eixo em que as vagas se alinham; `base` = posição do bico no outro eixo, com o suporte nos pinos;
+// troca: `eixo` = eixo em que as vagas se alinham; `base` = posição do bico no outro eixo, com o suporte na doca;
 // `afasta` = quanto o bico se afasta da base para andar entre as vagas; `recuo` = curso lento que solta/pega pelos ímãs.
 // Mudou o sentido na máquina? Troque o sinal de afasta e recuo.
 const trocaMegaS = (eixo, base, afasta, recuo) => ({
   eixo, base, afasta, recuo,
   vagas: PORTA.vagas.map((v) => 105 + v), // base centrada na mesa de 210
-  subida: 10,      // altura acima do assento para tirar o suporte dos pinos
+  assento: PORTA.assento, // zAssento = zEscrita + assento (ou zAssento fixo, se medido)
+  subida: PORTA.subida, // altura acima do assento para tirar os munhões do trilho dos postes
   fLento: 300,     // mm/min nos movimentos de encaixe
 });
 // caneta = posição da ponta em relação ao bico; janela = onde a ponta escreve, em coordenadas da mesa (onde o papel fica).

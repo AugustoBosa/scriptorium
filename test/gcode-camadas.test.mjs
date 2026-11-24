@@ -4,7 +4,7 @@ import { gcode, gcodeDocumento } from '../src/maquina/gcode.js';
 import { PERFIS, janelaDe } from '../src/maquina/perfis.js';
 
 const A6 = { largura: 105, altura: 148 };
-const Q = { largura: 100, altura: 100 }; // cabe no porta-caneta na frente (210 × 145) e no lado (145 × 210)
+const Q = { largura: 100, altura: 100 }; // cabe no porta-caneta na frente (210 × 152,5) e no lado (152,5 × 210)
 const cam = (id, caneta, tracos) => ({ id, caneta, personagem: null, ordem: 'otimizada', tracos });
 const T = [[[10, 20], [30, 20]]];
 const pag = (...camadas) => ({ camadas });
@@ -92,7 +92,10 @@ test('troca automática (megaSTroca): pega a 1ª, troca entre camadas, devolve a
   // X só muda com a base afastada: antes de cada G0 X de vaga, o Y anterior é base + afasta
   const L = r.texto.split('\n');
   assert.ok(L.includes('G0 X39.600 F6000'));
-  L.forEach((l, i) => { if (/^G0 X(39\.6|83\.2)00 F6000$/.test(l)) assert.equal(L[i - 1], 'G0 Y76.000 F6000', l); });
+  L.forEach((l, i) => { if (/^G0 X(39\.6|83\.2)00 F6000$/.test(l)) assert.equal(L[i - 1], 'G0 Y73.000 F6000', l); });
+  // v4: assenta 6 mm acima do Z de escrita e sobe 46,5 para tirar os munhões dos postes da doca
+  const zE = PERFIS.megaSTroca.zEscrita;
+  assert.ok(L.includes(`G1 Z${(zE + 6).toFixed(3)} F300`) && L.includes(`G0 Z${(zE + 52.5).toFixed(3)} F500`));
   assert.ok(r.texto.indexOf('; pegar caneta da vaga 1') < r.texto.indexOf('; camada texto'));
   assert.ok(r.texto.lastIndexOf('; largar caneta na vaga 2') < r.texto.indexOf(PERFIS.megaS.footer));
   assert.throws(() => gcodeDocumento(duas, Q, PERFIS.megaSTroca, { canetas: { preta: {} } }), /sem vaga/);
@@ -101,20 +104,20 @@ test('troca automática (megaSTroca): pega a 1ª, troca entre camadas, devolve a
 
 test('porta-caneta na frente ou no lado: janela onde a ponta escreve, bico atrás da ponta, troca no eixo certo', () => {
   const { megaSTroca: F, megaSTrocaLado: L } = PERFIS;
-  assert.deepEqual(janelaDe(F), { x0: 0, y0: 15, x1: 210, y1: 160 }); // 210 × 145
-  assert.deepEqual(janelaDe(L), { x0: 50, y0: 0, x1: 195, y1: 210 }); // 145 × 210
+  assert.deepEqual(janelaDe(F), { x0: 0, y0: 16, x1: 210, y1: 168.5 }); // 210 × 152,5: A5 deitado cabe
+  assert.deepEqual(janelaDe(L), { x0: 41.5, y0: 0, x1: 194, y1: 210 }); // 152,5 × 210: A5 em pé cabe
   const ponto = pag(cam('t', 'preta', [[[0, Q.altura], [1, Q.altura]]])); // canto (x0, y0) da janela
   const cn = { preta: {} };
-  assert.match(gcodeDocumento(ponto, Q, F, { canetas: cn }).texto, /^G0 X0\.000 Y65\.000 /m); // ponta em y 15, bico 50 atrás
+  assert.match(gcodeDocumento(ponto, Q, F, { canetas: cn }).texto, /^G0 X0\.000 Y57\.500 /m); // ponta em y 16, bico 41,5 atrás
   const lado = gcodeDocumento(ponto, Q, L, { canetas: cn });
-  assert.match(lado.texto, /^G0 X0\.000 Y0\.000 /m); // ponta em x 50, bico 50 à esquerda
+  assert.match(lado.texto, /^G0 X0\.000 Y0\.000 /m); // ponta em x 41,5, bico 41,5 à esquerda
   assert.deepEqual(lado.avisos, []);
-  // lado: vagas em Y; afasta em X (174 - 40) antes de andar em Y
+  // lado: vagas em Y; afasta em X (177 - 40) antes de andar em Y
   const T = lado.texto.split('\n');
   const i = T.indexOf('G0 Y39.600 F6000');
   assert.ok(i > 0);
-  assert.equal(T[i - 1], 'G0 X134.000 F6000');
-  assert.ok(T.includes('G1 X162.000 F300')); // recuo de 12 para a esquerda solta os ímãs
+  assert.equal(T[i - 1], 'G0 X137.000 F6000');
+  assert.ok(T.includes('G1 X165.000 F300')); // recuo de 12 para a esquerda solta os ímãs
 });
 
 test('gerar-teste-troca: 3 arquivos, sem NaN, TROCA3 sem pausa e 2 trocas', async () => {
