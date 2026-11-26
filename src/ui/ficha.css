@@ -18,9 +18,49 @@
 .ficha-alinhamento { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--e2); margin: var(--e2) 0; }
 .ficha-alinhamento button { width: 100%; }
 .ficha-alinhamento button[aria-pressed="true"] { background: var(--tinta); color: var(--pergaminho); border-color: var(--tinta); }
+.ficha button { min-height: var(--alvo); }
+.ficha select, .ficha input[type="text"] { min-height: var(--alvo); }
+.ficha-passo > summary { min-height: var(--alvo); cursor: pointer; }
+.ficha details > summary { min-height: var(--alvo); cursor: pointer; }
+
+/* passo Letra: cartões das propostas, misturar e letra atual */
+.ficha-cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--e3); margin: var(--e2) 0; }
+.ficha-cartao { display: flex; flex-direction: column; gap: var(--e2); padding: var(--e3); border: 1px solid var(--contorno); border-radius: var(--raio); background: var(--pergaminho); }
+.ficha-cartao h4 { margin: 0; font: 500 var(--t-grupo)/var(--linha) var(--fonte-titulo); color: var(--tinta); }
+.ficha-cartao .folha { margin: 0; }
+.ficha-cartao .ficha-nota { margin: 0; }
+.ficha-cartao > button { align-self: stretch; }
+.ficha-chips { display: flex; flex-wrap: wrap; gap: var(--e1); }
+.ficha-chip { padding: 2px var(--e2); border: 1px solid var(--contorno); border-radius: 999px; font-size: var(--t-pequeno); color: var(--tinta-2); }
+.ficha-aviso { margin: 0; font-size: var(--t-pequeno); color: var(--aviso); }
+.ficha-lista { margin: 0; padding: 0; list-style: none; }
+.ficha-linha, .ficha-atual-linha { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e2); min-height: var(--alvo); padding: var(--e1) 0; border-bottom: 1px solid var(--regua); }
+.ficha-fonte { flex: 1 1 140px; }
+.ficha-num { font-size: var(--t-pequeno); color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+.ficha-atual-linha .controle { flex: 2 1 240px; margin: 0; }
+
+/* passo Perfis de escrita: uma linha por perfil, separadas por pauta fina */
+.ficha-perfis { display: grid; gap: var(--e2); }
+.ficha-perfil { display: grid; gap: var(--e2); padding: var(--e3) 0; border-bottom: 1px solid var(--regua); }
+.ficha-perfil-cab { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--e2) var(--e3); }
+.ficha-perfil-nome { flex: 1 1 200px; }
+.ficha-perfil-nome input { width: 100%; }
+.ficha-perfil .ficha-nota { margin: 0; }
+.ficha-perfil .ficha-opcao { margin: 0; }
+.ficha-perfil > label { justify-self: start; }
+.ficha-perfil > button { justify-self: start; }
+.ficha-mini { max-width: 280px; margin: 0; }
+
+/* passo Resumo */
+.ficha-resumo { width: 100%; border-collapse: collapse; margin: var(--e2) 0 var(--e3); }
+.ficha-resumo th, .ficha-resumo td { padding: var(--e2) 0; border-bottom: 1px solid var(--regua); text-align: left; vertical-align: top; }
+.ficha-resumo th { width: 30%; padding-right: var(--e2); font-weight: 500; color: var(--tinta-2); }
 
 @media (max-width: 600px) {
   .ficha-topo { position: static; }
   .ficha-passo > summary { scroll-margin-top: 0; }
   .ficha-atributos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ficha button, .ficha select, .ficha input[type="text"], .ficha-passo > summary, .ficha details > summary { min-height: 44px; }
+  .ficha-opcao { min-height: 44px; }
+  .ficha-resumo th { width: 40%; }
 }
