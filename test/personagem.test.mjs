@@ -140,3 +140,49 @@ test('renomearSalvo preserva ordem, ajusta nome e valida', () => {
   assert.throws(() => renomearSalvo(salvos, 'B', 'A'), /já existe/);
   assert.throws(() => renomearSalvo(salvos, 'Q', 'Y'), /não encontrado/);
 });
+
+test('variação com base: resolver usa a base da variação e não muta p', () => {
+  const p = personagemValido();
+  p.variacoes.letra = { base: [{ fonte: 'EMSDelight', peso: 1 }] };
+  const antes = structuredClone(p);
+  assert.deepEqual(resolver(p, 'letra').base, [{ fonte: 'EMSDelight', peso: 1 }]);
+  assert.deepEqual(resolver(p, 'formal').base, p.mao.base);
+  assert.deepEqual(p, antes);
+});
+
+test('resolver recusa outra chave de identidade mesmo com base na variação', () => {
+  const p = personagemValido();
+  p.variacoes.letra = { base: [{ fonte: 'EMSDelight', peso: 1 }], inclinacao: 3 };
+  assert.throws(() => resolver(p, 'letra'), /chave de identidade na variação: inclinacao/);
+});
+
+test('validar: variação com base válida passa; base vazia ou item inválido apontam erro', () => {
+  const ok = personagemValido();
+  ok.variacoes.letra = { base: [{ fonte: 'EMSDelight', peso: 1 }] };
+  assert.deepEqual(validar(ok), []);
+  const vazia = personagemValido();
+  vazia.variacoes.letra = { base: [] };
+  assert.ok(validar(vazia).some((e) => /variação letra: base vazia/.test(e)));
+  const zero = personagemValido();
+  zero.variacoes.letra = { base: [{ fonte: 'X', peso: 0 }] };
+  assert.ok(validar(zero).some((e) => /variação letra: item de base inválido/.test(e)));
+});
+
+test('ajustarVariacao com base: grava cópia, apaga se igual à da mão, sem variação lança', () => {
+  const p = personagemValido();
+  const nova = [{ fonte: 'EMSDelight', peso: 1 }];
+  ajustarVariacao(p, 'formal', 'base', nova);
+  assert.deepEqual(p.variacoes.formal.base, nova);
+  nova[0].fonte = 'MUDADO';
+  assert.equal(p.variacoes.formal.base[0].fonte, 'EMSDelight');
+  ajustarVariacao(p, 'formal', 'base', structuredClone(p.mao.base));
+  assert.ok(!('base' in p.variacoes.formal));
+  assert.throws(() => ajustarVariacao(p, '', 'base', nova), /chave de identidade: base/);
+  assert.throws(() => ajustarVariacao(p, null, 'base', nova), /chave de identidade: base/);
+});
+
+test('personagem com variações só de EXECUCAO (antigo) continua válido', () => {
+  const p = personagemValido();
+  p.variacoes = { formal: { pressa: 0.05, capricho: 1 }, medo: { tremor: 0.6 } };
+  assert.deepEqual(validar(p), []);
+});

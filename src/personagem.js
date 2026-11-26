@@ -7,13 +7,16 @@ export function resolver(p, variacao) {
   const extra = p.variacoes?.[variacao];
   if (!extra) throw new Error('variação desconhecida: ' + variacao);
   for (const chave of Object.keys(extra)) {
-    if (!EXECUCAO.includes(chave)) throw new Error('chave de identidade na variação: ' + chave);
+    if (!EXECUCAO.includes(chave) && chave !== 'base') throw new Error('chave de identidade na variação: ' + chave);
   }
   return { ...base, ...structuredClone(extra) };
 }
 
 // Chaves que personagens antigos podem não ter (a mão é completada com NEUTRA ao compor).
 const OPCIONAIS = ['alternativas', 'contexto', 'arremate', 'ondulacao', 'deriva', 'ritmo', 'fadiga', 'ligadura', 'adiamento', 'fluidez', 'ultrapassagem', 'retoque'];
+
+// Item de base inválido: fonte string e peso número > 0 (mesma regra para mao.base e base de variação).
+const itemBaseInvalido = (it) => typeof it?.fonte !== 'string' || !(typeof it?.peso === 'number' && it.peso > 0);
 
 // Lista de erros de um personagem; vazia = ok. Não verifica se a fonte existe em disco.
 export function validar(p) {
@@ -27,9 +30,7 @@ export function validar(p) {
   if (!Array.isArray(b) || b.length === 0) erros.push('mao.base vazio ou inválido');
   else {
     for (const it of b) {
-      if (typeof it?.fonte !== 'string' || !(typeof it?.peso === 'number' && it.peso > 0)) {
-        erros.push('item de base inválido: ' + JSON.stringify(it));
-      }
+      if (itemBaseInvalido(it)) erros.push('item de base inválido: ' + JSON.stringify(it));
     }
   }
   for (const chave of Object.keys(NEUTRA)) {
@@ -48,7 +49,11 @@ export function validar(p) {
   }
   for (const [nome, extra] of Object.entries(p.variacoes ?? {})) {
     for (const [chave, v] of Object.entries(extra)) {
-      if (!EXECUCAO.includes(chave)) erros.push(`variação ${nome}: chave de identidade ${chave}`);
+      if (chave === 'base') {
+        if (!Array.isArray(v) || v.length === 0) erros.push(`variação ${nome}: base vazia ou inválida`);
+        else for (const it of v) if (itemBaseInvalido(it)) erros.push(`variação ${nome}: item de base inválido: ${JSON.stringify(it)}`);
+      }
+      else if (!EXECUCAO.includes(chave)) erros.push(`variação ${nome}: chave de identidade ${chave}`);
       else if (!Number.isFinite(v)) erros.push(`variação ${nome}: valor não numérico em ${chave}`);
     }
   }
@@ -60,18 +65,22 @@ export function novoPersonagem(nome = 'Novo personagem') {
   return { nome, mao: { ...structuredClone(NEUTRA), base: [{ fonte: 'EMSDelight', peso: 1 }] }, variacoes: { normal: {} } };
 }
 
-// Grava `valor` da chave de EXECUCAO. Sem variação (falsy): altera p.mao. Com variação: grava em p.variacoes[variacao],
-// mas se `valor` for igual a p.mao[chave], APAGA a chave da variação (variação guarda só o que difere da mão).
-// Lança erro se a chave não for de EXECUCAO ou a variação não existir.
+// Grava `valor` da chave de EXECUCAO (ou `base`, só com variação). Sem variação (falsy): altera p.mao. Com variação: grava em
+// p.variacoes[variacao], mas se `valor` for igual a p.mao[chave] (ou a p.mao.base, para `base`), APAGA a chave da variação
+// (variação guarda só o que difere da mão). Lança erro se a chave não for de EXECUCAO (ou `base` sem variação) ou a variação não existir.
 export function ajustarVariacao(p, variacao, chave, valor) {
-  if (!EXECUCAO.includes(chave)) throw new Error('chave de identidade: ' + chave);
+  if (!EXECUCAO.includes(chave) && !(chave === 'base' && variacao)) throw new Error('chave de identidade: ' + chave);
   if (!variacao) {
     p.mao[chave] = valor;
     return;
   }
   const extra = p.variacoes?.[variacao];
   if (!extra) throw new Error('variação desconhecida: ' + variacao);
-  if (valor === p.mao[chave]) delete extra[chave];
+  if (chave === 'base') {
+    if (JSON.stringify(valor) === JSON.stringify(p.mao.base)) delete extra.base;
+    else extra.base = structuredClone(valor);
+  }
+  else if (valor === p.mao[chave]) delete extra[chave];
   else extra[chave] = valor;
 }
 
