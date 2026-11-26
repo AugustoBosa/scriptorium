@@ -21,6 +21,7 @@ import * as pMat from './materiais.js';
 import { montar as montarMesa, desenharMesa, mesaLigada } from './mesa.js';
 import { montar as montarInicio } from './inicio.js';
 import { montar as montarPersonagens } from './personagens.js';
+import { montar as montarFicha } from './ficha.js';
 import { montar as montarBiblioteca, gravarMaterial, novoId } from './biblioteca.js';
 import { montarColeta, comporDeColeta, coleta0 } from './letra.js';
 import * as trabalho from './trabalho.js';
@@ -28,8 +29,8 @@ import { NOMES_OFICINA } from './util.js';
 
 const OFICINAS = { carta: 'escrita', livro: 'escrita', magias: 'grimorio', sigilos: 'sigilos', letra: 'coleta' };
 const ANTIGAS = { scroll: true, grimorio: false }; // rota antiga → porPagina em #magias
-const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens, biblioteca: montarBiblioteca };
-const NOMES = { inicio: 'Início', personagens: 'Personagens', biblioteca: 'Biblioteca', ...NOMES_OFICINA };
+const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens, biblioteca: montarBiblioteca, ficha: montarFicha };
+const NOMES = { inicio: 'Início', personagens: 'Personagens', biblioteca: 'Biblioteca', ficha: 'Criar personagem', ...NOMES_OFICINA };
 const VAZIO = { magias: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.', letra: 'Nada para plotar.' };
 const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto', 'mesa'];
 const $ = (id) => document.getElementById(id);
