@@ -5,6 +5,7 @@ import { validar } from '../src/personagem.js';
 import { NEUTRA, PARAMS } from '../src/motor/mao.js';
 import { CATALOGO } from '../src/catalogo.js';
 import { FONTES, SEM_ACENTOS } from '../src/fonte.js';
+import { montarPerfis, variacoesDe } from '../src/ficha/perfis.js';
 
 const MAGO = { v: 1, raca: 'elfo', classe: 'mago', antecedente: 'sabio', idade: 'adulto', destro: true, atributos: { int: 17 }, alinhamento: 'LB', idiomas: ['comum', 'elfico'], ferramentas: { caligrafo: false, falsificacao: false } };
 const BARBARO = { v: 1, raca: 'meio-orc', classe: 'barbaro', antecedente: 'forasteiro', idade: 'adulto', destro: true, atributos: { int: 8 }, alinhamento: 'CN', idiomas: ['comum', 'orc'], ferramentas: { caligrafo: false, falsificacao: false } };
@@ -78,4 +79,49 @@ test('execução: destro false dá inclinação -5; valores dentro de PARAMS', (
       if (p) assert.ok(e[k] >= p.min && e[k] <= p.max, `${f.classe}/${k}: ${e[k]}`);
     }
   }
+});
+
+const letrasDe = (f) => letrasDerivadas(f, propostas(f)[0].base);
+
+test('perfis: MAGO tem grimório e escrita élfica entre os sugeridos', () => {
+  const { sugeridos } = montarPerfis(MAGO, letrasDe(MAGO));
+  const nomes = sugeridos.map((p) => p.nome);
+  assert.ok(nomes.includes('Grimório'), nomes.join(', '));
+  assert.ok(nomes.includes('Escrita Élfica'), nomes.join(', '));
+});
+
+test('perfis: BARBARO não sugere grimório', () => {
+  const { sugeridos, outros } = montarPerfis(BARBARO, letrasDe(BARBARO));
+  assert.ok(!sugeridos.some((p) => p.nome === 'Grimório'));
+  assert.ok(outros.some((p) => p.nome === 'Grimório'));
+});
+
+test('perfis: nomes únicos e execução dentro de PARAMS, para as 3 fichas', () => {
+  for (const f of FICHAS) {
+    const letras = letrasDe(f);
+    const mao = maoDaFicha(f, letras.principal);
+    const { sugeridos, outros } = montarPerfis(f, letras);
+    const todos = [...sugeridos, ...outros];
+    const nomes = todos.map((p) => p.nome);
+    assert.equal(new Set(nomes).size, nomes.length, `${f.classe}: nomes repetidos`);
+    for (const p of todos) {
+      for (const k of Object.keys(p.exec)) {
+        const par = PARAMS.find((x) => x.chave === k);
+        assert.ok(par, `${f.classe}/${p.nome}: chave ${k} fora de PARAMS`);
+        assert.ok(p.exec[k] >= par.min && p.exec[k] <= par.max, `${f.classe}/${p.nome}/${k}: ${p.exec[k]}`);
+      }
+    }
+    assert.deepEqual(validar({ nome: 'X', mao, variacoes: variacoesDe(mao, todos) }), [], f.classe);
+  }
+});
+
+test('variacoesDe: perfil não ligado fica de fora; base igual à da mão não é gravada', () => {
+  const letras = letrasDe(MAGO);
+  const mao = maoDaFicha(MAGO, letras.principal);
+  const { sugeridos, outros } = montarPerfis(MAGO, letras);
+  const v = variacoesDe(mao, [...sugeridos, ...outros]);
+  assert.deepEqual(v.normal, {});
+  assert.ok(!(outros[0].nome in v), `${outros[0].nome} não ligado entrou`);
+  assert.ok('Diário' in v, 'Diário ligado ficou de fora');
+  assert.ok(!('base' in v['Diário']), 'base igual à da mão foi gravada');
 });
