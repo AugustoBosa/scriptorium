@@ -60,6 +60,18 @@ A3, A4, A5, A6, A7, A8, carta, ofício e personalizado, em retrato ou paisagem, 
 - `test/`: testes de unidade. `e2e/`: testes Playwright.
 - `workflow/`: quadro do projeto (`QUADRO.md`) e experimentos (P2S, fonte própria).
 - `PRODUCT.md` e `DESIGN.md`: regras do produto e do design; ler antes de mexer na interface.
+- `hardware/`: peças impressas para a máquina (veja Hardware).
+
+## Hardware (`hardware/pen_holder/`)
+
+Porta-caneta com troca automática para a Mega S, modelado em build123d (`pen_holder.py`). Ainda está em validação, e o app ainda não o usa.
+
+Peças (variante parafuso, a escolhida): morsa no cabeçote com mandíbula em C, M8 e 2 garras ajustáveis; um suporte por caneta, preso por ímãs e pinos; o bloco da caneta com cunha, 2 varetas roscadas e o elástico; e a base de troca com 4 vagas (doca com munhões), presa na frente da mesa.
+
+- **Versão atual: v5.1 (2026-11-25)**, a última mandada para imprimir na P2S (`0_validacao`: ~3h46, 63 g). Novidade: uma garra de cada lado, com gancho sob a borda da caixa, apertada por um M8; aceita caixa de ~52 a ~57,5 mm.
+- v1 a v5 foram impressas e corrigidas uma a uma (morsa que girava, pinos grossos, varetas apertadas, M6 da caneta trocado por cunha). O histórico está em `ESTADO.md`.
+
+Onde está cada coisa: as medidas para o G-code da troca estão em `hardware/pen_holder/README.md`, a impressão em `IMPRESSAO.md` e o estado atual em `ESTADO.md`. A troca automática no G-code será feita aqui no app (`src/maquina/`), mas ainda não foi feita.
 
 ## Rodar
 

@@ -19,6 +19,45 @@
   h1 small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
   .lbl { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; font-size: 12px; white-space: nowrap; }
   .lbl b { display: block; font-size: 13px; }
+  .painel { position: fixed; inset: 56px 12px 124px; overflow: auto; display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 12px; align-content: start; }
+  .painel .larga { grid-column: 1 / -1; }
+  @media (max-width: 720px) { .painel { grid-template-columns: minmax(0, 1fr); bottom: 174px; } .btns { flex-wrap: wrap; } .btns button { flex: 1 1 30%; } }
+  .painel[hidden] { display: none; }
+  .cmp { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .cmp td, .cmp th { border-bottom: 1px solid var(--line); padding: 5px 4px; text-align: right; vertical-align: top; }
+  .cmp td:first-child, .cmp th:first-child { text-align: left; }
+  .cmp .bom { color: #2f9e5b; font-weight: 600; } .cmp .mau { color: #d94141; font-weight: 600; }
+  .sel { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .sel select { min-height: 36px; font: inherit; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+  .vers { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .vers .card { padding: 10px; } .vers .card h2 { margin-bottom: 4px; }
+  .vers button { min-height: 36px; margin-top: 6px; width: 100%; }
+  .tl { border-left: 3px solid var(--line); padding-left: 10px; margin-bottom: 10px; }
+  .tl h3 { margin: 0; font-size: 14px; } .tl ul { margin: 4px 0 0; padding-left: 18px; } .tl .st { color: var(--muted); font-size: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
+  .card h2 { margin: 0 0 8px; font-size: 14px; }
+  .campo { display: grid; grid-template-columns: 1fr 76px; gap: 2px 8px; align-items: center; margin-bottom: 10px; }
+  .campo label { grid-column: 1 / -1; font-size: 13px; }
+  .campo input[type=range] { width: 100%; }
+  .campo input[type=number] { width: 100%; box-sizing: border-box; min-height: 36px; font: inherit; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--ink); padding: 0 6px; }
+  .res { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-variant-numeric: tabular-nums; }
+  .res b { font-size: 16px; }
+  .nota { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+  #tab { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 12px; }
+  #tab td, #tab th { border: 1px solid var(--line); padding: 4px; text-align: center; }
+  #tab td.on { outline: 2px solid var(--ink); font-weight: 700; }
+  #desenho { width: 100%; height: auto; max-height: 360px; display: block; }
+  #des { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 720px) { #des { grid-template-columns: minmax(0, 1fr); } }
+  .vista svg { width: 100%; height: auto; max-height: 380px; display: block; }
+  .vista svg .vi { fill: none; stroke: var(--ink); stroke-width: 1.3px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+  .vista svg .oc { fill: none; stroke: var(--muted); stroke-width: 0.8px; stroke-dasharray: 3 2; vector-effect: non-scaling-stroke; opacity: .7; }
+  .vista svg .ch { fill: none; stroke: #2f6fd6; stroke-width: 0.7px; vector-effect: non-scaling-stroke; }
+  .vista svg .co { fill: none; stroke: #2f6fd6; stroke-width: 0.9px; vector-effect: non-scaling-stroke; }
+  .vista svg .seta { fill: #2f6fd6; }
+  .vista svg text { fill: #2f6fd6; font-family: system-ui, sans-serif; text-anchor: middle; font-variant-numeric: tabular-nums; }
+  .vista svg path.ch + text { text-anchor: start; }
+  #des3d { width: 100%; height: 340px; display: block; border-radius: 8px; touch-action: none; }
 </style>
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -27,11 +66,77 @@
 <body>
 <canvas id="c"></canvas>
 <h1><span id="tit"></span><small>arraste para girar · pinça para zoom · medidas provisórias</small></h1>
+<section id="fol" class="painel" hidden>
+  <div class="card larga">
+    <h2>Cada versão</h2>
+    <div class="vers" id="folVers"></div>
+  </div>
+  <div class="card">
+    <h2>Guia do bloco nas varetas</h2>
+    <div class="campo"><label for="fVar">Ø vareta (mm)</label><input type="range" id="rVar" min="3" max="6" step="0.05"><input type="number" id="fVar" min="3" max="6" step="0.05"></div>
+    <div class="campo"><label for="fFuro">Ø furo do bloco (mm)</label><input type="range" id="rFuro" min="3" max="6.5" step="0.05"><input type="number" id="fFuro" min="3" max="6.5" step="0.05"></div>
+    <div class="campo"><label for="fEnc">furo sai menor na impressão (mm)</label><input type="range" id="rEnc" min="0" max="0.4" step="0.05"><input type="number" id="fEnc" min="0" max="0.4" step="0.05"></div>
+    <div class="campo"><label for="fBH">altura da guia (bloco) (mm)</label><input type="range" id="rBH" min="8" max="40" step="1"><input type="number" id="fBH" min="8" max="40" step="1"></div>
+    <div class="campo"><label for="fSai">caneta sai abaixo do bloco (mm)</label><input type="range" id="rSai" min="4" max="30" step="1"><input type="number" id="fSai" min="4" max="30" step="1"></div>
+    <div class="res">
+      <span>folga real (furo − vareta)</span><b id="oC"></b>
+      <span>inclinação máxima</span><b id="oA"></b>
+      <span>caneta pode andar na ponta</span><b id="oT"></b>
+      <span>v2 impressa (Ø4,4 · 12 · 18)</span><span id="oV2"></span>
+    </div>
+    <p class="nota">Ponta = folga × (1 + 2 × saída ÷ altura). É o quanto a cabeça anda sem a ponta sair do lugar, em cada sentido de X e de Y. Não conta a flexão da vareta.</p>
+  </div>
+  <div class="card">
+    <h2>Vista de lado (folga ampliada <span id="oE"></span>×)</h2>
+    <svg id="desenho" viewBox="-40 -6 80 76" role="img" aria-label="Bloco inclinado dentro da folga das varetas"></svg>
+  </div>
+  <div class="card" style="grid-column: 1 / -1">
+    <h2>Quanto a ponta anda (mm): folga × altura da guia, com a saída atual</h2>
+    <table id="tab"></table>
+    <p class="nota">Toque numa célula para usar esses valores.</p>
+  </div>
+  <div class="card larga" data-cmp="fol"><h2>Comparar duas versões</h2></div>
+</section>
+<section id="esf" class="painel" hidden>
+  <div class="card">
+    <h2>Entradas (todas as versões)</h2>
+    <div id="esfIn"></div>
+    <p class="nota">Valores de partida estimados. Ajuste ao que medir.</p>
+  </div>
+  <div class="card" data-cmp="esf"><h2>Comparar duas versões</h2></div>
+  <div class="card larga">
+    <h2>Todas as versões</h2>
+    <div style="overflow-x:auto"><table class="cmp" id="esfTodas"></table></div>
+    <p class="nota">Atrito: a ponta arrasta no papel com Ft = μ·Fv, na altura da ponta (abaixo do suporte).<br>
+    Descolar: o momento de Ft gira o suporte sobre a borda de cima ou de baixo da placa; os ímãs seguram com o braço até essa borda. Fator ≥ 3 = folgado.<br>
+    Torção: Ft no eixo da caneta, a dy da placa, torce o suporte em Z; os pinos seguram.<br>
+    Vareta: biengastada, carga no meio do vão. Cunha: N = P/(tanα + 2μ); parede da cunha como viga de vão = furo da caneta.</p>
+  </div>
+</section>
+<section id="his" class="painel" hidden>
+  <div class="card" id="hisTl"></div>
+  <div class="card" data-cmp="his"><h2>Comparar duas versões</h2></div>
+  <div class="card larga" id="hisDec"></div>
+</section>
+<section id="des" class="painel" hidden>
+  <div class="card larga sel"><label for="desPeca"><b>Peça</b></label><select id="desPeca"></select>
+    <span class="nota" style="margin:0">medidas em mm · tracejado = aresta escondida · Ø = furo ou pino redondo visto de frente</span></div>
+  <div class="card larga" id="desTab"></div>
+  <div class="card vista" data-v="Frente"></div>
+  <div class="card vista" data-v="Lado direito"></div>
+  <div class="card vista" data-v="Topo"></div>
+  <div class="card vista" data-v="3D"></div>
+  <div class="card larga"><h2>3D (arraste para girar)</h2><canvas id="des3d"></canvas></div>
+</section>
 <div class="bar">
   <div id="say">carregando…</div>
   <div class="btns">
     <button id="bSis" aria-pressed="true">Sistema</button>
     <button id="bPec" aria-pressed="false">Peças</button>
+    <button id="bFol" aria-pressed="false">Folga</button>
+    <button id="bEsf" aria-pressed="false">Esforços</button>
+    <button id="bHis" aria-pressed="false">Histórico</button>
+    <button id="bDes" aria-pressed="false">Desenhos</button>
     <button id="bPlay">Pausar</button>
   </div>
 </div>
@@ -71,7 +176,7 @@ const COLORS = [0xd94141, 0x2f6fd6, 0x2f9e5b, 0x8e44ad], NAMES = ["vermelha", "a
 
 // ---------- sistema ----------
 const sys = new THREE.Group(); scene.add(sys);
-const PZ = -D.BASE_H + 0.3, LIFT = D.PINO_BASE_H + 6, WZ = PZ + 20 - D.BRACO_H - 2; // 2 mm de pressão no papel
+const PZ = -D.BASE_H + 0.3, LIFT = D.PINO_BASE_H + 6, WZ = PZ - D.Z_PONTA - 2; // 2 mm de pressão no papel
 // mesa (anda em Y) com papel, base de troca e pregos
 const bed = new THREE.Group(); sys.add(bed);
 const BED_Y0 = D.BASE_Y0 + 5;
@@ -82,21 +187,36 @@ bed.add(mesh(geo.v_mesa, SCREW));
 const ink = new THREE.Group(); bed.add(ink);
 // pórtico X (sobe e desce em Z na megaS) + cabeça
 const gantry = new THREE.Group(); sys.add(gantry);
-for (const z of [D.ZT - 12, D.ZT + 22]) gantry.add(mesh(cyl(0, 0, -170, 170, 4, 20).rotateY(Math.PI / 2).translate(0, D.Y_CAB + 52, z), 0xa9abb0, { metal: 0.5, noEdges: true }));
+gantry.add(mesh(geo.v_portico, 0xa9abb0, { metal: 0.5 })); // varetas X, correia e pontas do X (modelo da Mega S no script)
 const head = new THREE.Group(); sys.add(head);
 head.add(mesh(geo.morsa, GREY), mesh(geo.v_cabeca, SCREW));
 if (geo.v_cabeca_cinza) head.add(mesh(geo.v_cabeca_cinza, GREY));
 document.getElementById("tit").textContent = D.TITULO;
-const hw = D.CABECA_W, hd = D.CABECA_D;
-head.add(mesh(box(-hw / 2, D.Y_CAB, D.ZT - D.CABECA_H, hw / 2, D.Y_CAB + hd, D.ZT), 0x2b2d31));
-head.add(mesh(new THREE.ConeGeometry(3, D.ZT - D.CABECA_H - D.Z_BICO, 16).rotateX(-Math.PI / 2).translate(0, D.Y_CAB + hd / 2, (D.ZT - D.CABECA_H + D.Z_BICO) / 2), 0xc9a227, { metal: 0.7 }));
-// porta-canetas: suporte + bloco com caneta
+head.add(mesh(geo.v_cabecote, 0x2b2d31)); // tampa, grade, peça de baixo, bico, topo e carro com rolamentos
+// porta-canetas: suporte + varetas + bloco com caneta
+// ímã: disco Ø3 × 1 no eixo Y + halo que aparece através das peças (indica atração)
+const imaGeo = new THREE.CylinderGeometry(D.IMA_D / 2, D.IMA_D / 2, 1, 16), haloGeo = new THREE.SphereGeometry(D.IMA_D * 1.4, 16, 10);
+function imas(g, y) {
+  const halo = new THREE.MeshBasicMaterial({ color: 0x3aa0ff, transparent: true, opacity: 0, depthTest: false });
+  for (const [x, z] of D.IMAS) {
+    const d = new THREE.Mesh(imaGeo, new THREE.MeshStandardMaterial({ color: 0x9aa3ad, metalness: 0.8, roughness: 0.3 })); d.position.set(x, y, z); g.add(d);
+    const s = new THREE.Mesh(haloGeo, halo); s.position.set(x, y, z); s.renderOrder = 9; g.add(s);
+  }
+  return halo;
+}
+const headHalo = imas(head, D.Y_COSTAS + 0.7);
+// elástico: 2 voltas = 2 fios de cada lado, do V do suporte ao V do bloco (só estica em Z)
+const fioGeo = new THREE.CylinderGeometry(0.45, 0.45, 1, 8).rotateX(Math.PI / 2).translate(0, 0, 0.5);
 const holders = COLORS.map((c) => {
   const h = new THREE.Group(), blk = new THREE.Group();
   h.add(mesh(geo.suporte, c), mesh(geo.v_varetas, 0xf2f0ea));
   blk.add(mesh(geo.bloco, PLA), mesh(geo.v_bloco, SCREW), mesh(geo.caneta, c, { alpha: 0.45 }));
-  h.add(blk); sys.add(h); return { h, blk };
+  const fioMat = new THREE.MeshStandardMaterial({ color: 0xd9a23a, roughness: 0.6 }), fios = [];
+  for (const sx of [-1, 1]) for (const y of [-0.6, 0.6]) { const f = new THREE.Mesh(fioGeo, fioMat); f.position.set(sx * D.ELASTICO.X, y, D.ELASTICO.Z_SUP); h.add(f); fios.push(f); }
+  const halo = imas(h, D.Y_COSTAS - 0.7);
+  h.add(blk); sys.add(h); return { h, blk, fios, fioMat, halo };
 });
+const AMBAR = new THREE.Color(0xd9a23a), VERM = new THREE.Color(0xe0302a);
 
 // ---------- traços no papel (coordenadas da mesa) ----------
 const TRACES = COLORS.map((_, n) => { const pts = []; for (let i = 0; i <= 80; i++) { const u = i / 80; pts.push([-42 + u * 84, 62 + n * 24 + 6 * Math.sin(u * Math.PI * (4 + n))]); } return pts; });
@@ -115,11 +235,11 @@ function plan() {
   const free = [0, 1, 2, 3].find((s) => !slotOf.includes(s)), next = (on + 1) % 4;
   go({ hx: D.XS[free] }, 1.0, "G0 X · alinha com a vaga livre " + (free + 1));
   go({ by: 0 }, 1.2, "G0 Y · a mesa traz a base de troca");
-  go({ hz: 0 }, 0.9, "G1 Z0 F300 · os pinos da base entram nos furos do suporte", () => { slotOf[on] = free; });
+  go({ hz: 0 }, 0.9, "G1 Z0 F300 · os munhões do suporte descem nos garfos da base", () => { slotOf[on] = free; });
   go({ by: -12 }, 0.9, "G1 Y−12 · a cabeça sai para trás: ímãs soltam");
   go({ hx: D.XS[slotOf[next]] }, 1.1, "G0 X · atrás da caneta " + NAMES[next]);
-  go({ by: 0 }, 0.9, "G1 Y+12 F300 · pinos encaixam, ímãs pegam", () => { slotOf[next] = -1; on = next; });
-  go({ hz: LIFT }, 0.9, "G0 Z · sobe: o suporte sai dos pinos");
+  go({ by: 0 }, 0.9, "G1 Y+12 F300 · pinos cônicos encaixam, ímãs pegam", () => { slotOf[next] = -1; on = next; });
+  go({ hz: LIFT }, 0.9, "G0 Z · sobe: os munhões saem dos garfos");
 }
 const ease = (u) => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
 function step(dt) {
@@ -133,13 +253,26 @@ function step(dt) {
     if (t >= 1) { cur.then?.(); cur = null; }
   }
 }
-function pose() {
+function pose(now) {
   bed.position.y = m.by; head.position.set(m.hx, 0, m.hz); gantry.position.z = m.hz;
-  holders.forEach(({ h, blk }, i) => {
+  const pulso = 0.5 + 0.5 * Math.sin(now / 90);
+  let cab = 0;  // brilho dos ímãs da cabeça
+  holders.forEach((o, i) => {
     const s = slotOf[i];
-    if (s < 0) { h.position.set(m.hx, 0, m.hz); blk.position.z = D.BRACO_H + Math.min(D.CURSO, Math.max(0, PZ - (m.hz + D.BRACO_H - 20))); }
-    else { h.position.set(D.XS[s], m.by, 0); blk.position.z = D.BRACO_H; }
+    const lift = s < 0 ? Math.max(0, PZ - (m.hz + D.Z_PONTA)) : 0;   // quanto o papel empurra a ponta para cima
+    if (s < 0) o.h.position.set(m.hx, 0, m.hz); else o.h.position.set(D.XS[s], m.by, 0);
+    const bz = D.BRACO_H + Math.min(D.CURSO, lift); o.blk.position.z = bz;
+    // elástico: estica com o bloco; âmbar em repouso, vermelho no fim do curso
+    const L = bz + D.ELASTICO.Z_BLOCO - D.ELASTICO.Z_SUP, k = Math.min(1, lift / D.CURSO);
+    for (const f of o.fios) f.scale.z = L;
+    o.fioMat.color.copy(AMBAR).lerp(VERM, k); o.fioMat.emissive.setRGB(0.5 * k * pulso, 0, 0);
+    // ímãs: preso = brilho fixo; na doca com a cabeça perto = pisca, mais fraco quanto mais longe
+    let b = 0;
+    if (s < 0) b = 0.35;
+    else if (Math.abs(m.hx - D.XS[s]) < 1 && Math.abs(m.hz) < 1) { const gap = Math.abs(m.by); if (gap < 14) b = (1 - gap / 14) * (0.15 + 0.55 * pulso); }
+    o.halo.opacity = b; cab = Math.max(cab, b);
   });
+  headHalo.opacity = cab;
 }
 
 // ---------- peças separadas ----------
@@ -158,30 +291,235 @@ INFO.forEach(([n, title, sub, color], i) => {
 });
 
 // ---------- interface ----------
-const bSis = document.getElementById("bSis"), bPec = document.getElementById("bPec"), bPlay = document.getElementById("bPlay");
-function mode(p) {
-  sys.visible = !p; parts.visible = p; labels.domElement.style.display = p ? "" : "none"; bSis.setAttribute("aria-pressed", String(!p)); bPec.setAttribute("aria-pressed", String(p));
-  bPlay.hidden = p; say.textContent = p ? "Tudo impresso. Só os ímãs (4 por placa) e o elástico são comprados." : (cur?.text ?? "");
-  frame(p);
+const bPlay = document.getElementById("bPlay");
+const ABAS = { sis: "", pec: "Tudo impresso. Só os ímãs e o elástico são comprados.", fol: "Mexa nos valores para escolher a folga e a altura do bloco.",
+  esf: "Momentos e esforços de cada versão. Mude as entradas para ver o efeito.", his: "Como o desenho chegou até aqui.",
+  des: "Vistas cotadas de cada peça, geradas do mesmo modelo que vai para a impressora." };
+const PAINEIS = ["fol", "esf", "his", "des"];
+function mode(aba) {
+  const p = aba === "pec", painel = PAINEIS.includes(aba);
+  sys.visible = aba === "sis"; parts.visible = p; labels.domElement.style.display = p ? "" : "none";
+  for (const k of PAINEIS) document.getElementById(k).hidden = k !== aba;
+  canvas.style.visibility = painel ? "hidden" : "";
+  for (const k in ABAS) document.getElementById("b" + k[0].toUpperCase() + k.slice(1)).setAttribute("aria-pressed", String(k === aba));
+  bPlay.hidden = aba !== "sis";
+  say.textContent = ABAS[aba] || (cur?.text ?? "");
+  if (!painel) frame(p);
+  if (aba === "des") desenhar();
 }
+
+// ---------- folga do bloco nas varetas ----------
+const G = D.GUIA, V = { Var: G.VARETA, Furo: G.FURO, Enc: 0, BH: G.BH, Sai: G.SAI };
+const ponta = (c, bh, sai) => c * (1 + 2 * sai / bh);  // folga c: base e topo da bucha encostam em lados opostos
+const mm = (v) => v.toFixed(2).replace(".", ",") + " mm";
+const svg = document.getElementById("desenho"), tab = document.getElementById("tab");
+function folga() {
+  const c = Math.max(0, V.Furo - V.Enc - V.Var), a = Math.atan(c / V.BH), t = ponta(c, V.BH, V.Sai);
+  document.getElementById("oC").textContent = mm(c);
+  document.getElementById("oA").textContent = (a * 180 / Math.PI).toFixed(2).replace(".", ",") + "°";
+  document.getElementById("oT").textContent = "± " + mm(t / 2);
+  document.getElementById("oV2").textContent = "± " + mm(ponta(0.4, 12, 18) / 2);
+  // desenho: corte em X, bloco encostado nas varetas em cantos opostos; folga ampliada E vezes
+  const E = c > 0 ? Math.min(15, 4 / c) : 1, ce = c * E, ae = Math.atan(ce / V.BH), z0 = 50 - V.BH;  // y do SVG cresce para baixo; papel em 50 + sai
+  document.getElementById("oE").textContent = E.toFixed(0);
+  const w = G.BW, rv = V.Var / 2, ink = getComputedStyle(document.body).color;
+  const rods = [-G.X, G.X].map((x) => `<rect x="${x - rv}" y="${z0 - 8}" width="${2 * rv}" height="${V.BH + 12}" fill="#b9b6ae"/>`).join("");
+  const blk = (fill, op, ang, dx) => `<g transform="translate(${dx} ${50 - V.BH / 2}) rotate(${ang * 180 / Math.PI})" opacity="${op}">
+      <rect x="${-w / 2}" y="${-V.BH / 2}" width="${w}" height="${V.BH}" fill="${fill}" stroke="${ink}" stroke-width="0.3"/>
+      <rect x="-4" y="${-V.BH / 2 - 8}" width="8" height="${V.BH + 8 + V.Sai}" fill="#d94141" opacity="0.55"/></g>`;
+  const tipX = Math.tan(ae) * (V.BH / 2 + V.Sai);   // ponta da caneta inclinada (ampliada), relativa ao centro do bloco
+  svg.setAttribute("viewBox", `-34 ${z0 - 12} 68 ${V.BH + V.Sai + 20}`);
+  svg.innerHTML = blk("#d9d6cf", 0.25, 0, 0) + blk("#d9d6cf", 0.9, ae, 0) + `<g opacity="0.7">${rods}</g>` +
+    `<line x1="-34" x2="34" y1="${50 + V.Sai}" y2="${50 + V.Sai}" stroke="${ink}" stroke-width="0.4"/>
+     <line x1="0" x2="${-tipX}" y1="${50 + V.Sai + 2.5}" y2="${50 + V.Sai + 2.5}" stroke="#d94141" stroke-width="0.8"/>
+     <text x="${-tipX / 2}" y="${50 + V.Sai + 7}" font-size="3.2" text-anchor="middle" fill="${ink}">ponta anda ${mm(t / 2)} (desenho ×${E.toFixed(0)})</text>`;
+  // tabela: folga × altura
+  const fs = [0.1, 0.15, 0.2, 0.3, 0.4], hs = [12, 16, 20, 24, 28, 32];
+  const max = ponta(0.4, 12, V.Sai);
+  tab.innerHTML = `<tr><th>folga ↓ · altura →</th>${hs.map((h) => `<th>${h}</th>`).join("")}</tr>` + fs.map((f) => `<tr><th>${f.toFixed(2).replace(".", ",")}</th>${hs.map((h) => {
+    const v = ponta(f, h, V.Sai) / 2, k = Math.min(1, v / (max / 2));
+    const on = Math.abs(f - c) < 0.026 && Math.abs(h - V.BH) < 0.5 ? ' class="on"' : "";
+    return `<td${on} data-f="${f}" data-h="${h}" style="background:hsl(${120 - 120 * k} 60% 50% / .35);cursor:pointer">±${v.toFixed(2).replace(".", ",")}</td>`;
+  }).join("")}</tr>`).join("");
+}
+for (const k of Object.keys(V)) {
+  const r = document.getElementById("r" + k), n = document.getElementById("f" + k);
+  r.value = n.value = V[k];
+  const set = (v) => { if (!isFinite(v)) return; V[k] = v; r.value = n.value = v; folga(); };
+  r.oninput = () => set(+r.value); n.oninput = () => set(+n.value);
+}
+tab.onclick = (e) => {
+  const td = e.target.closest("td[data-f]"); if (!td) return;
+  V.Furo = +(V.Var + +td.dataset.f + V.Enc).toFixed(2); V.BH = +td.dataset.h;
+  for (const k of ["Furo", "BH"]) document.getElementById("r" + k).value = document.getElementById("f" + k).value = V[k];
+  folga();
+};
+folga();
+
+// ---------- versões (v1–v3 fixas; v4 sai do script) ----------
+const num = (v, d = 2) => typeof v === "number" ? v.toFixed(d).replace(".", ",") : v;
+const VERS = {
+  v1: { data: "22/11", status: "impressa (1ª validação)", furo: 4.4, vareta: 4, BH: 12, sai: 18, dy: 18, SH: 26, braco: 4, curso: 6, bw: 24,
+        pinosZ: [9, 17], pinoX: 3.5, pinoFolga: 0.3, pinoL: 3, pinoTipo: "quadrados", imasZ: [6, 20], pilha: 3, trava: "M6" },
+  v2: { data: "22/11", status: "impressa (2ª validação)", furo: 4.4, vareta: 4, BH: 12, sai: 18, dy: 18, SH: 26, braco: 4, curso: 6, bw: 25.6,
+        pinosZ: [9, 17], pinoX: 3.5, pinoFolga: 0.3, pinoL: 3, pinoTipo: "quadrados", imasZ: [6, 20], pilha: 1, trava: "M6" },
+  v3: { data: "23/11", status: "não impressa (substituída)", furo: 4.2, vareta: 4, BH: 20, sai: 12, dy: 14.75, SH: 34, braco: 4, curso: 6, bw: 25.6,
+        pinosZ: [4, 30], pinoX: 3.5, pinoFolga: 0.3, pinoL: 5, pinoTipo: "quadrados", imasZ: [4, 30], pilha: 1, trava: "cunha",
+        parede: 1.6, vaoCaneta: 8.3, cunhaB: 1.2, cunhaT: 2.6 },
+  v4: { data: "24/11", status: "atual (validar)", ...D.V4, pinoTipo: "cônicos", pilha: 1, trava: "cunha" },
+};
+const NV = Object.keys(VERS);
+const EI = { Fv: [1.5, "força da caneta no papel (N)"], mu: [0.3, "atrito ponta × papel"], Fima: [1.0, "força de 1 ímã 3×1 encostado (N)"],
+  kPilha: [2.0, "ganho de 3 ímãs empilhados (v1)"], P: [20, "empurrão na cunha ao montar (N)"], muC: [0.25, "atrito da cunha"], E: [3500, "módulo do PLA (MPa)"] };
+const I = Object.fromEntries(Object.entries(EI).map(([k, [v]]) => [k, v]));
+const zt = (v) => v.braco - v.sai;                       // altura da ponta (coord. do suporte; negativa = abaixo)
+const somaImas = (v, f) => 2 * I.Fima * (v.pilha > 1 ? I.kPilha : 1) * v.imasZ.reduce((s, z) => s + f(z), 0);
+const cunha = (v) => {
+  if (v.trava !== "cunha") return null;
+  const N = I.P / ((v.cunhaT - v.cunhaB) / v.BH + 2 * I.muC), s = (N * v.vaoCaneta / 8) / (v.BH * v.parede ** 2 / 6);
+  return { N, s };
+};
+// [rótulo, função, unidade, casas, melhor: -1 menor / +1 maior / 0 neutro]
+const M_FOL = [
+  ["folga furo − vareta", (v) => v.furo - v.vareta, "mm", 2, -1],
+  ["altura da guia", (v) => v.BH, "mm", 0, 0],
+  ["caneta sai abaixo do bloco", (v) => v.sai, "mm", 0, -1],
+  ["inclinação máxima", (v) => Math.atan((v.furo - v.vareta) / v.BH) * 180 / Math.PI, "°", 2, -1],
+  ["ponta anda (guia)", (v) => ponta(v.furo - v.vareta, v.BH, v.sai) / 2, "± mm", 2, -1],
+  ["ponta anda (pinos)", (v) => ponta(v.pinoFolga, v.pinosZ.at(-1) - v.pinosZ[0], v.pinosZ[0] - zt(v)) / 2, "± mm", 2, -1],
+];
+const M_ESF = [
+  ["atrito na ponta Ft", () => I.mu * I.Fv, "N", 2, 0],
+  ["ponta abaixo do suporte", (v) => -zt(v), "mm", 0, -1],
+  ["descolar pela borda de cima", (v) => somaImas(v, (z) => v.SH - z) / (I.mu * I.Fv * (v.SH - zt(v))), "×", 1, 1],
+  ["descolar pela borda de baixo", (v) => somaImas(v, (z) => z) / (I.mu * I.Fv * -zt(v)), "×", 1, 1],
+  ["momento no plano (Ft em X)", (v) => I.mu * I.Fv * (v.SH / 2 - zt(v)), "N·mm", 1, -1],
+  ["torção Mz = Ft·dy", (v) => I.mu * I.Fv * v.dy, "N·mm", 1, -1],
+  ["força em cada pino (torção)", (v) => I.mu * I.Fv * v.dy / (2 * v.pinosZ.length * v.pinoX), "N", 2, -1],
+  ["flexão da vareta", (v) => { const L = v.BH + v.curso, J = Math.PI * v.vareta ** 4 / 64; return 1000 * (I.mu * I.Fv / 2) * L ** 3 / (192 * I.E * J); }, "µm", 2, -1],
+  ["cunha: aperto na caneta N", (v) => cunha(v)?.N ?? "— (M6)", "N", 0, 1],
+  ["cunha: tensão na parede", (v) => cunha(v)?.s ?? "—", "MPa", 0, -1],
+  ["cunha: segurança (PLA 50 MPa)", (v) => cunha(v) ? 50 / cunha(v).s : "—", "×", 1, 1],
+];
+const M_HIS = [
+  ["data", (v) => v.data, "", 0, 0], ["situação", (v) => v.status, "", 0, 0],
+  ["Ø furo / Ø vareta", (v) => num(v.furo) + " / " + num(v.vareta, 1), "mm", 0, 0],
+  ["altura do bloco (guia)", (v) => v.BH, "mm", 0, 0], ["altura do suporte", (v) => v.SH, "mm", 0, 0],
+  ["eixo da caneta até a placa", (v) => v.dy, "mm", 2, -1], ["largura do bloco", (v) => v.bw, "mm", 1, -1],
+  ["pinos", (v) => `${2 * v.pinosZ.length} ${v.pinoTipo} · ${num(v.pinoL, 0)} mm`, "", 0, 0],
+  ["ímãs", (v) => `${2 * v.imasZ.length} cavas × ${v.pilha}`, "", 0, 0],
+  ["trava da caneta", (v) => v.trava + (v.parede ? ` · parede ${num(v.parede, 1)}` : ""), "", 0, 0],
+  ["ponta anda (guia)", M_FOL[4][1], "± mm", 2, -1],
+];
+const CMP = { fol: M_FOL, esf: M_ESF, his: M_HIS }, sel = { A: "v2", B: "v4" };
+const cel = (x, d) => typeof x === "number" ? num(x, d) : x;
+function tabela(metr, vs) {
+  return `<tr><th></th>${vs.map((n) => `<th>${n}</th>`).join("")}${vs.length === 2 ? "<th>Δ B−A</th>" : ""}</tr>` + metr.map(([r, f, u, d, b]) => {
+    const xs = vs.map((n) => f(VERS[n]));
+    let dl = "";
+    if (vs.length === 2) {
+      const [a, c] = xs, ok = typeof a === "number" && typeof c === "number";
+      const dv = ok ? c - a : null, cls = ok && b && Math.abs(dv) > 1e-9 ? (Math.sign(dv) === b ? "bom" : "mau") : "";
+      dl = `<td class="${cls}">${ok ? (dv > 0 ? "+" : "") + num(dv, d) : ""}</td>`;
+    }
+    return `<tr><td>${r}${u ? ` <small>(${u})</small>` : ""}</td>${xs.map((x) => `<td>${cel(x, d)}</td>`).join("")}${dl}</tr>`;
+  }).join("");
+}
+function comparar() {
+  for (const el of document.querySelectorAll("[data-cmp]")) el.querySelector("table").innerHTML = tabela(CMP[el.dataset.cmp], [sel.A, sel.B]);
+  document.getElementById("esfTodas").innerHTML = tabela(M_ESF, NV);
+}
+const opts = (s) => NV.map((n) => `<option${n === s ? " selected" : ""}>${n}</option>`).join("");
+for (const el of document.querySelectorAll("[data-cmp]")) {
+  el.insertAdjacentHTML("beforeend", `<div class="sel">A <select data-k="A">${opts(sel.A)}</select> × B <select data-k="B">${opts(sel.B)}</select></div><div style="overflow-x:auto"><table class="cmp"></table></div><p class="nota">Δ verde = B melhor; vermelho = B pior.</p>`);
+  el.onchange = (e) => { sel[e.target.dataset.k] = e.target.value; for (const s of document.querySelectorAll(`select[data-k=${e.target.dataset.k}]`)) s.value = e.target.value; comparar(); };
+}
+// entradas dos esforços
+document.getElementById("esfIn").innerHTML = Object.entries(EI).map(([k, [v, r]]) =>
+  `<div class="campo"><label for="e${k}">${r}</label><span></span><input type="number" id="e${k}" value="${v}" step="any"></div>`).join("");
+for (const k in EI) document.getElementById("e" + k).oninput = (e) => { const x = +e.target.value; if (isFinite(x)) { I[k] = x; comparar(); } };
+// cards de cada versão na aba Folga
+document.getElementById("folVers").innerHTML = NV.map((n) => { const v = VERS[n]; return `<div class="card"><h2>${n} <small style="font-weight:400;color:var(--muted)">${v.status}</small></h2>
+  Ø${num(v.furo)} em vareta Ø${num(v.vareta, 1)} · guia ${v.BH} · sai ${v.sai}<br>folga ${num(v.furo - v.vareta)} · <b>ponta ± ${num(ponta(v.furo - v.vareta, v.BH, v.sai) / 2)} mm</b>
+  <button data-v="${n}">carregar</button></div>`; }).join("");
+document.getElementById("folVers").onclick = (e) => {
+  const n = e.target.dataset?.v; if (!n) return; const v = VERS[n];
+  Object.assign(V, { Var: v.vareta, Furo: v.furo, BH: v.BH, Sai: v.sai });
+  for (const k of ["Var", "Furo", "BH", "Sai"]) document.getElementById("r" + k).value = document.getElementById("f" + k).value = V[k];
+  folga();
+};
+// histórico
+const HIST = [
+  ["v1", "Primeira mesa de validação", ["morsa com parafuso M8; caneta presa por M6", "4 pinos quadrados de 3 mm; ímãs 3 empilhados por cava", "guia de 12 mm, furo 4,4"],
+    ["morsa frouxa: mandíbula batia na barra e o M8 no fundo", "ganchos do elástico pequenos", "furo do M6 tapado; botão curto", "3 ímãs por cava: força demais"]],
+  ["v2", "Correções da v1", ["curso da morsa 6 → 16; M8 mais curto", "ganchos de 7 mm nas laterais, em linha", "varetas roscadas no suporte", "1 ímã por cava"],
+    ["cavas dos ímãs rasas: ímã para fora afasta as placas", "pinos curtos", "bloco balança nas varetas", "M6 da caneta espanou", "ponta longe da placa: momento grande"]],
+  ["v3", "Contra o balanço e o momento", ["cava do ímã +0,4; pinos de 5 mm (passantes)", "cunha no lugar do M6", "bloco assimétrico: caneta 3 mm mais perto da placa", "caneta sai 12 (era 18); guia 20 com folga 0,2", "opção flexão de lâminas para comparar"],
+    ["flexão de lâminas rejeitada antes de imprimir: desgasta e quebra"]],
+  ["v4", "Bloco fino, pinos cônicos e doca D2", ["guia de 25 com furo 4,1: ponta ±0,1 mm", "paredes de 1,2; furo da caneta +1; cunha em Y", "placa de 3 mm: 6 pinos cônicos e 8 ímãs", "ganchos laterais com entalhe em V; ganchos a ½ elástico", "doca: 2 munhões por lado num trilho vertical"],
+    ["a validar: só morsa + 1 porta-caneta (sem doca)"]],
+];
+document.getElementById("hisTl").innerHTML = "<h2>Linha do tempo</h2>" + HIST.map(([n, t, mud, prob]) =>
+  `<div class="tl"><h3>${n} · ${t}</h3><span class="st">${VERS[n].data} · ${VERS[n].status}</span>
+   <ul>${mud.map((x) => `<li>${x}</li>`).join("")}</ul><b style="font-size:12px">${n === "v4" ? "Pendente" : "Achado depois"}</b><ul>${prob.map((x) => `<li>${x}</li>`).join("")}</ul></div>`).join("");
+const DEC = [
+  ["Cunha no lugar do parafuso da caneta", "o M6 espanou na v2"],
+  ["Sem flexão de lâminas impressas", "desgasta e quebra (decisão do usuário)"],
+  ["Cunha em Y, não em X", "bloco 23,7 contra 26,5 mm; a carga fica longe das buchas"],
+  ["Ganchos nas laterais do bloco", "evitam torção do bloco nas varetas"],
+  ["Entalhe em V onde o elástico apoia", "o elástico não escapa para nenhum lado"],
+  ["Ganchos a ½ elástico de dinheiro (2 voltas)", "ELASTICO_L = 70 → 35 mm; medir o elástico"],
+  ["Pinos cônicos + ímãs", "folga zero e centraliza sozinho na troca"],
+  ["Doca D2: 2 munhões por lado, folga 0,5", "com 1 munhão o suporte girava ao soltar; a folga deixa deslizar sem travar"],
+  ["Base com no máximo 4 vagas", "cabe em 210 mm com passo 43,6"],
+  ["Validar 1 porta-caneta antes da doca", "mandíbula e M8 da v2 reaproveitados"],
+];
+document.getElementById("hisDec").innerHTML = "<h2>Decisões</h2><table class='cmp'>" + DEC.map(([d, p]) => `<tr><td><b>${d}</b></td><td style="text-align:left">${p}</td></tr>`).join("") + "</table>";
+comparar();
 function frame(p) {
   const k = innerWidth < innerHeight ? 1.5 : 1;
   if (p) { camera.position.set(-260 * k, -470 * k, 380 * k); controls.target.set(-20, -50, 0); }
   else { camera.position.set(-300 * k, -330 * k, 230 * k); controls.target.set(0, 30, 10); }
 }
-bSis.onclick = () => mode(false); bPec.onclick = () => mode(true);
+for (const k in ABAS) document.getElementById("b" + k[0].toUpperCase() + k.slice(1)).onclick = () => mode(k);
 bPlay.onclick = () => { paused = !paused; bPlay.textContent = paused ? "Continuar" : "Pausar"; };
 if (matchMedia("(prefers-reduced-motion: reduce)").matches) { paused = true; bPlay.textContent = "Continuar"; }
 function resize() {
   const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); labels.setSize(w, h);
   camera.aspect = w / h; camera.fov = w < h ? 55 : 35; camera.updateProjectionMatrix();
 }
-addEventListener("resize", resize); resize(); mode(false);
+addEventListener("resize", resize); resize();
+// ---------- desenhos cotados ----------
+const desSel = document.getElementById("desPeca"), TIT = Object.fromEntries(D.INFO.map(([n, t]) => [n, t]));
+TIT.cabecote = "Cabeçote da Mega S (modelo)";
+for (const n of Object.keys(D.DES)) desSel.add(new Option(TIT[n] ?? n, n));
+const r3 = new THREE.WebGLRenderer({ canvas: document.getElementById("des3d"), antialias: true }), s3 = new THREE.Scene();
+s3.background = new THREE.Color(dark ? 0x232326 : 0xffffff);
+s3.add(new THREE.HemisphereLight(0xffffff, 0x777777, 1.6));
+const sun3 = new THREE.DirectionalLight(0xffffff, 1.8); sun3.position.set(-200, -300, 400); s3.add(sun3);
+const c3 = new THREE.PerspectiveCamera(35, 1, 1, 5000); c3.up.set(0, 0, 1);
+const o3 = new OrbitControls(c3, r3.domElement), g3 = new THREE.Group(); s3.add(g3);
+const ren3 = () => r3.render(s3, c3); o3.addEventListener("change", ren3);
+function desenhar() {
+  const n = desSel.value, d = D.DES[n];
+  document.getElementById("desTab").innerHTML = `<h2>${TIT[n] ?? n}: cotas de projeto</h2>` + (d.cotas.length
+    ? `<table class="cmp">${d.cotas.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join("")}</table>` : '<p class="nota">Só as cotas das vistas.</p>');
+  for (const el of document.querySelectorAll(".vista")) el.innerHTML = `<h2>${el.dataset.v}</h2>` + d.vistas[el.dataset.v];
+  g3.clear();
+  const g = (geo[n] ?? geo.v_cabecote).clone(); g.computeBoundingBox(); const bb = g.boundingBox, c = bb.getCenter(new THREE.Vector3());
+  g.translate(-c.x, -c.y, -c.z); g3.add(mesh(g, n === "cabecote" ? 0x2b2d31 : PLA));
+  const r = bb.getSize(new THREE.Vector3()).length();
+  const cv = r3.domElement, w = cv.clientWidth || 300, h = cv.clientHeight || 300;
+  r3.setPixelRatio(devicePixelRatio); r3.setSize(w, h, false); c3.aspect = w / h; c3.updateProjectionMatrix();
+  c3.position.set(r * 1.1, -r * 1.5, r * 1.0); o3.target.set(0, 0, 0); o3.update(); ren3();
+}
+desSel.onchange = desenhar;
+mode({ "#folga": "fol", "#esforcos": "esf", "#historico": "his", "#desenhos": "des" }[location.hash] ?? "sis");
 let last = 0;
 renderer.setAnimationLoop((now) => {
   const dt = last ? Math.min((now - last) / 1000, 1 / 20) : 0; last = now;
   if (!paused && sys.visible) step(dt);
-  pose(); controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
+  pose(now); controls.update(); renderer.render(scene, camera); labels.render(scene, camera);
 });
 window.__estado = () => ({ ...m, slotOf: [...slotOf], on, texto: say.textContent });
 </script>
