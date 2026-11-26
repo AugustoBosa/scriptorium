@@ -40,10 +40,12 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 | Ajudantes de DOM/armazenamento (`el`, `botao`, `baixar`, `lerPersonagens`, nomes das oficinas) | `src/ui/util.js` |
 | Geometria comum (`dist`, `comprimento`, `clamp`, `ret`, `VAO`, `valido`) | `src/geo.js` — não copiar em outro arquivo |
 | Salvar no navegador | trabalho: `src/ui/trabalho.js` (localStorage `trabalho.*`, `grimorio.estado`); biblioteca e magias: `src/ui/armazem.js` (IndexedDB `scriptorium`), `src/ui/biblioteca.js` |
+| Criar personagem (#ficha: ficha D&D → letra → perfis) | tabelas `src/ficha/dnd.js`, pontuação `src/ficha/sugerir.js`, perfis `src/ficha/perfis.js`, wizard `src/ui/ficha.js` (rascunho `writer.ficha.rascunho`); variação com `base` em `src/personagem.js` |
 | Minha letra (oficina #letra: a máquina plota as folhas de coleta) | `src/letra/folha.js` (`comporColeta`, código da folha), `src/letra/textos.js` + `scripts/gerar-texto-modelo.mjs <corpus> <lingua>` → `src/letra/linguas/<lingua>.json`, painel `src/ui/letra.js`; plano em `workflow/experimentos/fonte-propria/PESQUISA.md` |
 
 ## Entregas
 
+- 2026-11-25 — Wizard de personagem (`#ficha`, branch `wizard-personagem`): ficha D&D 5e (PHB 2014, pt-BR) em 8 passos (um aberto por vez) sugere a letra pelo catálogo (só critérios: arquétipo, eixos, ligação) e gera perfis de escrita filtrados pela classe e antecedente; cada escrita de idioma vira perfil com letra própria (variação aceita `base`). "+ Novo" abre o wizard ("Começar em branco" mantém o antigo); "Reabrir ficha" na galeria; aviso no painel quando o perfil usa outra letra. Capricho da ficha parte de 0,8 (NEUTRA = 1 é o teto).
 - 2026-11-18 — Reorganização: oficina Magias (pergaminho + grimório, separador entre magias), oficinas com a mesma ordem de painéis e a mesma lista de papéis, texto de exemplo e visual padrão por tipo, valores com 2 casas, destaque em vermelho na prévia dos controles, menu ☰ nas oficinas e home com cartões animados. Os textos do teste inicial e o histórico antigo saíram.
 - 2026-11-18 — Notas livres e biblioteca: notas com posição automática, por lado ou livre (arrastar) na Carta e no Livro; Livro com notas e rabiscos; trabalho salvo sozinho; aba Biblioteca com materiais (.json) e cópia de tudo; magias importadas guardadas no navegador.
 - 2026-11-21 — Calibração da troca: `scripts/gerar-teste-troca.mjs` gera `TROCA1/2/3.GCO` (posições a seco, ciclo passo a passo, ciclo real) em `workflow/experimentos/troca-automatica/`, com o guia `CALIBRACAO.md` e as medidas propostas.

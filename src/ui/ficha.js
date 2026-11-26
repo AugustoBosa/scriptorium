@@ -205,7 +205,7 @@ function passoLetra(corpo, s) {
       chips.append(...(rank.find((x) => x.fonte === prop.base[0].fonte)?.motivos ?? []).map((t) => el('span', 'ficha-chip', t)));
       const usar = botao('Usar', () => { s.r.base = structuredClone(prop.base); s.mudou(); });
       botoesUsar.push({ usar, base: prop.base });
-      c.append(el('h4', null, prop.nome), m, el('p', 'ficha-nota', prop.base.map((i) => i.fonte).join(' + ')), chips, ...(prop.aviso ? [el('p', 'ficha-aviso', prop.aviso)] : []), usar);
+      c.append(el('h3', null, prop.nome), m, el('p', 'ficha-nota', prop.base.map((i) => i.fonte).join(' + ')), chips, ...(prop.aviso ? [el('p', 'ficha-aviso', prop.aviso)] : []), usar);
       return c;
     }));
   }

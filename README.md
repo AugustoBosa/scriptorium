@@ -25,6 +25,7 @@ Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, 
 - **Básico / Avançado**: o básico mostra o essencial; o avançado mostra os ajustes finos e a máquina.
 - **Prévia viva**: cada controle mostra uma amostra ao passar o mouse ou focar. O que o controle altera aparece em vermelho; o resto, em tinta. Os controles de valor têm régua e escala de 10 mm, e os valores têm no máximo 2 casas depois da vírgula.
 - **Personagens**: galeria com espécime; a mão em uso vale para todas as oficinas.
+- **Criar personagem** (`#ficha`): "+ Novo personagem" abre uma ficha de D&D 5e (raça, classe, antecedente, atributos, alinhamento, idiomas). A ficha sugere a letra (3 propostas e mistura) e os perfis de escrita (diário, grimório, carta formal, uma escrita por idioma…); cada perfil pode ter letra própria. "Reabrir ficha" na galeria volta ao wizard.
 - **Temas**: claro e vela (escuro).
 - **Salvos no navegador**: personagens (`writer.personagens`), perfil de máquina (`writer.perfil`), preferências (`writer.ui`) e o trabalho em andamento de cada oficina (`trabalho.escrita`, `trabalho.sigilos`, `grimorio.estado`), no localStorage. No IndexedDB (`scriptorium`): os materiais da biblioteca e o `magias.json` importado. Nada vai para servidor.
 - **Biblioteca** (`#biblioteca`): "Salvar na biblioteca" guarda o trabalho com nome (oficina, texto ou magias, ajustes e personagem). A aba abre, baixa (.json), renomeia e apaga; "Baixar cópia de tudo" leva personagens e materiais para outro navegador. A home mostra os mais recentes.
