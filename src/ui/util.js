@@ -14,4 +14,10 @@ export const baixarJson = (nome, dados) => baixar(JSON.stringify(dados, null, 2)
 export const lerPersonagens = () => { try { return JSON.parse(localStorage.getItem('writer.personagens')) ?? {}; } catch { return {}; } };
 export const gravarPersonagens = (salvos) => localStorage.setItem('writer.personagens', JSON.stringify(salvos));
 
+// Abre o wizard "Criar personagem" com rascunho dado (ou limpo, se null).
+export function novaFicha(rascunho = null) {
+  try { if (rascunho) localStorage.setItem('writer.ficha.rascunho', JSON.stringify(rascunho)); else localStorage.removeItem('writer.ficha.rascunho'); } catch { /* sem storage: o wizard começa do zero */ }
+  location.hash = '#ficha';
+}
+
 export const NOMES_OFICINA = { carta: 'Carta', livro: 'Livro', magias: 'Magias', sigilos: 'Sigilos', letra: 'Minha letra' };

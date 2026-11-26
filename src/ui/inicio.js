@@ -15,7 +15,7 @@ import { gerarAlfabeto } from '../arcano/alfabeto.js';
 import { magiaVazia } from '../magia.js';
 import { NEUTRA } from '../motor/mao.js';
 import { materiais } from './biblioteca.js';
-import { el, NOMES_OFICINA, lerPersonagens } from './util.js';
+import { el, NOMES_OFICINA, lerPersonagens, novaFicha } from './util.js';
 
 const MAGIA = { ...magiaVazia(), id: 'exemplo', nome: 'Bola de Fogo', nivel: 3, linhaNivel: 'Evocação de 3º nível', alcance: '45 m', comp: 'V, S, M',
   duracao: 'Instantânea', resumo: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.', texto: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.' };
@@ -133,7 +133,7 @@ export function montar(raiz, { fontes, abrir }) {
     }));
     const novo = el('button', 'cartao novo', '+ Novo personagem');
     novo.type = 'button';
-    novo.addEventListener('click', () => { gravarAtual(novoPersonagem(), 'normal'); location.hash = '#personagens'; });
+    novo.addEventListener('click', () => novaFicha());
     faixa.append(novo);
     vazio.hidden = salvos.length > 0;
     materiais().then((ms) => {

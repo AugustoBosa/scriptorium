@@ -1,9 +1,9 @@
-import { resolver, validar, novoPersonagem, ajustarVariacao } from '../personagem.js';
+import { resolver, validar, ajustarVariacao } from '../personagem.js';
 import { rotulo, AJUDA } from '../ajuda.js';
 import { controle, dica } from './controle.js';
 import { PARAMS } from '../motor/mao.js';
 import { amostra } from '../layout.js';
-import { el, botao, lerPersonagens as lerSalvos } from './util.js';
+import { el, botao, lerPersonagens as lerSalvos, novaFicha } from './util.js';
 
 const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
 const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate', 'ligadura', 'adiamento'];
@@ -48,6 +48,15 @@ function opcoes(sel, lista) {
   sel.replaceChildren(...lista.map(([texto, valor]) => new Option(texto, valor)));
 }
 const opcoesVariacao = (chaves) => (chaves.length ? chaves.map((k) => [k, k]) : [['(mão base)', '']]);
+// Perfil com letra própria (base na variação): diz de que fonte vem a letra
+const notaPerfil = () => { const n = el('p', 'nota-perfil'); n.hidden = true; return n; };
+function atualizarNota(nota, p, variacao) {
+  const base = p.variacoes?.[variacao]?.base;
+  nota.hidden = !base;
+  if (!base) return;
+  const letra = `Este perfil usa a letra ${base.map((i) => i.fonte).join(' + ')}`;
+  nota.textContent = p.ficha ? `${letra} — mude em Reabrir ficha.` : `${letra}.`;
+}
 
 let montados = 0; // cada oficina monta o próprio painel: sufixo evita id repetido
 
@@ -70,11 +79,12 @@ export function montar(elemento, estado, aoMudar) {
   const editar = el('p'), link = el('a', null, 'Editar mãos em Personagens');
   link.href = '#personagens';
   editar.append(link);
+  const nota = notaPerfil();
 
   elemento.append(
     ...campo('p-personagem' + sufixo, 'Personagem', selPers, AJUDA.personagem),
     ...campo('p-variacao' + sufixo, rotulo('variacaoSel'), selVar, AJUDA.variacaoSel),
-    editar, erro,
+    nota, editar, erro,
   );
 
   function atualizar() {
@@ -85,6 +95,7 @@ export function montar(elemento, estado, aoMudar) {
     selPers.value = salvo ? p.nome : '';
     opcoes(selVar, opcoesVariacao(chaves));
     selVar.value = estado.variacao;
+    atualizarNota(nota, p, estado.variacao);
     lembrar(estado);
   }
   atualizar();
@@ -108,6 +119,7 @@ export function editor(elemento, estado, aoMudar) {
     estado.variacao = nome;
     aoMudar();
   });
+  const nota = notaPerfil();
   const btnRemover = botao('Remover', () => {
     const atual = estado.variacao;
     if (!confirm(`Remover a variação "${atual}"?`)) return;
@@ -157,13 +169,9 @@ export function editor(elemento, estado, aoMudar) {
   };
   const mao = secao('Mão em uso',
     ...campo('pg-nome', 'Nome', inputNome, AJUDA.personagem),
-    linhaBotoes(botao('Novo personagem', () => {
-      estado.personagem = novoPersonagem();
-      estado.variacao = 'normal';
-      aoMudar();
-    })),
+    linhaBotoes(botao('Novo personagem', () => novaFicha())),
     ...campo('pg-variacao', rotulo('variacaoSel'), selVar, AJUDA.variacaoSel),
-    avancado);
+    nota, avancado);
   mao.open = true;
   elemento.append(
     mao,
@@ -178,6 +186,7 @@ export function editor(elemento, estado, aoMudar) {
     if (!chaves.includes(estado.variacao)) estado.variacao = chaves[0] ?? '';
     opcoes(selVar, opcoesVariacao(chaves));
     selVar.value = estado.variacao;
+    atualizarNota(nota, p, estado.variacao);
     btnRenomear.disabled = btnRemover.disabled = !chaves.length;
     [...ctrlIdentidade, ...ctrlExecucao].forEach((c) => c.atualizar());
     lembrar(estado);

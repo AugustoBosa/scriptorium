@@ -15,6 +15,7 @@ async function abrir(page, salvos = {}) {
 test('criar: Novo, nome e Salvar na galeria', async ({ page }) => {
   const v = await abrir(page)
   await v.getByRole('button', { name: 'Novo', exact: true }).click()
+  await page.getByRole('button', { name: 'Começar em branco' }).click()
   await v.getByLabel('Nome', { exact: true }).fill('Elara')
   await v.getByRole('button', { name: 'Salvar na galeria' }).click()
   await expect(v.locator('.pers-cartao')).toHaveCount(1)

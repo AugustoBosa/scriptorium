@@ -14,6 +14,8 @@
 .pers-cartao .linha-botoes { margin: 0; }
 .pers-vazio { grid-column: 1 / -1; margin: 0; color: var(--tinta-2); }
 
+.nota-perfil { margin: var(--e2) 0 0; font-size: var(--t-pequeno); color: var(--tinta-2); }
+
 @media (max-width: 800px) {
   .pers { grid-template-columns: minmax(0, 1fr); }
   .pers-editor { order: 2; position: static; max-height: none; overflow: visible; }

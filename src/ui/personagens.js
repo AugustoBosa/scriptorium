@@ -7,7 +7,7 @@ const FRASE_GRANDE = 'Querida Elena, o vento cheira a trigo.';
 const FRASE_CARTAO = 'Querida Elena,';
 const FOLHA_GRANDE = { largura: 120, altura: 40, margens: { topo: 4, dir: 4, base: 4, esq: 4 } };
 
-import { el, botao, baixarJson, lerPersonagens as lerSalvos } from './util.js';
+import { el, botao, baixarJson, lerPersonagens as lerSalvos, novaFicha } from './util.js';
 const primeiraVariacao = (p) => Object.keys(p.variacoes ?? {})[0] ?? '';
 
 // Contrato de página: montar(el, { fontes }) → atualizar()
@@ -102,6 +102,7 @@ export function montar(raiz, { fontes }) {
       const acao = (texto, fn) => botao(texto, () => fn(chave), `${texto} ${chave}`);
       const linha = el('div', 'linha-botoes');
       linha.append(acao('Usar', usar), acao('Duplicar', duplicar), acao('Renomear', renomear), acao('Exportar', exportar), acao('Excluir', excluir));
+      if (p.ficha) linha.append(botao('Reabrir ficha', () => novaFicha({ nome: p.nome, ficha: structuredClone(p.ficha), base: structuredClone(p.mao.base), perfis: null, editando: p.nome }), 'Reabrir ficha ' + chave));
       c.append(mini, el('strong', 'nome', chave), marca, linha);
       return c;
     }));
@@ -127,7 +128,7 @@ export function montar(raiz, { fontes }) {
       if (!nome) { mostrarErro('dê um nome ao personagem antes de salvar.'); return; }
       gravarSalvos({ ...salvos, [nome]: { ...structuredClone(estado.personagem), nome } });
     }),
-    botao('Novo', () => { estado.personagem = novoPersonagem(); estado.variacao = 'normal'; aoMudar(); }),
+    botao('Novo', () => novaFicha()),
     botao('Importar JSON', () => inputArquivo.click()),
     inputArquivo,
   );
