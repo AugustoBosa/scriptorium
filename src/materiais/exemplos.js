@@ -9,12 +9,12 @@ export const EXEMPLOS = {
 // Troca o texto pelo exemplo de `para` só se ele ainda for o exemplo de `de` (ou estiver vazio).
 export const trocarExemplo = (texto, de, para) => (!texto.trim() || texto === EXEMPLOS[de] ? EXEMPLOS[para] ?? texto : texto);
 
-// Visual padrão de cada tipo de folha, aplicado na primeira vez que o tipo abre (depois vale o que o usuário mudou).
+// Visual padrão de cada tipo de folha (escala sobre o tamanho do personagem), aplicado na primeira vez que o tipo abre (depois vale o que o usuário mudou).
 export const VISUAL = {
-  carta: { opcoes: { tamanho: 6, entrelinha: 1.6, alinhamento: 'esquerda' } },
-  anotacao: { opcoes: { tamanho: 5, entrelinha: 1.5, alinhamento: 'esquerda' } },
-  diario: { opcoes: { tamanho: 5, entrelinha: 1.4, alinhamento: 'esquerda' } },
-  livro: { opcoes: { tamanho: 4.5, entrelinha: 1.5, alinhamento: 'justificado' }, livro: { capitularLivro: 'lombarda', bordaLivro: 'linhas', titulo: 'Os sete copistas' } },
+  carta: { opcoes: { escala: 1, alinhamento: 'esquerda' } },
+  anotacao: { opcoes: { escala: 0.85, alinhamento: 'esquerda' } },
+  diario: { opcoes: { escala: 0.85, alinhamento: 'esquerda' } },
+  livro: { opcoes: { escala: 0.75, alinhamento: 'justificado' }, livro: { capitularLivro: 'lombarda', bordaLivro: 'linhas', titulo: 'Os sete copistas' } },
 };
 
 // Aplica o visual de `tipo` em `estado` uma única vez por tipo.

@@ -8,7 +8,8 @@ import { separador } from '../ornamento/filigrana.js';
 
 
 export const CFG_PADRAO = {
-  tamanho: 4, minimo: 2.5, entrelinha: 1.5,
+  tamanho: 4, minimo: 2.5, entrelinha: 1.5, // tamanho/entrelinha vêm do personagem (escritaDe) ao compor
+  escala: 0.7,            // escala da letra do personagem nesta oficina
   sigilo: 0.35,           // diâmetro do sigilo como fração do menor lado útil; 0 = sem sigilo
   moldura: true,
   cifrar: { nome: false, ficha: false, efeito: false },
@@ -169,6 +170,8 @@ export const PARAMS = [
     { tipo: 'opcao', padrao: CFG_PADRAO.separador, semEscala: true, opcoes: [{ valor: 'nenhum', rotulo: 'nenhum' }, { valor: 'losango', rotulo: 'losango' }, { valor: 'asteriscos', rotulo: 'asteriscos' }, { valor: 'onda', rotulo: 'onda' }] }),
   P('tamanho', 'folha', 'basico', 'tamanho da letra', 'Altura das letras da magia, em mm. O programa diminui a letra até o mínimo se a magia não couber na folha.',
     (v, ctx) => ctx.escrever(ctx.mao, 'magia', { tamanho: v }), { tipo: 'faixa', min: 2, max: 8, passo: 0.25, padrao: CFG_PADRAO.tamanho, unidade: 'mm' }),
+  P('escala', 'folha', 'basico', 'escala da letra', 'Aumenta ou diminui a letra do personagem só neste material. 1 = o tamanho do perfil; o tamanho de verdade fica no personagem.',
+    (v, ctx) => ctx.escrever(ctx.mao, 'magia', { tamanho: (ctx.mao.tamanho ?? 6) * v }), { tipo: 'faixa', min: 0.4, max: 1.6, passo: 0.05, padrao: CFG_PADRAO.escala }),
   P('minimo', 'folha', 'avancado', 'letra mínima', 'Menor altura de letra permitida ao encolher uma magia para caber na folha. Abaixo disso o texto vira resumo.',
     (v, ctx) => ctx.escrever(ctx.mao, 'magia', { tamanho: v }), { tipo: 'faixa', min: 1.5, max: 5, passo: 0.25, padrao: CFG_PADRAO.minimo, unidade: 'mm' }),
   P('entrelinha', 'folha', 'avancado', 'entrelinha da magia', 'Distância entre as linhas do texto da magia, de 1,1 a 2,2. Valores menores deixam a magia mais compacta e ajudam a caber.',

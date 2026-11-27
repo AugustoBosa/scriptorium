@@ -118,7 +118,7 @@ export function montarPapel(elemento, estado, aoMudar, { aparencia: comAparencia
     estado.opcoes.colunas = v;
     if (estado.oficina === 'livro') estado.colunasLivro = v;
   });
-  const aparencia = comAparencia ? [dasOpcoes(PL.tamanho), dasOpcoes(PL.entrelinha), dasOpcoes(PL.alinhamento), cColunas] : [];
+  const aparencia = comAparencia ? [dasOpcoes(PL.escala), dasOpcoes(PL.alinhamento), cColunas] : [];
 
   elemento.replaceChildren(
     ...(comAparencia ? [titulo('Papel')] : []), ...controles.map((c) => c.el),

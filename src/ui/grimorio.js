@@ -1,5 +1,5 @@
 // Oficina Magias (pergaminho avulso ou grimório corrido): estado, painéis e composição. O shell (app.js) monta os grupos e chama compor().
-import { resolver, novoPersonagem } from '../personagem.js';
+import { resolver, novoPersonagem, escritaDe } from '../personagem.js';
 import { NEUTRA } from '../motor/mao.js';
 import { PERFIS } from '../maquina/perfis.js';
 import { magiaVazia, ESCOLAS } from '../magia.js';
@@ -190,7 +190,7 @@ export function criar() {
   function painelFolha(raiz, aoMudar) {
     const cfg = () => estado.cfg;
     const ctrls = [
-      ...['porPagina', 'separador', 'completo', 'tamanho', 'minimo', 'entrelinha', 'sigilo', 'moldura'].map((c) => controle(PS[c], ligar(cfg, c, ctx), aoMudar)),
+      ...['porPagina', 'separador', 'completo', 'escala', 'minimo', 'sigilo', 'moldura'].map((c) => controle(PS[c], ligar(cfg, c, ctx), aoMudar)),
     ];
     raiz.append(...ctrls.map((c) => c.el));
     const sep = ctrls.find((c) => c.el.dataset.chave === 'separador');
@@ -335,7 +335,8 @@ export function criar() {
 
   // erro sobe para app.renderizar, que mostra (antes ficava escrito aqui e era apagado logo depois)
   function compor() {
-    const r = comporGrimorio(estado.selecionadas, contexto(), { ...estado.cfg, papel: estado.pagina });
+    const ctx = contexto();
+    const r = comporGrimorio(estado.selecionadas, ctx, { ...estado.cfg, ...escritaDe(ctx.mao, estado.cfg.escala ?? CFG_PADRAO.escala), papel: estado.pagina });
     estado.resultado = r;
     salvar();
     const linhas = estado.selecionadas.map((m) => {

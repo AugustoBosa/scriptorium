@@ -203,6 +203,8 @@ export const PARAMS = [
     previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, 'mão', { tamanho: v }) },
   { chave: 'entrelinha', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 1, max: 3, passo: 0.01, padrao: 1.6, rotulo: ROTULOS.entrelinha, ajuda: AJUDA.entrelinha,
     previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, 'uma\nduas', { entrelinha: v }) },
+  { chave: 'escala', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 0.5, max: 1.6, passo: 0.05, padrao: 1, rotulo: 'escala da letra', ajuda: 'Aumenta ou diminui a letra do personagem só neste material. 1 = o tamanho do perfil; o tamanho de verdade fica no personagem.',
+    previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, 'mão', { tamanho: (ctx.mao.tamanho ?? 6) * v }) },
   { chave: 'alinhamento', grupo: 'aparencia', nivel: 'basico', tipo: 'opcao', padrao: 'esquerda', rotulo: ROTULOS.alinhamento, ajuda: AJUDA.alinhamento,
     opcoes: [{ valor: 'esquerda', rotulo: 'esquerda' }, { valor: 'centro', rotulo: 'centro' }, { valor: 'justificado', rotulo: 'justificado' }],
     previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, PARAGRAFO, { tamanho: 3, alinhamento: v }) },

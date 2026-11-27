@@ -1,10 +1,10 @@
 // Painéis e composição dos materiais novos (M20): carta, livro e folha de sigilos. O shell (app.js) monta os grupos.
-import { resolver, validar } from '../personagem.js';
+import { resolver, validar, escritaDe, notasDe } from '../personagem.js';
 import { amostra } from '../layout.js';
 import { CANETAS } from '../materiais/documento.js';
 import { comporCarta, PRESETS, PARAMS as PARAMS_CARTA } from '../materiais/carta.js';
 import { trocarExemplo, aplicarVisual } from '../materiais/exemplos.js';
-import { parsearNotas, posicionarNota, LADOS, PADRAO_MAO, PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
+import { parsearNotas, posicionarNota, LADOS, PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
 import { comporLivro, PARAMS as PARAMS_LIVRO } from '../materiais/livro.js';
 import { comporSigilos, PARAMS as PARAMS_SIG } from '../materiais/sigilos.js';
 import { PARAMS as PARAMS_METODO } from '../arcano/sigilo.js';
@@ -16,7 +16,7 @@ import { lerPersonagens as salvos } from './util.js';
 const mapa = (ps) => Object.fromEntries(ps.map((p) => [p.chave, p]));
 const PC = mapa(PARAMS_CARTA), PN = mapa(PARAMS_NOTAS), PL = mapa(PARAMS_LIVRO), PS = mapa(PARAMS_SIG), PM = mapa(PARAMS_METODO), PA = mapa(PARAMS_ALF);
 
-export const carta0 = () => ({ ...PADRAO_MAO, tipo: 'anotacao', marginalia: 'direita', faixa: 0.3, conector: 'linha', espontaneo: 0, canetaNotas: 'vermelha', personagemNotas: '' });
+export const carta0 = () => ({ tipo: 'anotacao', marginalia: 'direita', faixa: 0.3, conector: 'linha', espontaneo: 0, canetaNotas: 'vermelha', personagemNotas: '' });
 export const livro0 = () => ({ titulo: '', inicio: 1, numeracao: true, reclamo: true, rubrica: true, capitularLivro: 'nenhuma', bordaLivro: 'nenhuma' });
 export const sigilos0 = () => ({ frases: 'abracadabra\nluz da lua\nsol\nmar e céu', tipo: 'selo', metodo: 'kamea', colunas: 3, legendas: true, caneta: 'preta' });
 
@@ -60,22 +60,21 @@ function juntar(div, itens, extras = []) {
 }
 
 // ---- composição ----
-// Gesto da mão nas notas (seta, irregularidade, inclinação); trabalho salvo antes disso cai no padrão.
-const maoNotas = (c) => Object.fromEntries(Object.keys(PADRAO_MAO).map((k) => [k, c[k] ?? PADRAO_MAO[k]]));
 export function comporEscrita(estado, variacao) {
   const o = estado.opcoes, mao = resolver(estado.personagem, variacao || null);
-  const base = { papel: estado.pagina, tamanho: o.tamanho, entrelinha: o.entrelinha, alinhamento: o.alinhamento };
+  const base = { papel: estado.pagina, ...escritaDe(mao, o.escala ?? 1), alinhamento: o.alinhamento };
   const c = estado.carta, outro = salvos()[c.personagemNotas], pn = outro && !validar(outro).length ? outro : estado.personagem;
+  const gesto = notasDe(pn); // seta, irregularidade e inclinação das notas: do personagem que anota
   const ctx = { fontes: estado.fontes, mao, maoNotas: pn === estado.personagem ? mao : resolver(pn, null), personagens: { texto: estado.personagem.nome, notas: pn.nome } };
   if (estado.oficina === 'livro') {
     const l = estado.livro, nenhuma = (v, extra) => (v === 'nenhuma' ? null : { estilo: v, ...extra });
     return comporLivro(estado.texto, ctx, {
       ...base, colunas: o.colunas, titulo: l.titulo, inicio: l.inicio, numeracao: l.numeracao, reclamo: l.reclamo, rubrica: l.rubrica,
       capitular: nenhuma(l.capitularLivro, { linhas: 3 }), borda: nenhuma(l.bordaLivro, { largura: 6 }),
-      conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas, ...maoNotas(c),
+      conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas, ...gesto,
     });
   }
-  return comporCarta(estado.texto, ctx, { ...base, tipo: c.tipo, marginalia: c.marginalia, faixa: c.faixa, conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas, ...maoNotas(c) });
+  return comporCarta(estado.texto, ctx, { ...base, tipo: c.tipo, marginalia: c.marginalia, faixa: c.faixa, conector: c.conector, espontaneo: c.espontaneo, canetaNotas: c.canetaNotas, ...gesto });
 }
 
 export function comporDeSigilos(estado) {
@@ -96,7 +95,7 @@ const MARCACAO = [
 export function montarCarta(div, estado, aoMudar) {
   const c = estado.carta, ctx = ctxDe(estado);
   const tipo = { ler: () => c.tipo, gravar: (v) => { Object.assign(c, { tipo: v, faixa: 0.3, ...PRESETS[v] }); estado.texto = trocarExemplo(estado.texto, estado.exemplo, v); estado.exemplo = v; aplicarVisual(estado, v); }, ctx };
-  const pers = opcao('personagemNotas', 'Personagem das notas', 'Quem escreve as notas da margem. "O mesmo da escrita" usa a mão do texto; os outros são personagens salvos no navegador.',
+  const pers = opcao('personagemNotas', 'Quem anota', 'Quem escreve as notas da margem. "O mesmo da escrita" usa a mão do texto; os outros são personagens salvos. O jeito das setas e a inclinação vêm do personagem.',
     () => [['', 'o mesmo da escrita'], ...Object.keys(salvos()).map((n) => [n, n])], () => c.personagemNotas, (v) => { c.personagemNotas = v; },
     (v, x) => { const p = salvos()[v]; return nota(p && !validar(p).length ? resolver(p, null) : x.mao, x); }, aoMudar, ctx);
   const caneta = opcao('canetaNotas', 'Caneta das notas', 'Cor da caneta que desenha a camada de notas. Troque de caneta no plotter entre as camadas.',
@@ -106,7 +105,6 @@ export function montarCarta(div, estado, aoMudar) {
   const lista = el('div', { className: 'posicoes' }), assinatura = { v: null };
   const atualizar = juntar(div, [
     ...soCarta, controle(PN.conector, ligar(c, 'conector', ctx), aoMudar), controle(PN.espontaneo, ligar(c, 'espontaneo', ctx), aoMudar), pers, caneta,
-    ...Object.keys(PADRAO_MAO).map((k) => { c[k] ??= PADRAO_MAO[k]; return controle(PN[k], ligar(c, k, ctx), aoMudar); }),
   ], [titulo('Marcação no texto', 'Escreva estas marcas no texto. Elas não aparecem na folha: viram notas e riscos na camada de notas.'), ajuda,
     titulo('Posição das notas', 'Automática: o lugar livre mais perto da palavra (na Carta com margem, a margem). Escolha um lado, ou arraste a nota na prévia para uma posição livre.'), lista]);
   return () => {

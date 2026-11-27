@@ -13,7 +13,6 @@ import { desenhar, listar } from './previa.js';
 import { ligarArrasto } from './arrastar.js';
 import { posicionarNota } from '../materiais/notas.js';
 import * as pPersonagem from './personagem.js';
-import * as pFontes from './fontes.js';
 import * as pTexto from './texto.js';
 import * as pExportar from './exportar.js';
 import { criar as criarGrimorio } from './grimorio.js';
@@ -50,7 +49,7 @@ function criarEscrita() {
   const estado = {
     fontes: {}, nomesFontes: FONTES, personagem: novoPersonagem(), variacao: 'normal', comparar: false, variacaoB: 'normal',
     texto: EXEMPLOS.anotacao, exemplo: 'anotacao',
-    paginaNome: 'A5', pagina: papel('A5'), opcoes: { tamanho: 6, entrelinha: 1.6, alinhamento: 'esquerda', colunas: 1 },
+    paginaNome: 'A5', pagina: papel('A5'), opcoes: { escala: 1, alinhamento: 'esquerda', colunas: 1 },
     perfil: structuredClone(PERFIS.megaS), perfilNome: 'megaS', otimizar: true, trajeto: false, paginaAtual: 0,
     carta: pMat.carta0(), livro: pMat.livro0(),
   };
@@ -62,7 +61,6 @@ function criarEscrita() {
     estado,
     grupos: [
       { titulo: 'Personagem', montar: pPersonagem.montar },
-      { titulo: 'Fontes', montar: pFontes.montar },
       { titulo: 'Texto', montar: pTexto.montar },
       { titulo: 'Papel e aparência', montar: pTexto.montarPapel },
       { titulo: 'Notas', aberto: true, montar: pMat.montarCarta },
