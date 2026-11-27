@@ -205,6 +205,17 @@ export function minimoFolga(ctx) {
   return { valor: m.valor, texto: m.sem.length ? `${m.sem.join(', ')} não fica legível com a folga do porta-caneta, nem em 15 mm.` : `mín. ${String(m.valor).replace('.', ',')} mm pela folga do porta-caneta` };
 }
 
+// Mesmo mínimo visto pela escala do material: a letra do personagem × escala não pode ficar abaixo dele.
+// ponytail: 6 = ESCRITA_PADRAO.tamanho de personagem.js (importar daqui faria ciclo layout → notas → layout).
+function minimoEscala(ctx) {
+  const m = minimoTamanho(ctx?.perfil, ctx?.mao);
+  if (!m) return null;
+  const base = ctx.mao?.tamanho ?? 6, e = Math.ceil((m.valor / base) * 20 - 1e-9) / 20, f = (v) => String(v).replace('.', ',');
+  if (m.sem.length) return { valor: 1.6, texto: minimoFolga(ctx).texto };
+  if (e > 1.6) return { valor: 1.6, texto: `A letra do personagem (${f(base)} mm) é pequena demais para a folga do porta-caneta: aumente o tamanho no personagem para ${f(m.valor)} mm.` };
+  return { valor: e, texto: `mín. ${f(e)} (letra de ${f(m.valor)} mm) pela folga do porta-caneta` };
+}
+
 const PARAGRAFO = 'a lua cheia sobe no mar e a noite fica calma';
 export const PARAMS = [
   { chave: 'tamanho', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 3, max: 15, passo: 0.5, padrao: 6, unidade: 'mm', rotulo: ROTULOS.tamanho, ajuda: AJUDA.tamanho,
@@ -213,6 +224,7 @@ export const PARAMS = [
   { chave: 'entrelinha', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 1, max: 3, passo: 0.01, padrao: 1.6, rotulo: ROTULOS.entrelinha, ajuda: AJUDA.entrelinha,
     previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, 'uma\nduas', { entrelinha: v }) },
   { chave: 'escala', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 0.5, max: 1.6, passo: 0.05, padrao: 1, rotulo: 'escala da letra', ajuda: 'Aumenta ou diminui a letra do personagem só neste material. 1 = o tamanho do perfil; o tamanho de verdade fica no personagem.',
+    minimo: (ctx) => minimoEscala(ctx),
     previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, 'mão', { tamanho: (ctx.mao.tamanho ?? 6) * v }) },
   { chave: 'alinhamento', grupo: 'aparencia', nivel: 'basico', tipo: 'opcao', padrao: 'esquerda', rotulo: ROTULOS.alinhamento, ajuda: AJUDA.alinhamento,
     opcoes: [{ valor: 'esquerda', rotulo: 'esquerda' }, { valor: 'centro', rotulo: 'centro' }, { valor: 'justificado', rotulo: 'justificado' }],

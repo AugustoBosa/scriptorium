@@ -2,7 +2,7 @@ import { gcodeDocumento, svgDocumento } from '../maquina/gcode.js';
 import { PERFIS, PARAMS as PARAMS_PERFIL, mesclarPerfil } from '../maquina/perfis.js';
 import { PARAMS as PARAMS_OTIM } from '../maquina/otimizar.js';
 import { amostra, minimoFolga } from '../layout.js';
-import { resolver } from '../personagem.js';
+import { resolver, escritaDe } from '../personagem.js';
 import { AJUDA, rotulo } from '../ajuda.js';
 import { controle, dica, ligar } from './controle.js';
 import { resumoMesa, otim } from './mesa.js';
@@ -38,7 +38,7 @@ function gerarGcode(estado, i, camadas, rapido = false) {
     const g = gcodeDocumento(rapido ? doc.paginas[i] : paginaOtimizada(estado, i), doc.papel, estado.perfil, { canetas: doc.canetas, camadas });
     const fora = g.avisos.find((a) => a.includes('fora da janela'));
     if (fora) return estado.perfil.experimental ? { g, bloqueia: true, erro: 'Perfil experimental: há traços fora da janela da máquina.' } : { g, erro: fora };
-    const m = minimoFolga(ctxDe(estado)()), t = estado.opcoes?.tamanho; // tamanho salvo antes de trocar para o porta-caneta
+    const ctx = ctxDe(estado)(), m = minimoFolga(ctx), t = escritaDe(ctx.mao, estado.opcoes?.escala ?? estado.cfg?.escala ?? 1).tamanho; // letra efetiva do material
     if (m && t < m.valor) return { g, erro: `Letra de ${String(t).replace('.', ',')} mm, abaixo do mínimo de ${String(m.valor).replace('.', ',')} mm com a folga do porta-caneta: as letras saem deformadas.` };
     return { g };
   } catch (e) {
