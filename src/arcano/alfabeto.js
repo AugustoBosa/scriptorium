@@ -137,7 +137,7 @@ export function cifrar(texto) {
 }
 
 // Miolo do sigilo por escola, em raio 1.
-const MIOLO = {
+export const MIOLO = {
   A: () => [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]], [[0, -1], [0, 1]]],
   C: () => [Array.from({ length: 31 }, (_, i) => { const a = i * 0.35, q = i / 30; return [q * Math.cos(a), q * Math.sin(a)]; })],
   D: () => [
