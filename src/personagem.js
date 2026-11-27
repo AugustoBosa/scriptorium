@@ -1,4 +1,21 @@
 import { NEUTRA, EXECUCAO } from './motor/mao.js';
+import { PADRAO_MAO as NOTAS_PADRAO } from './materiais/notas.js';
+
+// Tamanho da letra (mm) e entrelinha: são da mão do personagem e cada perfil (variação) pode ter os seus.
+// O material só aplica uma escala por cima (ver escritaDe).
+export const ESCRITA = ['tamanho', 'entrelinha'];
+export const ESCRITA_PADRAO = { tamanho: 6, entrelinha: 1.6 };
+const FAIXA_ESCRITA = { tamanho: [2, 15], entrelinha: [1, 3] };
+// Chaves que uma variação pode mudar.
+const DA_VARIACAO = (chave) => EXECUCAO.includes(chave) || ESCRITA.includes(chave) || chave === 'base';
+// Tamanho e entrelinha de uma mão já resolvida, com a escala do material.
+export const escritaDe = (mao, escala = 1) => ({
+  tamanho: +((mao.tamanho ?? ESCRITA_PADRAO.tamanho) * escala).toFixed(2),
+  entrelinha: mao.entrelinha ?? ESCRITA_PADRAO.entrelinha,
+});
+// Gesto das notas na margem (seta, irregularidade, inclinação): é do personagem que anota.
+export const NOTAS = Object.keys(NOTAS_PADRAO);
+export const notasDe = (p) => ({ ...NOTAS_PADRAO, ...p?.notas });
 
 // Devolve uma cópia da mão do personagem com a variação aplicada (sem mutar p).
 export function resolver(p, variacao) {
@@ -7,7 +24,7 @@ export function resolver(p, variacao) {
   const extra = p.variacoes?.[variacao];
   if (!extra) throw new Error('variação desconhecida: ' + variacao);
   for (const chave of Object.keys(extra)) {
-    if (!EXECUCAO.includes(chave) && chave !== 'base') throw new Error('chave de identidade na variação: ' + chave);
+    if (!DA_VARIACAO(chave)) throw new Error('chave de identidade na variação: ' + chave);
   }
   return { ...base, ...structuredClone(extra) };
 }
@@ -47,13 +64,18 @@ export function validar(p) {
     const [lo, hi] = chave === 'alternativas' ? [1, 5] : chave === 'ritmo' ? [20, 200] : [0, 1];
     if (v < lo || v > hi || (chave === 'alternativas' && !Number.isInteger(v))) erros.push(`${chave} fora de [${lo},${hi}]: ${v}`);
   }
+  for (const chave of ESCRITA) {
+    const v = p.mao[chave], [lo, hi] = FAIXA_ESCRITA[chave];
+    if (v !== undefined && !(Number.isFinite(v) && v >= lo && v <= hi)) erros.push(`${chave} fora de [${lo},${hi}]: ${v}`);
+  }
+  if (p.notas !== undefined && (typeof p.notas !== 'object' || p.notas === null)) erros.push('notas inválido');
   for (const [nome, extra] of Object.entries(p.variacoes ?? {})) {
     for (const [chave, v] of Object.entries(extra)) {
       if (chave === 'base') {
         if (!Array.isArray(v) || v.length === 0) erros.push(`variação ${nome}: base vazia ou inválida`);
         else for (const it of v) if (itemBaseInvalido(it)) erros.push(`variação ${nome}: item de base inválido: ${JSON.stringify(it)}`);
       }
-      else if (!EXECUCAO.includes(chave)) erros.push(`variação ${nome}: chave de identidade ${chave}`);
+      else if (!DA_VARIACAO(chave)) erros.push(`variação ${nome}: chave de identidade ${chave}`);
       else if (!Number.isFinite(v)) erros.push(`variação ${nome}: valor não numérico em ${chave}`);
     }
   }
@@ -62,14 +84,14 @@ export function validar(p) {
 
 // Personagem em branco: NEUTRA sobre EMSDelight, variação 'normal' vazia.
 export function novoPersonagem(nome = 'Novo personagem') {
-  return { nome, mao: { ...structuredClone(NEUTRA), base: [{ fonte: 'EMSDelight', peso: 1 }] }, variacoes: { normal: {} } };
+  return { nome, mao: { ...structuredClone(NEUTRA), base: [{ fonte: 'EMSDelight', peso: 1 }], ...ESCRITA_PADRAO }, variacoes: { normal: {} }, notas: { ...NOTAS_PADRAO } };
 }
 
 // Grava `valor` da chave de EXECUCAO (ou `base`, só com variação). Sem variação (falsy): altera p.mao. Com variação: grava em
 // p.variacoes[variacao], mas se `valor` for igual a p.mao[chave] (ou a p.mao.base, para `base`), APAGA a chave da variação
 // (variação guarda só o que difere da mão). Lança erro se a chave não for de EXECUCAO (ou `base` sem variação) ou a variação não existir.
 export function ajustarVariacao(p, variacao, chave, valor) {
-  if (!EXECUCAO.includes(chave) && !(chave === 'base' && variacao)) throw new Error('chave de identidade: ' + chave);
+  if (!EXECUCAO.includes(chave) && !ESCRITA.includes(chave) && !(chave === 'base' && variacao)) throw new Error('chave de identidade: ' + chave);
   if (!variacao) {
     p.mao[chave] = valor;
     return;
@@ -80,7 +102,7 @@ export function ajustarVariacao(p, variacao, chave, valor) {
     if (JSON.stringify(valor) === JSON.stringify(p.mao.base)) delete extra.base;
     else extra.base = structuredClone(valor);
   }
-  else if (valor === p.mao[chave]) delete extra[chave];
+  else if (valor === (p.mao[chave] ?? ESCRITA_PADRAO[chave])) delete extra[chave];
   else extra[chave] = valor;
 }
 

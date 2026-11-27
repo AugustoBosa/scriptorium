@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { pesosArquetipo, sugerirLetras, propostas, letrasDerivadas, execucao, maoDaFicha } from '../src/ficha/sugerir.js';
-import { validar } from '../src/personagem.js';
+import { validar, ESCRITA } from '../src/personagem.js';
 import { NEUTRA, PARAMS } from '../src/motor/mao.js';
 import { CATALOGO } from '../src/catalogo.js';
 import { FONTES, SEM_ACENTOS } from '../src/fonte.js';
@@ -106,6 +106,7 @@ test('perfis: nomes únicos e execução dentro de PARAMS, para as 3 fichas', ()
     assert.equal(new Set(nomes).size, nomes.length, `${f.classe}: nomes repetidos`);
     for (const p of todos) {
       for (const k of Object.keys(p.exec)) {
+        if (ESCRITA.includes(k)) continue; // tamanho/entrelinha do perfil: faixa conferida por validar
         const par = PARAMS.find((x) => x.chave === k);
         assert.ok(par, `${f.classe}/${p.nome}: chave ${k} fora de PARAMS`);
         assert.ok(p.exec[k] >= par.min && p.exec[k] <= par.max, `${f.classe}/${p.nome}/${k}: ${p.exec[k]}`);

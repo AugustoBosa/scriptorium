@@ -186,3 +186,33 @@ test('personagem com variações só de EXECUCAO (antigo) continua válido', () 
   p.variacoes = { formal: { pressa: 0.05, capricho: 1 }, medo: { tremor: 0.6 } };
   assert.deepEqual(validar(p), []);
 });
+
+// ---- tamanho, entrelinha e notas no personagem ----
+import { escritaDe, notasDe, ESCRITA_PADRAO } from '../src/personagem.js';
+test('novo personagem traz tamanho, entrelinha e gesto das notas', () => {
+  const p = novoPersonagem();
+  assert.deepEqual(validar(p), []);
+  assert.equal(p.mao.tamanho, ESCRITA_PADRAO.tamanho);
+  assert.equal(notasDe(p).ponta, 'aberta');
+});
+test('perfil pode ter tamanho próprio e a escala do material multiplica', () => {
+  const p = novoPersonagem();
+  p.variacoes.diario = {};
+  ajustarVariacao(p, 'diario', 'tamanho', 4.5);
+  assert.deepEqual(validar(p), []);
+  assert.equal(escritaDe(resolver(p, 'diario')).tamanho, 4.5);
+  assert.equal(escritaDe(resolver(p, 'diario'), 2).tamanho, 9);
+  ajustarVariacao(p, 'diario', 'tamanho', 6);
+  assert.equal('tamanho' in p.variacoes.diario, false);
+});
+test('personagem antigo sem tamanho continua válido e usa o padrão', () => {
+  const p = novoPersonagem();
+  delete p.mao.tamanho; delete p.mao.entrelinha; delete p.notas;
+  assert.deepEqual(validar(p), []);
+  assert.deepEqual(escritaDe(resolver(p, null)), ESCRITA_PADRAO);
+});
+test('tamanho fora da faixa é erro', () => {
+  const p = novoPersonagem();
+  p.mao.tamanho = 40;
+  assert.match(validar(p).join(), /tamanho fora/);
+});

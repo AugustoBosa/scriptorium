@@ -2,7 +2,7 @@ import './ficha.css';
 import { el, botao, lerPersonagens, gravarPersonagens } from './util.js';
 import { especime } from './especime.js';
 import { PARAMS } from '../motor/mao.js';
-import { novoPersonagem, nomeLivre, validar } from '../personagem.js';
+import { novoPersonagem, nomeLivre, validar, ESCRITA_PADRAO, notasDe } from '../personagem.js';
 import { RACAS, CLASSES, ANTECEDENTES, IDIOMAS, ALINHAMENTOS, IDADES, ESCRITAS } from '../ficha/dnd.js';
 import { propostas, sugerirLetras, letrasDerivadas, maoDaFicha } from '../ficha/sugerir.js';
 import { montarPerfis, variacoesDe } from '../ficha/perfis.js';
@@ -367,8 +367,8 @@ function passoResumo(corpo, s) {
     const salvos = lerPersonagens();
     if (r.editando) delete salvos[r.editando];
     const final = nomeLivre(Object.keys(salvos), nome);
-    const mao = maoDaFicha(r.ficha, baseDe(r));
-    const personagem = { nome: final, mao, variacoes: variacoesDe(mao, lista.map((p) => ({ ...p, nome: p.nome.trim() }))), ficha: structuredClone(r.ficha) };
+    const mao = { ...maoDaFicha(r.ficha, baseDe(r)), ...ESCRITA_PADRAO };
+    const personagem = { nome: final, mao, variacoes: variacoesDe(mao, lista.map((p) => ({ ...p, nome: p.nome.trim() }))), notas: notasDe(null), ficha: structuredClone(r.ficha) };
     const errosP = validar(personagem);
     if (errosP.length) { erro.textContent = 'Erro: ' + errosP.join('; '); return; }
     try {
