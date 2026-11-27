@@ -35,21 +35,21 @@ test('só uma seção do painel fica aberta por vez', async ({ page }) => {
   await expect(abertas.locator(':scope > summary')).toHaveText('Texto')
 })
 
-test('menu ☰: some na home, abre nas oficinas, marca a rota atual e fecha ao navegar', async ({ page }) => {
-  await page.goto('index.html#inicio')
-  await expect(page.locator('#menu')).toBeHidden()
+test('navegação: à vista no desktop, ☰ no celular; marca a seção atual', async ({ page }) => {
   await page.goto('index.html#carta')
   await page.waitForSelector('#previa svg')
   const nav = page.getByRole('navigation', { name: 'Seções' })
-  await expect(nav).toBeHidden()
-  await page.locator('#menu').click()
+  await expect(page.locator('#menu')).toBeHidden()
   await expect(nav.getByRole('link', { name: 'Carta' })).toHaveAttribute('aria-current', 'page')
   await nav.getByRole('link', { name: 'Personagens' }).click()
   await page.waitForURL(/#personagens$/)
+  await expect(nav.getByRole('link', { name: 'Personagens' })).toHaveAttribute('aria-current', 'page')
+  await page.setViewportSize({ width: 390, height: 844 })
   await expect(nav).toBeHidden()
   await page.locator('#menu').click()
-  await expect(nav.getByRole('link', { name: 'Personagens' })).toHaveAttribute('aria-current', 'page')
-  await page.keyboard.press('Escape')
+  await expect(nav).toBeVisible()
+  await nav.getByRole('link', { name: 'Carta' }).click()
+  await page.waitForURL(/#carta$/)
   await expect(nav).toBeHidden()
 })
 

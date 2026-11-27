@@ -134,6 +134,19 @@ const vistas = new Map(); // instância → { detalhes, barra, atualizar: [] }
 let atual = null, fontesCarregadas = null, ticket = 0, vindoDePagina = false, porPaginaPedido = null, materialAberto = false;
 const paginasAtualizar = {}; // id → atualizar() da página, montada uma vez
 
+// Quem escreve este material: o personagem é escolhido no painel Personagem e editado na aba Personagens.
+function escritoPor(e) {
+  const p = $('escrito-por');
+  if (!e.personagem || e.oficina === 'letra') { p.hidden = true; return; }
+  const editar = document.createElement('a');
+  editar.href = '#personagens';
+  editar.textContent = 'Editar personagem ›';
+  const nome = document.createElement('strong');
+  nome.textContent = e.personagem.nome || 'sem nome';
+  p.hidden = false;
+  p.replaceChildren('Escrito por ', nome, e.variacao ? ` · perfil ${e.variacao}` : '', ' ', editar);
+}
+
 // ---- render ----
 function renderizar() {
   const inst = atual;
@@ -152,6 +165,7 @@ function renderizar() {
   e.doc = emDoc(r);
   const docB = rB && emDoc(rB);
 
+  escritoPor(e);
   const total = Math.max(1, r.paginas.length, rB?.paginas.length ?? 0);
   e.paginaAtual = Math.min(Math.max(0, e.paginaAtual), total - 1);
   $('pag-info').textContent = `Página ${e.paginaAtual + 1} de ${total}`;
@@ -225,9 +239,9 @@ async function rotear() {
   if (id in ANTIGAS) { porPaginaPedido = ANTIGAS[id]; location.replace('#magias'); return; }
   if (!OFICINAS[id] && !PAGINAS[id]) { location.replace('#inicio'); return; }
   const marcar = () => {
-    document.querySelectorAll('nav.oficinas a').forEach((a) => (a.getAttribute('href') === '#' + id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
+    const secao = ['letra', 'ficha'].includes(id) ? 'personagens' : id; // criar letra e ficha são parte de Personagens
+    document.querySelectorAll('nav.oficinas a').forEach((a) => (a.getAttribute('href') === '#' + secao ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     document.title = `Scriptorium — ${NOMES[id]}`;
-    $('menu').hidden = id === 'inicio'; // na home os cartões são a navegação
     if ($('nav-oficinas').matches(':popover-open')) $('nav-oficinas').hidePopover();
   };
   document.querySelector('main').hidden = !!PAGINAS[id];

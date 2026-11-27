@@ -14,8 +14,7 @@ async function abrir(page, salvos = {}) {
 
 test('criar: Novo, nome e Salvar na galeria', async ({ page }) => {
   const v = await abrir(page)
-  await v.getByRole('button', { name: 'Novo', exact: true }).click()
-  await page.getByRole('button', { name: 'Começar em branco' }).click()
+  await v.getByRole('button', { name: 'Novo: em branco' }).click()
   await v.getByLabel('Nome', { exact: true }).fill('Elara')
   await v.getByRole('button', { name: 'Salvar na galeria' }).click()
   await expect(v.locator('.pers-cartao')).toHaveCount(1)
@@ -77,4 +76,24 @@ test('um slider muda writer.personagem; sem Salvar JSON na aba', async ({ page }
   await slider.focus()
   await slider.press('ArrowRight')
   await expect.poll(() => page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem('writer.personagem'))))).not.toBe(antes)
+})
+
+test('a letra é do personagem: Letra, Tamanho por perfil e Notas no editor; tamanho do perfil chega na carta', async ({ page }) => {
+  const v = await abrir(page, { Elara: { ...pers('Elara'), variacoes: { normal: {}, miuda: { tamanho: 4 } } } })
+  await v.getByRole('button', { name: 'Usar Elara' }).click()
+  const ed = v.locator('.pers-editor')
+  for (const s of ['Letra', 'Tamanho e linhas', 'Notas na margem']) await expect(ed.locator('summary', { hasText: new RegExp(`^${s}$`) })).toBeVisible()
+  await ed.locator('summary', { hasText: /^Notas na margem$/ }).click()
+  await expect(ed.locator('.controle[data-chave="curva"]')).toBeVisible()
+  // perfil normal (6 mm) x perfil miúdo (4 mm): a carta fica mais curta com o miúdo
+  const altura = async () => {
+    await page.goto('index.html#carta')
+    await page.waitForSelector('#previa svg path')
+    return page.locator('#previa g[data-camada="texto"]').evaluate((g) => g.getBBox().height)
+  }
+  const normal = await altura()
+  await page.locator('#grupos summary', { hasText: /^Personagem$/ }).click()
+  await page.locator('#grupos details:not([hidden]) select[id^="p-variacao"]').selectOption('miuda')
+  await expect.poll(() => page.locator('#previa g[data-camada="texto"]').evaluate((g) => g.getBBox().height)).toBeLessThan(normal)
+  await expect(page.locator('#escrito-por')).toContainText('perfil miuda')
 })

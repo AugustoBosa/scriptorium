@@ -7,33 +7,29 @@ import { comporCarta } from '../materiais/carta.js';
 import { comporLivro } from '../materiais/livro.js';
 import { comporGrimorio } from '../materiais/scroll.js';
 import { comporSigilos } from '../materiais/sigilos.js';
-import { comporColeta } from '../letra/folha.js';
-import ptBR from '../letra/linguas/pt-BR.json';
-import { CANETAS } from '../materiais/documento.js';
 import { EXEMPLOS } from '../materiais/exemplos.js';
 import { gerarAlfabeto } from '../arcano/alfabeto.js';
 import { magiaVazia } from '../magia.js';
 import { NEUTRA } from '../motor/mao.js';
 import { materiais } from './biblioteca.js';
-import { el, NOMES_OFICINA, lerPersonagens, novaFicha } from './util.js';
+import { CLASSES, RACAS } from '../ficha/dnd.js';
+import { el, NOMES_OFICINA, lerPersonagens, comecarPersonagem, INICIOS } from './util.js';
 
 const MAGIA = { ...magiaVazia(), id: 'exemplo', nome: 'Bola de Fogo', nivel: 3, linhaNivel: 'Evocação de 3º nível', alcance: '45 m', comp: 'V, S, M',
   duracao: 'Instantânea', resumo: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.', texto: 'Uma explosão de chamas atinge uma esfera de 6 m de raio.' };
 
-// Cada oficina: rota, nome, descrição e a miniatura real feita pelo próprio compositor, com o texto de exemplo.
+// Cada material: rota, nome, descrição e a miniatura real feita pelo próprio compositor, com o texto de exemplo.
 const OFICINAS = [
-  ['carta', 'Carta', 'Cartas, anotações e diários. Notas na margem, palavras riscadas e sublinhadas, numa segunda caneta.',
+  ['carta', 'Carta', 'Cartas, anotações e diários, com notas na margem.',
     (ctx) => comporCarta(EXEMPLOS.anotacao, ctx, { papel: papel('A7'), tamanho: 3.5, tipo: 'anotacao' })],
-  ['livro', 'Livro', 'Páginas de livro em colunas, com título corrente, número de página, capitular e borda.',
+  ['livro', 'Livro', 'Páginas em colunas, com capitular e borda.',
     (ctx) => comporLivro(EXEMPLOS.livro, ctx, { papel: papel('A7'), tamanho: 2.5, entrelinha: 1.5, colunas: 1, titulo: 'Os sete copistas',
       capitular: { estilo: 'lombarda', linhas: 3 }, borda: { estilo: 'linhas', largura: 4 } })],
-  ['magias', 'Magias', 'Magias de D&D em pergaminhos avulsos ou num grimório corrido, com sigilo, moldura e alfabeto arcano.',
+  ['magias', 'Magias', 'Pergaminhos avulsos ou um grimório corrido.',
     (ctx) => comporGrimorio([MAGIA], { ...ctx, fontes: { ...ctx.fontes, arcano: gerarAlfabeto({ seed: 1, curva: 0.4, complexidade: 0.5 }) },
       maoArcana: { ...NEUTRA, base: [{ fonte: 'arcano', peso: 1 }], seed: 1 }, sigilos: {}, seed: 1 }, { papel: papel('A7'), tamanho: 3, completo: 'nao' })],
-  ['sigilos', 'Sigilos', 'Frases viram selos, sigilos e círculos mágicos, arrumados em grade numa folha.',
+  ['sigilos', 'Sigilos', 'Frases viram selos e círculos mágicos.',
     (ctx) => comporSigilos('luz\nmar\nsol\nlua', ctx, { papel: papel('A7'), tipo: 'selo', colunas: 2, legendas: true, seed: 1 })],
-  ['letra', 'Minha letra', 'A máquina plota folhas de coleta com guias; você escreve à mão nelas para virar a sua própria fonte.',
-    (ctx) => comporColeta(ptBR, ctx, { papel: papel('A7'), tipo: 'N', canetas: CANETAS })],
 ];
 
 function ler(chave, padrao) {
@@ -51,97 +47,129 @@ function tracar(f) {
   f.classList.add('tracando');
 }
 
+const nomeDe = (lista, id) => lista.find((x) => x.id === id)?.nome;
+// Linha de ficha: "Mago · Elfo · 5 perfis"
+function resumoFicha(p) {
+  const f = p.ficha ?? {}, n = Object.keys(p.variacoes ?? {}).length;
+  return [nomeDe(CLASSES, f.classe), nomeDe(RACAS, f.raca), `${n} ${n === 1 ? 'perfil' : 'perfis'}`].filter(Boolean).join(' · ');
+}
+// Capitular iluminada: a letra inicial de cada área, como num manuscrito.
+function cabecalho(letra, cor, titulo, id) {
+  const h = el('header', 'cab-area');
+  const cap = el('span', `capitular ${cor}`, letra);
+  cap.setAttribute('aria-hidden', 'true');
+  const t = el('div'), h2 = el('h2', null, titulo), sub = el('p', 'sub');
+  h2.id = id;
+  t.append(h2, sub);
+  h.append(cap, t);
+  return { h, sub };
+}
 
 export function montar(raiz, { fontes, abrir }) {
-  const lema = el('p', 'lema', 'Caligrafia de traço único para plotter de caneta.');
-  const mao = el('p', 'mao-atual');
-  const gradeOf = el('div', 'grade');
-  const faixa = el('div', 'grade faixa');
-  const vazio = el('p', 'vazio', 'Nenhum personagem salvo ainda.');
+  // ---- Personagens: quem escreve ----
+  const areaP = el('section', 'area area-personagens');
+  areaP.setAttribute('aria-labelledby', 'h-personagens');
+  const cabP = cabecalho('P', 'lapis', 'Personagens', 'h-personagens');
+  cabP.sub.textContent = 'Quem escreve. Cada um tem a sua letra, os seus tamanhos e perfis.';
+  const blocos = el('div', 'blocos');
+  const vazioP = el('p', 'vazio', 'Ainda não há personagens. Comece criando quem vai escrever.');
+  const inicios = el('div', 'inicios');
+  inicios.append(...INICIOS.map(([modo, rotulo, ajuda]) => {
+    const b = el('button', 'inicio');
+    b.type = 'button';
+    b.append(el('strong', null, rotulo), el('span', null, ajuda));
+    b.addEventListener('click', () => comecarPersonagem(modo));
+    return b;
+  }));
   const todos = el('a', 'todos', 'Todos os personagens ›');
   todos.href = '#personagens';
-  const hPe = el('h2');
-  hPe.append(el('span', null, 'Personagens'), todos);
-  const hBib = el('h2'), todosBib = el('a', 'todos', 'Biblioteca ›');
-  todosBib.href = '#biblioteca';
-  hBib.append(el('span', null, 'Materiais salvos'), todosBib);
-  const recentes = el('div', 'grade recentes'), semMateriais = el('p', 'vazio', 'Nenhum material salvo ainda. Nas oficinas, use "Salvar na biblioteca".');
-  raiz.append(lema, mao, el('h2', null, 'Oficinas'), gradeOf, hBib, recentes, semMateriais, hPe, faixa, vazio);
+  areaP.append(cabP.h, blocos, vazioP, el('h3', 'rotulo-inicios', 'Novo personagem'), inicios, todos);
 
-  function miniatura(pai, p, variacao, texto) {
-    const f = el('div', 'folha');
-    pai.append(f);
-    especime(f, fontes, p, variacao, texto);
-  }
+  // ---- Escrever: o que escrever ----
+  const areaE = el('section', 'area area-escrever');
+  areaE.setAttribute('aria-labelledby', 'h-escrever');
+  const cabE = cabecalho('E', 'vermelhao', 'Escrever', 'h-escrever');
+  const gradeOf = el('div', 'grade');
+  areaE.append(cabE.h, gradeOf);
+
+  // ---- Continuar: materiais salvos ----
+  const areaC = el('section', 'area area-continuar');
+  areaC.setAttribute('aria-labelledby', 'h-continuar');
+  const topoC = el('div', 'topo-continuar'), hC = el('h2', null, 'Continuar'), todosBib = el('a', 'todos', 'Biblioteca ›');
+  hC.id = 'h-continuar';
+  todosBib.href = '#biblioteca';
+  topoC.append(hC, todosBib);
+  const recentes = el('div', 'recentes');
+  const semMateriais = el('p', 'vazio', 'Nenhum material salvo ainda. Nas oficinas, use "Salvar na biblioteca".');
+  areaC.append(topoC, recentes, semMateriais);
+
+  const colunas = el('div', 'colunas');
+  colunas.append(areaP, areaE);
+  raiz.replaceChildren(colunas, areaC);
 
   function atual() {
     const s = ler('writer.personagem', null);
     if (s?.personagem && validar(s.personagem).length === 0) return s;
     return { personagem: novoPersonagem(), variacao: 'normal' };
   }
-
-  function botao(pai, rotulo, nome, fn) {
-    const b = el('button', null, rotulo);
+  function usar(salvo) {
+    gravarAtual(salvo, Object.keys(salvo.variacoes ?? {})[0] ?? '');
+    atualizar();
+  }
+  function botao(pai, rotulo, nome, fn, classe) {
+    const b = el('button', classe, rotulo);
     b.type = 'button';
     b.setAttribute('aria-label', `${rotulo} ${nome}`);
     b.addEventListener('click', fn);
     pai.append(b);
   }
 
-  function usar(salvo) {
-    gravarAtual(salvo, Object.keys(salvo.variacoes ?? {})[0] ?? '');
-    atualizar();
-  }
-
   function atualizar() {
     const { personagem: p, variacao } = atual();
-    const trocar = el('a', null, 'Trocar ›');
-    trocar.href = '#personagens';
-    mao.replaceChildren('Mão atual: ', el('strong', null, p.nome), variacao ? ` · ${variacao}` : '', ' ', trocar);
+    const salvos = Object.values(lerPersonagens()).filter((s) => validar(s).length === 0);
+    // em uso primeiro; três na home, o resto em Personagens
+    const ordem = [...salvos.filter((s) => s.nome === p.nome), ...salvos.filter((s) => s.nome !== p.nome)].slice(0, 3);
+    blocos.replaceChildren(...ordem.map((s) => {
+      const emUso = s.nome === p.nome;
+      const b = el('article', `bloco-ficha${emUso ? ' em-uso' : ''}`);
+      const topo = el('div', 'bloco-topo'), nomes = el('div'), acoes = el('div', 'acoes');
+      nomes.append(el('h3', null, s.nome), el('p', 'resumo', resumoFicha(s)));
+      if (emUso) acoes.append(el('span', 'marca', 'em uso'));
+      else botao(acoes, 'Usar', s.nome, () => usar(s));
+      botao(acoes, 'Editar', s.nome, () => { usar(s); location.hash = '#personagens'; }, 'sec');
+      topo.append(nomes, acoes);
+      const f = el('div', 'folha amostra');
+      b.append(topo, f);
+      especime(f, fontes, s, emUso ? variacao : Object.keys(s.variacoes ?? {})[0] ?? '', 'Querida Elena, o vento cheira a trigo.');
+      return b;
+    }));
+    vazioP.hidden = salvos.length > 0;
+    todos.hidden = salvos.length <= 3;
+    areaP.classList.toggle('primeira-vez', !salvos.length);
 
+    cabE.sub.replaceChildren('Escolha o material. Escrito por ', el('strong', null, p.nome), variacao ? ` · perfil ${variacao}` : '', '.');
     const escrita = resolver(p, variacao || null);
     const ctx = { fontes, mao: escrita, maoNotas: escrita, personagens: { texto: p.nome, notas: p.nome } };
-    const cartao = (id, nome, desc, desenho) => {
+    gradeOf.replaceChildren(...OFICINAS.map(([id, nome, desc, compor]) => {
       const a = el('a', `cartao oficina ${id}`);
       a.href = `#${id}`;
-      const f = el('div', 'folha');
-      a.append(f, el('span', 'nome', nome), el('span', 'desc', desc));
-      desenho(f);
+      const f = el('div', 'folha'), txt = el('div', 'txt');
+      txt.append(el('span', 'nome', nome), el('span', 'desc', desc));
+      a.append(f, txt);
+      try { desenhar(f, compor(ctx)); f.style.maxWidth = ''; } catch { especime(f, fontes, p, variacao, nome); }
       tracar(f);
       a.addEventListener('pointerenter', () => tracar(f));
       return a;
-    };
-    gradeOf.replaceChildren(
-      ...OFICINAS.map(([id, nome, desc, compor]) => cartao(id, nome, desc, (f) => {
-        try { desenhar(f, compor(ctx)); f.style.maxWidth = ''; } catch { especime(f, fontes, p, variacao, nome); }
-      })),
-      cartao('personagens', 'Personagens', 'Crie a mão de cada personagem: fontes, inclinação, pressa e as variações do jeito de escrever.',
-        (f) => especime(f, fontes, p, variacao, p.nome || 'Personagem')),
-    );
-
-    const salvos = Object.values(lerPersonagens()).filter((s) => validar(s).length === 0).slice(0, 7);
-    faixa.replaceChildren(...salvos.map((s) => {
-      const c = el('div', 'cartao');
-      miniatura(c, s, Object.keys(s.variacoes ?? {})[0] ?? '', s.nome);
-      c.append(el('span', 'nome', s.nome));
-      const acoes = el('span', 'acoes');
-      if (s.nome === p.nome) acoes.append(el('span', 'marca', 'em uso'));
-      else botao(acoes, 'Usar', s.nome, () => usar(s));
-      botao(acoes, 'Editar', s.nome, () => { usar(s); location.hash = '#personagens'; });
-      c.append(acoes);
-      return c;
     }));
-    const novo = el('button', 'cartao novo', '+ Novo personagem');
-    novo.type = 'button';
-    novo.addEventListener('click', () => novaFicha());
-    faixa.append(novo);
-    vazio.hidden = salvos.length > 0;
+
     materiais().then((ms) => {
       semMateriais.hidden = ms.length > 0;
-      recentes.replaceChildren(...ms.slice(0, 4).map((m) => {
-        const b = el('button', 'cartao material');
+      recentes.replaceChildren(...ms.slice(0, 4).map((m, i) => {
+        const b = el('button', `material${i === 0 ? ' ultimo' : ''}`);
         b.type = 'button';
-        b.append(el('span', 'nome', m.nome), el('span', 'desc', `${NOMES_OFICINA[m.oficina] ?? m.oficina} · ${new Date(m.quando).toLocaleDateString('pt-BR')}`));
+        const quem = m.estado?.personagem?.nome;
+        b.append(el('span', 'nome', m.nome),
+          el('span', 'desc', [NOMES_OFICINA[m.oficina] ?? m.oficina, quem && `por ${quem}`, new Date(m.quando).toLocaleDateString('pt-BR')].filter(Boolean).join(' · ')));
         b.addEventListener('click', () => abrir(m));
         return b;
       }));

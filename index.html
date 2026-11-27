@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="theme-color" content="#f4ecd8">
+<meta name="theme-color" content="#8a1f17">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Scriptorium</title>
 </head>
@@ -11,7 +11,9 @@
   <button id="menu" type="button" popovertarget="nav-oficinas" aria-label="Abrir menu">☰</button>
   <h1><a href="#inicio">Scriptorium</a></h1>
   <nav id="nav-oficinas" class="oficinas" aria-label="Seções" popover>
-    <a href="#inicio">Início</a><a href="#carta">Carta</a><a href="#magias">Magias</a><a href="#livro">Livro</a><a href="#sigilos">Sigilos</a><a href="#letra">Minha letra</a><a href="#personagens" class="sep">Personagens</a><a href="#biblioteca">Biblioteca</a>
+    <a href="#inicio">Início</a><a href="#personagens">Personagens</a>
+    <span class="grupo-nav" aria-hidden="true">Escrever</span><a href="#carta">Carta</a><a href="#livro">Livro</a><a href="#magias">Magias</a><a href="#sigilos">Sigilos</a>
+    <a href="#biblioteca" class="sep">Biblioteca</a>
   </nav>
   <button id="tema" type="button">Vela</button>
 </header>
@@ -30,6 +32,7 @@
   </aside>
   <section id="area-previa" aria-labelledby="t-previa">
     <h2 id="t-previa" class="so-leitor">Prévia</h2>
+    <p id="escrito-por" class="escrito-por"></p>
     <div class="barra-previa">
       <div class="vista-previa" role="group" aria-label="Vista da prévia"><button type="button" id="vista-pagina" aria-pressed="true">Página</button><button type="button" id="vista-mesa" aria-pressed="false">Mesa</button></div>
       <div class="paginas"><button type="button" id="pag-ant">‹ Anterior</button><span id="pag-info" aria-live="polite">Página 1 de 1</span><button type="button" id="pag-prox">Próxima ›</button></div>

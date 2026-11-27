@@ -51,7 +51,7 @@ test('captura personagens', async ({ page }, testInfo) => {
 test('captura avançado com popover aberto', async ({ page }, testInfo) => {
   await abrir(page, 'carta')
   await page.getByLabel('Avançado').check()
-  await page.locator('#grupos summary', { hasText: /^Fontes$/ }).click() // seção no topo: rolar fecharia o popover
+  await page.locator('#grupos summary', { hasText: /^Papel e aparência$/ }).click() // seção no topo: rolar fecharia o popover
   await page.locator('#grupos input[type=range]:visible').first().focus()
   await page.waitForSelector('#previa-viva:popover-open')
   await foto(page, testInfo, 'avancado-popover') // sem fullPage: resize fecha o popover

@@ -69,10 +69,12 @@ test('a 375 px o popover cabe na viewport', async ({ page }) => {
 })
 
 test('Básico esconde Máquina; Avançado mostra; "?" com nome e fonte da mão com prévia', async ({ page }) => {
-  await page.goto('index.html#carta')
-  await page.locator('#grupos summary', { hasText: /^Fontes$/ }).click()
-  await page.locator('[data-chave="base"] select').first().focus()
+  // fonte da mão agora mora no editor de personagem (seção Letra)
+  await page.goto('index.html#personagens')
+  await page.locator('.pers-editor summary', { hasText: /^Letra$/ }).click()
+  await page.locator('.pers-editor [data-chave="base"] select').first().focus()
   await expect(page.locator('#previa-viva figure')).toHaveCount(1)
+  await page.goto('index.html#carta')
   const maquina = page.locator('#grupos summary', { hasText: /^Máquina$/ })
   await expect(maquina).toBeHidden()
   await page.locator('#grupos summary', { hasText: /^Personagem$/ }).click()

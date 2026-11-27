@@ -1,4 +1,4 @@
-/* Tokens do Scriptorium (sóbrio).
+/* Tokens do Scriptorium: manual do aventureiro de dia (Claro), grimório iluminado à noite (Vela).
    Um valor por token: light-dark() escolhe pelo color-scheme. Sem [data-tema] segue o sistema
    (prefers-color-scheme); [data-tema="claro"|"vela"] no <html> força o tema.
    ponytail: light-dark() e popover exigem Chrome 123+/Firefox 125+/Safari 17.5+; sem fallback para navegador antigo.
@@ -16,15 +16,22 @@
   color-scheme: light dark;
 
   /* superfícies */
-  --mesa:       light-dark(#ded3ba, #120e0a); /* fundo do app: o tampo onde a folha repousa */
-  --pergaminho: light-dark(#f4ecd8, #1e1812); /* cabeçalho, painel, barra de exportação */
-  --campo:      light-dark(#fbf6e9, #2a2219); /* inputs, selects, popover */
+  --mesa:       light-dark(#e6d7b6, #15100c); /* fundo do app: pergaminho cru de dia, couro à noite */
+  --pergaminho: light-dark(#f5ead2, #221a14); /* painéis e blocos */
+  --campo:      light-dark(#fcf6e6, #2c2219); /* inputs, selects, popover */
   --folha:      light-dark(#fdfaf1, #e9dfc6); /* a página da prévia: continua papel no tema vela */
 
   /* tinta */
   --tinta:      light-dark(#241c15, #ece2cb); /* ferro-gálico: texto e botão primário */
   --tinta-2:    light-dark(#5a4733, #b8a784); /* sépia: texto secundário, unidades, ajuda */
-  --rubrica:    light-dark(#96231a, #e8826b); /* títulos de grupo, oficina atual, polegar do slider, erro */
+  --rubrica:    light-dark(#8a1f17, #e8826b); /* títulos, seção atual, polegar do slider, erro */
+  /* iluminura: faixa do cabeçalho, filete de ouro e as capitulares (lápis-lazúli e vermelhão) */
+  --faixa:       light-dark(#7e1c15, #1d1510); /* barra do topo: vermelho de manual de dia, couro à noite */
+  --faixa-tinta: light-dark(#f8ead0, #e6bd5c); /* texto na faixa: 9,4 claro, 9,1 vela */
+  --ouro:        light-dark(#9a7124, #d9ae4f); /* filetes e molduras (ornamento; texto só no tema vela) */
+  --lapis:       #1d3a7a;                      /* fundo de capitular: igual nos dois temas */
+  --vermelhao:   #9e2a1f;
+  --ouro-cap:    #f1d58a;                      /* letra da capitular: 7,7 sobre lápis, 5,6 sobre vermelhão */
   --aviso:      light-dark(#6e4a00, #e2b45c); /* avisos de composição e de máquina */
   --contorno:   light-dark(#85714f, #8f7d5c); /* borda de controle (>= 3:1) */
   --regua:      light-dark(#cdbd9b, #3d3225); /* pautas e divisórias (ornamento) */
@@ -89,7 +96,7 @@ body { margin: 0; background: var(--mesa); color: var(--tinta); font: var(--t-ui
 textarea, input { caret-color: var(--rubrica); }
 a { color: var(--rubrica); text-underline-offset: .15em; }
 h1, nav.oficinas a, summary { font-family: var(--fonte-titulo); font-weight: 500; }
-h1 { margin: 0; font-size: var(--t-titulo); letter-spacing: .01em; }
+h1 { margin: 0; font-size: var(--t-titulo); letter-spacing: .03em; font-variant-caps: small-caps; }
 summary { font-size: var(--t-grupo); font-variant-caps: small-caps; letter-spacing: .04em; color: var(--rubrica); cursor: pointer; }
 output { font-variant-numeric: tabular-nums; }
 input, select, textarea, button { font: inherit; color: inherit; }
@@ -98,7 +105,7 @@ input:not([type=range], [type=checkbox]), select, textarea, button {
 }
 input[type=range], input[type=checkbox] { accent-color: var(--rubrica); }
 button { padding: 0 var(--e3); cursor: pointer; }
-button.primario { background: var(--tinta); color: var(--pergaminho); border-color: var(--tinta); }
+button.primario { background: var(--rubrica); color: var(--pergaminho); border-color: var(--rubrica); font-family: var(--fonte-titulo); font-variant-caps: small-caps; font-size: var(--t-grupo); }
 button:disabled, button.primario:disabled { background: transparent; color: var(--tinta-2); border-style: dashed; cursor: default; } /* tinta-2 sobre pergaminho: 7,5 nos dois temas */
 :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 .erro { color: var(--rubrica); font-weight: 600; }  /* sempre com o prefixo "Erro:" no texto */
@@ -109,6 +116,7 @@ body[data-nivel="basico"] main [data-nivel="avancado"] { display: none; }
 
 /* assinatura: pauta dupla de escriba separando os grupos do painel */
 details { border-bottom: 3px double var(--regua); padding: var(--e2) 0; }
+summary::marker { color: var(--ouro); }
 /* subseção dentro de um grupo: linha simples e título menor, abaixo da pauta dupla na hierarquia */
 details.subsecao { border-bottom-width: 1px; border-bottom-style: solid; padding: var(--e1) 0; }
 details.subsecao:last-child { border-bottom: 0; }
@@ -131,19 +139,40 @@ select { max-width: 100%; padding: 0 var(--e2); }
 .rotulo { margin: 0 0 var(--e2); font-weight: 600; color: var(--tinta-2); }
 figure { margin: 0; min-width: 0; }
 
-/* cabeçalho */
-header { display: flex; align-items: center; gap: var(--e5); min-height: 56px; padding: 0 var(--e4); background: var(--pergaminho); border-bottom: 3px double var(--regua); }
-h1 { margin-right: auto; }
-h1 a { color: inherit; text-decoration: none; }
+/* cabeçalho: faixa de rubrica com filete duplo de ouro, como a capa de um manual */
+body > header { display: flex; align-items: center; gap: var(--e5); min-height: 56px; padding: 0 var(--e5); background: var(--faixa); color: var(--faixa-tinta); border-bottom: 3px double var(--ouro); }
+body > header h1 a { color: inherit; text-decoration: none; }
+body > header button { background: transparent; color: inherit; border-color: var(--faixa-tinta); }
+body > header :focus-visible { outline-color: var(--faixa-tinta); }
+#tema { margin-left: auto; }
 #menu { min-width: var(--alvo); min-height: var(--alvo); font-size: 1.4rem; line-height: 1; }
+/* capitular iluminada: letra inicial de cada área (home, páginas) */
+.capitular { flex: none; display: inline-grid; place-items: center; width: 52px; height: 52px; background: var(--lapis); color: var(--ouro-cap);
+  font: 500 38px/1 var(--fonte-titulo); border: 2px solid var(--ouro); box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--lapis) 70%, #000); }
+.capitular.vermelhao { background: var(--vermelhao); box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--vermelhao) 70%, #000); }
+/* quem escreve o material: em cima da prévia */
+.escrito-por { margin: 0 0 var(--e3); font-family: var(--fonte-titulo); font-size: var(--t-grupo); color: var(--tinta-2); }
+.escrito-por strong { color: var(--rubrica); font-weight: 500; }
+.escrito-por a { margin-left: var(--e2); font: var(--t-ui) var(--fonte-ui); }
 /* menu ☰: popover nativo (Esc e clique fora fecham), abre abaixo do cabeçalho */
 nav.oficinas[popover] { position: fixed; inset: 60px auto auto var(--e4); margin: 0; padding: var(--e3) var(--e4); min-width: 220px;
   flex-direction: column; gap: var(--e2); background: var(--pergaminho); color: var(--tinta); border: 1px solid var(--contorno); border-radius: var(--raio); box-shadow: var(--sombra-pop); }
 nav.oficinas[popover]:popover-open { display: flex; }
-nav.oficinas a { font-size: var(--t-grupo); color: var(--tinta); text-decoration: none; padding: var(--e1) 0; border-bottom: 2px solid transparent; }
+nav.oficinas a { font-size: var(--t-grupo); font-variant-caps: small-caps; letter-spacing: .03em; color: inherit; text-decoration: none; padding: var(--e1) 0; border-bottom: 2px solid transparent; }
 nav.oficinas a.sep { margin-top: var(--e2); padding-top: var(--e3); border-top: 1px solid var(--regua); }
 nav.oficinas a:hover { border-bottom-color: var(--regua); }
 nav.oficinas a[aria-current="page"] { color: var(--rubrica); border-bottom-color: var(--rubrica); }
+.grupo-nav { margin-top: var(--e2); font-size: var(--t-pequeno); letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-2); }
+/* desktop: a navegação fica sempre à vista na faixa; o ☰ só existe no celular */
+@media (min-width: 801px) {
+  #menu { display: none; }
+  nav.oficinas[popover] { display: flex; position: static; inset: auto; flex-direction: row; align-items: baseline; gap: var(--e4); padding: 0; min-width: 0;
+    background: none; color: var(--faixa-tinta); border: 0; box-shadow: none; overflow: visible; }
+  nav.oficinas a.sep { margin: 0; padding-top: var(--e1); border-top: 0; }
+  nav.oficinas a:hover { border-bottom-color: color-mix(in srgb, var(--faixa-tinta) 50%, transparent); }
+  nav.oficinas a[aria-current="page"] { color: var(--faixa-tinta); border-bottom-color: var(--ouro); }
+  .grupo-nav { margin: 0 0 0 var(--e3); padding-left: var(--e4); border-left: 1px solid color-mix(in srgb, var(--faixa-tinta) 35%, transparent); color: inherit; opacity: .8; }
+}
 #tema { min-width: var(--alvo); }
 #nivel { display: inline-flex; border: 1px solid var(--contorno); border-radius: var(--raio); overflow: hidden; }
 #nivel label { margin: 0; padding: 0 var(--e3); min-height: var(--alvo); display: flex; align-items: center; cursor: pointer; background: var(--campo); }
@@ -154,9 +183,9 @@ nav.oficinas a[aria-current="page"] { color: var(--rubrica); border-bottom-color
 /* shell */
 .pagina { padding: var(--e4); }
 main { display: grid; grid-template-columns: var(--painel) minmax(0, 1fr); grid-template-areas: "painel previa" "painel exportar"; gap: var(--e4); padding: var(--e4); align-items: start; }
-aside#painel { grid-area: painel; position: sticky; top: var(--e4); max-height: calc(100vh - 56px - 2 * var(--e4)); overflow-y: auto; background: var(--pergaminho); border: 1px solid var(--regua); border-radius: var(--raio); padding: 0 var(--e3); }
+aside#painel { grid-area: painel; position: sticky; top: var(--e4); max-height: calc(100vh - 56px - 2 * var(--e4)); overflow-y: auto; background: var(--pergaminho); border-top: 3px solid var(--rubrica); border-bottom: 3px solid var(--rubrica); padding: 0 var(--e3); }
 section#area-previa { grid-area: previa; min-width: 0; }
-footer#exportar { grid-area: exportar; position: sticky; bottom: 0; background: var(--pergaminho); border-top: 3px double var(--regua); padding: var(--e3) var(--e4); }
+footer#exportar { grid-area: exportar; position: sticky; bottom: 0; background: var(--pergaminho); border-top: 3px double var(--ouro); padding: var(--e3) var(--e4); }
 #exportar > div { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e3); }
 #exportar .controle { margin: 0; grid-template-columns: auto 12em 24px; }
 #exportar .resumo { white-space: nowrap; margin-right: auto; }
@@ -231,8 +260,7 @@ dialog::backdrop { background: var(--sombra-cor); }
 }
 
 @media (max-width: 800px) {
-  header { flex-wrap: wrap; gap: var(--e2) var(--e4); padding-block: var(--e2); }
-  #tema { margin-left: auto; }
+  body > header { gap: var(--e3); padding: var(--e2) var(--e4); }
   /* celular: ver, baixar, depois ajustar; o painel tem ~2400px e escondia o G-code três telas abaixo */
   main { grid-template-columns: minmax(0, 1fr); grid-template-areas: "previa" "exportar" "painel"; }
   aside#painel { position: static; max-height: none; overflow: visible; }

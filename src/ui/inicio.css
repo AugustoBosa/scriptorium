@@ -1,53 +1,86 @@
-#vista-inicio { max-width: 1120px; margin: 0 auto; padding: var(--e5); }
-#vista-inicio .lema { margin: 0 0 var(--e2); font-family: var(--fonte-titulo); font-size: var(--t-grupo); }
-#vista-inicio .mao-atual { margin: 0 0 var(--e5); color: var(--tinta-2); }
-#vista-inicio .mao-atual a { margin-left: var(--e2); }
-#vista-inicio h2 {
-  display: flex; align-items: center; gap: var(--e3); margin: var(--e6) 0 var(--e4);
-  font: 600 var(--t-grupo) var(--fonte-titulo); font-variant: small-caps; letter-spacing: .04em; color: var(--rubrica);
-}
-#vista-inicio h2::after { content: ""; flex: 1; order: 1; border-top: 3px double var(--regua); }
-#vista-inicio h2 .todos { order: 2; font: var(--t-ui) var(--fonte-ui); font-variant: normal; letter-spacing: 0; }
-#vista-inicio .grade { display: grid; gap: var(--e4); grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
-#vista-inicio .cartao {
-  display: flex; flex-direction: column; gap: var(--e2); padding: var(--e3); min-width: 0;
-  background: var(--pergaminho); border: 1px solid var(--regua); border-radius: var(--raio);
-  color: var(--tinta); text-decoration: none;
-}
-#vista-inicio .cartao:hover { border-color: var(--contorno); }
-#vista-inicio .cartao .folha { margin: 0; width: 100%; }
-#vista-inicio .nome { font: var(--t-grupo) var(--fonte-titulo); color: var(--tinta); }
-#vista-inicio .desc { font-size: var(--t-pequeno); color: var(--tinta-2); }
-#vista-inicio .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e2); }
-#vista-inicio .marca { font: var(--t-pequeno) var(--fonte-titulo); font-variant: small-caps; color: var(--rubrica); }
-#vista-inicio .novo { justify-content: center; align-items: center; min-height: 120px; border-style: dashed; border-color: var(--contorno); background: transparent; cursor: pointer; font: var(--t-ui) var(--fonte-ui); }
-#vista-inicio .vazio { margin: var(--e3) 0 0; color: var(--tinta-2); }
-@media (max-width: 799px) {
-  #vista-inicio { padding: var(--e4); }
-  #vista-inicio .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  #vista-inicio .faixa { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
-  #vista-inicio .faixa .cartao { flex: 0 0 160px; scroll-snap-align: start; }
-}
+/* Home: duas áreas (Personagens à esquerda, Escrever à direita) e a faixa Continuar embaixo.
+   Personagens são blocos de ficha (filete de rubrica em cima e embaixo); materiais são cartões com a miniatura real. */
+#vista-inicio { max-width: 1180px; margin: 0 auto; padding: var(--e6) var(--e5) var(--e6); }
+#vista-inicio .colunas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: var(--e6); align-items: start; }
 
-/* Cartões das oficinas: acento próprio, descrição e miniatura desenhada traço a traço. */
-#vista-inicio .oficina { border-top: 4px solid var(--acento, var(--regua)); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-#vista-inicio .oficina:hover, #vista-inicio .oficina:focus-visible { transform: translateY(-3px); box-shadow: 0 6px 18px var(--sombra-cor); }
-#vista-inicio .oficina .nome { color: var(--acento, var(--tinta)); }
-#vista-inicio .oficina .desc { font-size: var(--t-ui); line-height: 1.4; }
-#vista-inicio .oficina .folha { display: grid; place-items: center; aspect-ratio: 3 / 4; overflow: hidden; }
-#vista-inicio .oficina .folha svg { width: 100%; height: 100%; }
-#vista-inicio .oficina.personagens .folha { aspect-ratio: 3 / 1; }
-#vista-inicio .carta { --acento: var(--acento-carta); }
-#vista-inicio .livro { --acento: var(--acento-livro); }
-#vista-inicio .magias { --acento: var(--acento-magias); }
-#vista-inicio .sigilos { --acento: var(--acento-sigilos); }
-#vista-inicio .personagens { --acento: var(--acento-personagens); }
-#vista-inicio .letra { --acento: var(--acento-letra); }
+/* cabeçalho de área: capitular iluminada + título em versalete + linha de apoio */
+#vista-inicio .cab-area { display: flex; gap: var(--e3); align-items: center; padding-bottom: var(--e3); margin-bottom: var(--e4); border-bottom: 3px double var(--ouro); }
+#vista-inicio h2 { margin: 0; font: 500 1.75rem/1.1 var(--fonte-titulo); font-variant-caps: small-caps; letter-spacing: .03em; color: var(--rubrica); }
+#vista-inicio .sub { margin: var(--e1) 0 0; color: var(--tinta-2); }
+#vista-inicio .sub strong { color: var(--tinta); font-weight: 600; }
+#vista-inicio .vazio { margin: 0 0 var(--e3); color: var(--tinta-2); }
+#vista-inicio .todos { display: inline-block; margin-top: var(--e3); }
+
+/* bloco de ficha de personagem */
+#vista-inicio .blocos { display: grid; gap: var(--e4); }
+#vista-inicio .bloco-ficha { background: var(--pergaminho); border-top: 3px solid var(--rubrica); border-bottom: 3px solid var(--rubrica); padding: var(--e3) var(--e4) var(--e4); }
+#vista-inicio .bloco-ficha.em-uso { box-shadow: inset 0 0 0 1px var(--ouro); }
+#vista-inicio .bloco-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--e3); margin-bottom: var(--e2); }
+#vista-inicio .bloco-ficha h3 { margin: 0; font: 500 1.25rem/1.2 var(--fonte-titulo); color: var(--rubrica); }
+#vista-inicio .resumo { margin: 2px 0 0; font: italic var(--t-ui) var(--fonte-titulo); color: var(--tinta-2); }
+#vista-inicio .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e2); }
+#vista-inicio .marca { font: var(--t-ui) var(--fonte-titulo); font-variant-caps: small-caps; letter-spacing: .04em; color: var(--rubrica); border: 1px solid var(--ouro); padding: 0 var(--e2); }
+#vista-inicio .acoes .sec { background: transparent; }
+#vista-inicio .amostra { width: 100%; margin: 0; box-shadow: 0 1px 3px var(--sombra-cor); }
+#vista-inicio .amostra svg { max-height: 64px; width: auto; max-width: 100%; margin: 0 auto; }
+
+/* três jeitos de começar um personagem */
+#vista-inicio .rotulo-inicios { margin: var(--e5) 0 var(--e2); font: 500 var(--t-grupo) var(--fonte-titulo); font-variant-caps: small-caps; letter-spacing: .04em; color: var(--tinta-2); }
+#vista-inicio .inicios { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--e2); }
+#vista-inicio .inicio { display: flex; flex-direction: column; gap: var(--e1); align-items: flex-start; text-align: left; padding: var(--e3); min-height: 0; background: var(--campo); border: 1px solid var(--contorno); }
+#vista-inicio .inicio strong { font: 500 var(--t-grupo) var(--fonte-titulo); color: var(--rubrica); }
+#vista-inicio .inicio span { font-size: var(--t-pequeno); color: var(--tinta-2); line-height: 1.35; }
+#vista-inicio .inicio:hover { border-color: var(--rubrica); }
+/* primeira visita: sem personagens, os três inícios são a ação principal */
+#vista-inicio .primeira-vez .rotulo-inicios { display: none; }
+#vista-inicio .primeira-vez .inicios { grid-template-columns: minmax(0, 1fr); }
+#vista-inicio .primeira-vez .inicio { flex-direction: row; align-items: baseline; gap: var(--e3); padding: var(--e4); border-top: 3px solid var(--rubrica); border-bottom: 3px solid var(--rubrica); border-inline: 0; background: var(--pergaminho); }
+#vista-inicio .primeira-vez .inicio strong { flex: none; width: 9em; font-size: 1.2rem; }
+#vista-inicio .primeira-vez .inicio span { font-size: var(--t-ui); }
+
+/* materiais: cartão com miniatura real, traçada na hora */
+#vista-inicio .grade { display: grid; gap: var(--e4); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#vista-inicio .cartao { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: var(--e4); align-items: center; padding: var(--e3);
+  background: var(--pergaminho); border: 1px solid var(--regua); outline: 1px solid var(--regua); outline-offset: -5px; color: var(--tinta); text-decoration: none; }
+#vista-inicio .cartao .folha { margin: 0; width: 100%; display: grid; place-items: center; aspect-ratio: 3 / 4; overflow: hidden; }
+#vista-inicio .cartao .folha svg { width: 100%; height: 100%; }
+/* miniatura pequena: traço mais grosso que o da caneta real, senão some na tela */
+#vista-inicio .cartao .folha svg g { stroke-width: .8; }
+#vista-inicio .cartao .txt { display: flex; flex-direction: column; gap: var(--e1); }
+#vista-inicio .cartao .nome { font: 500 1.375rem/1.1 var(--fonte-titulo); font-variant-caps: small-caps; letter-spacing: .03em; color: var(--tinta); }
+#vista-inicio .cartao .nome::first-letter { color: var(--rubrica); }
+#vista-inicio .cartao .desc { font-size: var(--t-pequeno); color: var(--tinta-2); line-height: 1.4; }
+#vista-inicio .cartao:hover, #vista-inicio .cartao:focus-visible { border-color: var(--ouro); outline-color: var(--ouro); }
+@media (prefers-reduced-motion: no-preference) {
+  #vista-inicio .cartao { transition: transform .25s cubic-bezier(.2, .7, .2, 1), box-shadow .25s cubic-bezier(.2, .7, .2, 1); }
+  #vista-inicio .cartao:hover, #vista-inicio .cartao:focus-visible { transform: translateY(-2px); box-shadow: 0 6px 16px var(--sombra-cor); }
+}
 #vista-inicio .tracando path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: tracar .5s ease-out forwards; }
 @keyframes tracar { to { stroke-dashoffset: 0; } }
-@media (prefers-reduced-motion: reduce) {
-  #vista-inicio .tracando path { animation: none; stroke-dashoffset: 0; }
-  #vista-inicio .oficina { transition: none; }
-  #vista-inicio .oficina:hover { transform: none; }
+@media (prefers-reduced-motion: reduce) { #vista-inicio .tracando path { animation: none; stroke-dashoffset: 0; } }
+
+/* continuar */
+#vista-inicio .area-continuar { margin-top: var(--e6); }
+#vista-inicio .topo-continuar { display: flex; align-items: baseline; gap: var(--e4); padding-bottom: var(--e2); margin-bottom: var(--e3); border-bottom: 3px double var(--ouro); }
+#vista-inicio .topo-continuar h2 { font-size: 1.375rem; }
+#vista-inicio .topo-continuar .todos { margin: 0 0 0 auto; }
+#vista-inicio .recentes { display: grid; gap: var(--e3); grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#vista-inicio .material { display: flex; flex-direction: column; gap: var(--e1); align-items: flex-start; text-align: left; padding: var(--e3); min-height: 0; background: var(--pergaminho); border: 1px solid var(--regua); }
+#vista-inicio .material .nome { font: 500 var(--t-grupo) var(--fonte-titulo); color: var(--rubrica); }
+#vista-inicio .material .desc { font-size: var(--t-pequeno); color: var(--tinta-2); }
+#vista-inicio .material:hover { border-color: var(--ouro); }
+#vista-inicio .material.ultimo { border-top: 3px solid var(--rubrica); }
+
+@media (max-width: 900px) {
+  #vista-inicio { padding: var(--e5) var(--e4); }
+  #vista-inicio .colunas { grid-template-columns: minmax(0, 1fr); gap: var(--e6); }
+  /* uma coluna: com personagem pronto, escrever vem primeiro; na primeira visita, criar personagem */
+  #vista-inicio .colunas:not(:has(.primeira-vez)) .area-escrever { order: -1; }
+  #vista-inicio .recentes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-#vista-inicio .material { text-align: left; cursor: pointer; font: inherit; }
+@media (max-width: 520px) {
+  #vista-inicio .grade { grid-template-columns: minmax(0, 1fr); }
+  #vista-inicio .inicios { grid-template-columns: minmax(0, 1fr); }
+  #vista-inicio .primeira-vez .inicio { flex-direction: column; gap: var(--e1); }
+  #vista-inicio .recentes { grid-template-columns: minmax(0, 1fr); }
+}

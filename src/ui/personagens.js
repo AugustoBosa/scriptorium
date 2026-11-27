@@ -7,7 +7,7 @@ const FRASE_GRANDE = 'Querida Elena, o vento cheira a trigo.';
 const FRASE_CARTAO = 'Querida Elena,';
 const FOLHA_GRANDE = { largura: 120, altura: 40, margens: { topo: 4, dir: 4, base: 4, esq: 4 } };
 
-import { el, botao, baixarJson, lerPersonagens as lerSalvos, novaFicha } from './util.js';
+import { el, botao, baixarJson, lerPersonagens as lerSalvos, novaFicha, comecarPersonagem, INICIOS } from './util.js';
 const primeiraVariacao = (p) => Object.keys(p.variacoes ?? {})[0] ?? '';
 
 // Contrato de página: montar(el, { fontes }) → atualizar()
@@ -128,13 +128,17 @@ export function montar(raiz, { fontes }) {
       if (!nome) { mostrarErro('dê um nome ao personagem antes de salvar.'); return; }
       gravarSalvos({ ...salvos, [nome]: { ...structuredClone(estado.personagem), nome } });
     }),
-    botao('Novo', () => novaFicha()),
+    ...INICIOS.map(([modo, rotulo, ajuda]) => { const b = botao('Novo: ' + rotulo[0].toLowerCase() + rotulo.slice(1), () => comecarPersonagem(modo)); b.title = ajuda; return b; }),
     botao('Importar JSON', () => inputArquivo.click()),
     inputArquivo,
   );
 
   const mesa = el('div', 'pers-mesa');
-  mesa.append(folha, textoEstado, acoes, erro, titulo, galeria);
+  const cab = el('header', 'cab-pagina'), cap = el('span', 'capitular', 'P'), cabTxt = el('div');
+  cap.setAttribute('aria-hidden', 'true');
+  cabTxt.append(el('h2', null, 'Personagens'), el('p', null, 'Tudo da letra mora aqui: fontes, tamanho por perfil, identidade, execução e notas. As oficinas só escolhem quem escreve.'));
+  cab.append(cap, cabTxt);
+  mesa.append(cab, folha, textoEstado, acoes, erro, titulo, galeria);
   const grade = el('div', 'pers');
   grade.append(mesa, aside);
   raiz.replaceChildren(grade);

@@ -51,10 +51,8 @@ test('trocar de oficina não perde a variação das magias', async ({ page }) =>
   const outra = opcoes.find((o) => o !== atual)
   expect(outra).toBeTruthy()
   await sel.selectOption({ label: outra })
-  await page.locator('#menu').click()
   await page.locator('nav.oficinas a[href="#carta"]').click()
   await expect(page.locator('#pag-info')).toBeVisible()
-  await page.locator('#menu').click()
   await page.locator('nav.oficinas a[href="#magias"]').click()
   expect(await sel.evaluate((s) => s.selectedOptions[0].textContent)).toBe(outra)
 })
@@ -95,7 +93,7 @@ test('livro: alça da nota anda pelo teclado e o foco volta para ela', async ({ 
   await expect(alca).toHaveCSS('touch-action', 'none')
 })
 
-test('livro: ângulo da nota no painel vira /graus no texto e as setas usam os controles de mão', async ({ page }) => {
+test('livro: ângulo da nota no painel vira /graus no texto; o gesto das setas não fica no material', async ({ page }) => {
   await abrir(page, 'livro')
   await secao(page, 'Notas')
   const ang = page.locator('#grupos details:not([hidden]) .posicao input[type=number]').first()
@@ -103,5 +101,6 @@ test('livro: ângulo da nota no painel vira /graus no texto e as setas usam os c
   await ang.dispatchEvent('change')
   await expect.poll(() => page.locator('#painel textarea').evaluateAll((ts) => ts.some((t) => /\{nota@\/30:/.test(t.value)))).toBe(true)
   const notas = page.locator('#grupos details:not([hidden])', { has: page.locator('summary', { hasText: /^Notas$/ }) })
-  for (const k of ['curva', 'irregular', 'ponta', 'inclinacao']) await expect(notas.locator(`.controle[data-chave="${k}"]`)).toBeVisible()
+  for (const k of ['curva', 'irregular', 'ponta', 'inclinacao']) await expect(notas.locator(`.controle[data-chave="${k}"]`)).toHaveCount(0)
+  await expect(page.locator('#escrito-por')).toContainText('Escrito por')
 })
