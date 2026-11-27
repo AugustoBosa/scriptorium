@@ -129,8 +129,13 @@ Correções:
 - O modelo 3D do lado ainda não existe: a morsa e a base são as da frente. Antes de imprimir para o lado, medir o que há na lateral direita do cabeçote e a borda direita da mesa.
 - Para ganhar os 3 mm do A5: base totalmente fora da mesa, ou a mesa andar além de 210 (medir).
 
+## Folga da ponta (2026-11-27)
+- Folga do bloco nas varetas (`FOLGA_TRILHO` 0,4, `BH` 25, `CANETA_SAI` 12) → a ponta fica parada enquanto a cabeça anda ±0,39 mm.
+- O app (main `ded7c9b`) simula isso em todas as letras: o mínimo legível vai de 6 a 14,5 mm conforme a fonte. Mudou uma dessas 3 medidas? Atualize `FOLGA_PORTA` em `src/maquina/folga.js` e rode `node scripts/folga-ponta.mjs`.
+- Para baixar o mínimo: menos `FOLGA_TRILHO` (Ø4,1 travou na v5) ou mais `BH`.
+
 ## Git (branch `hardware-pen-holder`)
-- A v5.1 (última mandada para imprimir) está commitada na branch em 2026-11-26. `a042d6f` e esse commit ainda não foram enviados (push).
+- A v5.1 (última mandada para imprimir) está commitada na branch em 2026-11-26. Enviada ao GitHub (push) em 2026-11-26.
 - Commit e push só quando o usuário pedir.
 
 ## Não fazer

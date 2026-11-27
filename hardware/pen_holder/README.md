@@ -30,6 +30,7 @@ Medidas do modelo, relativas ao eixo da caneta. Valores **MEDIR** são provisór
 | Subida do assento até o suporte passar sobre os postes | 46,5 | `POSTE_H + 6`; app: `PORTA.subida` |
 | Cunha à frente do eixo da caneta (parte mais à frente) | 10 | `cunha()` |
 | Curso da caneta (elástico) | 6 | `CURSO` |
+| Folga da ponta: quanto a cabeça anda sem a ponta sair do lugar (inclinação do bloco ~0,9°) | ±0,39 = 0,4 × (1 + 2 × 12 ÷ 25) ÷ 2 | `FOLGA_TRILHO`, `BH`, `CANETA_SAI`; app: `FOLGA_PORTA` em `src/maquina/folga.js`. Mudou um deles? Rode `node scripts/folga-ponta.mjs` no app: ele refaz o tamanho mínimo de letra por fonte |
 | Bico acima da ponta da caneta | 5 | `MARGEM_BICO` |
 | Frente do cabeçote atrás do eixo da caneta | 16,35 | `Y_CAB` |
 | Caneta à frente do bico | ~64,8 (MEDIR; o app ainda usa 41,5 da v4) | `Y_CAB + BICO_Y` |
