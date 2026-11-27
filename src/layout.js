@@ -2,6 +2,7 @@ import { glifo, NEUTRA } from './motor/mao.js';
 import { escreverPalavra } from './motor/escrita.js';
 import { rng, ruido1d } from './rng.js';
 import { ROTULOS, AJUDA } from './ajuda.js';
+import { minimoTamanho } from './maquina/perfis.js';
 
 export const PAGINAS = {
   A4: { largura: 210, altura: 297, margens: { topo: 20, dir: 20, base: 20, esq: 20 } },
@@ -197,9 +198,17 @@ export function amostra(fontes, mao, texto, opcoes = {}) {
   return compor(texto, fontes, mao, opcoes.pagina ?? FOLHA_AMOSTRA, { tamanho: 6, ...opcoes }).paginas[0];
 }
 
+// Mínimo do slider de tamanho com o porta-caneta (folga da ponta): { valor, texto } ou null.
+export function minimoFolga(ctx) {
+  const m = minimoTamanho(ctx?.perfil, ctx?.mao);
+  if (!m) return null;
+  return { valor: m.valor, texto: m.sem.length ? `${m.sem.join(', ')} não fica legível com a folga do porta-caneta, nem em 15 mm.` : `mín. ${String(m.valor).replace('.', ',')} mm pela folga do porta-caneta` };
+}
+
 const PARAGRAFO = 'a lua cheia sobe no mar e a noite fica calma';
 export const PARAMS = [
   { chave: 'tamanho', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 3, max: 15, passo: 0.5, padrao: 6, unidade: 'mm', rotulo: ROTULOS.tamanho, ajuda: AJUDA.tamanho,
+    minimo: (ctx) => minimoFolga(ctx),
     previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, 'mão', { tamanho: v }) },
   { chave: 'entrelinha', grupo: 'aparencia', nivel: 'basico', tipo: 'faixa', min: 1, max: 3, passo: 0.01, padrao: 1.6, rotulo: ROTULOS.entrelinha, ajuda: AJUDA.entrelinha,
     previa: (v, ctx) => amostra(ctx.fontes, ctx.mao, 'uma\nduas', { entrelinha: v }) },

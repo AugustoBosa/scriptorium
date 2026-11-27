@@ -224,6 +224,8 @@ dialog::backdrop { background: var(--sombra-cor); }
 .controle > input[type=number], .controle > select { grid-column: 2 / 4; width: 100%; }
 .controle > output { text-align: right; color: var(--tinta-2); font-size: var(--t-pequeno); }
 .controle > .dica { grid-column: 4; }
+.controle > .controle-nota { grid-column: 1 / -1; margin: 0; color: var(--tinta-2); font-size: var(--t-pequeno); }
+.controle > .controle-nota.abaixo { color: var(--aviso); font-weight: 600; }
 .controle[data-tipo="marca"] { grid-template-columns: auto 1fr 24px; }
 .controle[data-tipo="marca"] > .dica { grid-column: 3; }
 .dica { width: 24px; height: 24px; min-height: 0; padding: 0; border-radius: 50%; font-size: var(--t-pequeno); line-height: 1; color: var(--tinta-2); }

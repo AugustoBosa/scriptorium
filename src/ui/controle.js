@@ -201,7 +201,10 @@ export function controle(def, estado, aoMudar) {
   entrada.setAttribute('aria-describedby', ajuda.id);
   const bt = el('button', 'dica', '?'); bt.type = 'button'; bt.setAttribute('aria-label', 'Ajuda: ' + def.rotulo);
   if (tipo === 'faixa') { saida = el('output'); saida.htmlFor = id; }
-  linha.append(...(tipo === 'marca' ? [entrada, rot] : [rot, entrada]), ...(saida ? [saida] : []), bt, ajuda);
+  // def.minimo(ctx) → { valor, texto } | null: mínimo que depende do contexto (ex.: tamanho com a folga do porta-caneta)
+  const nota = def.minimo ? el('p', 'controle-nota') : null;
+  linha.append(...(tipo === 'marca' ? [entrada, rot] : [rot, entrada]), ...(saida ? [saida] : []), bt, ajuda, ...(nota ? [nota] : []));
+  const minimo = () => (def.minimo ? def.minimo(estado.ctx?.()) : null);
 
   const atualizar = () => {
     const v = estado.ler();
@@ -209,12 +212,19 @@ export function controle(def, estado, aoMudar) {
     else if (tipo === 'opcao') entrada.value = Math.max(0, def.opcoes.findIndex(o => o.valor === v));
     else if (document.activeElement !== entrada) entrada.value = v;
     if (saida) saida.textContent = fmt(v, def.unidade);
+    if (nota) {
+      const m = minimo();
+      nota.hidden = !m;
+      if (m) { nota.textContent = m.texto; nota.classList.toggle('abaixo', v < m.valor); }
+    }
   };
   const mudou = () => {
     let v;
     if (tipo === 'marca') v = entrada.checked;
     else if (tipo === 'opcao') v = def.opcoes[Number(entrada.value)].valor;
     else { v = valida(def, entrada.value); if (v === null) return; }
+    const m = tipo === 'faixa' || tipo === 'numero' ? minimo() : null;
+    if (m && v < m.valor) { v = m.valor; entrada.value = v; } // o slider não desce abaixo do mínimo
     estado.gravar(v);
     atualizar();
     aoMudar?.();

@@ -48,9 +48,12 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 | Geometria comum (`dist`, `comprimento`, `clamp`, `ret`, `VAO`, `valido`) | `src/geo.js` — não copiar em outro arquivo |
 | Salvar no navegador | trabalho: `src/ui/trabalho.js` (localStorage `trabalho.*`, `grimorio.estado`); biblioteca e magias: `src/ui/armazem.js` (IndexedDB `scriptorium`), `src/ui/biblioteca.js` |
 | Criar personagem (#ficha: ficha D&D → letra → perfis) | tabelas `src/ficha/dnd.js`, pontuação `src/ficha/sugerir.js`, perfis `src/ficha/perfis.js`, wizard `src/ui/ficha.js` (rascunho `writer.ficha.rascunho`); variação com `base` em `src/personagem.js` |
+| Folga da ponta do porta-caneta (tamanho mínimo de letra) | modelo e critério `src/maquina/folga.js`; tabela gerada `src/maquina/folga-fontes.js` por `node scripts/folga-ponta.mjs` (também gera `workflow/experimentos/folga/simulacao.html`); `folgaPonta` e `minimoTamanho` em `src/maquina/perfis.js`; gancho `def.minimo(ctx)` em `src/ui/controle.js` |
 | Minha letra (oficina #letra: a máquina plota as folhas de coleta) | `src/letra/folha.js` (`comporColeta`, código da folha), `src/letra/textos.js` + `scripts/gerar-texto-modelo.mjs <corpus> <lingua>` → `src/letra/linguas/<lingua>.json`, painel `src/ui/letra.js`; plano em `workflow/experimentos/fonte-propria/PESQUISA.md` |
 
 ## Entregas
+
+- 2026-11-27 — Folga da ponta (branch `folga-ponta`): o bloco do porta-caneta v5.1 tem folga de 0,4 mm nas varetas (guia 25, caneta 12 abaixo), então a cabeça anda ±0,39 mm sem a ponta sair do lugar. `simularPonta` faz a ponta atrasar (coleira de raio r, o deslocamento passa de um traço para o outro, 5 inícios). Letra legível = desvio (Hausdorff, com a letra alinhada) ≤ 15% da altura-x E mais perto da própria letra que da metade do caminho até qualquer outra (chamfer descontando a tinta de 0,4 mm). Com os perfis `megaSTroca*`, o slider de tamanho não desce abaixo do mínimo da fonte (6 a 14,5 mm; EMSMistyNight e EMSPepita não passam nem em 15) e a barra avisa se o tamanho salvo está abaixo. A letra que mais segura o mínimo é o `i` (o pingo encolhe). Página da simulação com animação cabeça × ponta.
 
 - 2026-11-25 — Wizard de personagem (`#ficha`, branch `wizard-personagem`): ficha D&D 5e (PHB 2014, pt-BR) em 8 passos (um aberto por vez) sugere a letra pelo catálogo (só critérios: arquétipo, eixos, ligação) e gera perfis de escrita filtrados pela classe e antecedente; cada escrita de idioma vira perfil com letra própria (variação aceita `base`). "+ Novo" abre o wizard ("Começar em branco" mantém o antigo); "Reabrir ficha" na galeria; aviso no painel quando o perfil usa outra letra. Capricho da ficha parte de 0,8 (NEUTRA = 1 é o teto).
 - 2026-11-18 — Reorganização: oficina Magias (pergaminho + grimório, separador entre magias), oficinas com a mesma ordem de painéis e a mesma lista de papéis, texto de exemplo e visual padrão por tipo, valores com 2 casas, destaque em vermelho na prévia dos controles, menu ☰ nas oficinas e home com cartões animados. Os textos do teste inicial e o histórico antigo saíram.
@@ -77,7 +80,8 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 2. Imposição: Carta → A6 → Mesa e folha → folha A4 → baixar a passada → rodar com a caneta levantada, depois com a caneta. Conferir que a folha real bate com a vista Mesa.
 3. Conferir se o `M0` (troca de caneta) retoma na tela da Mega S.
 4. Calibrar no papel: tamanho e legibilidade, `fluidez`, fadiga, ligações (EMSAllure, Swiss, Society), arremate; notas soltas, setas (irregularidade 0,5 parece natural ou tremida?) e rabiscos no Livro.
-5. P2S nunca testada: pesquisa em `workflow/experimentos/p2s/PESQUISA.md`.
+5. Folga da ponta: medir quanto a cabeça anda sem a ponta mexer (riscar um vaivém curto e medir no papel) e pôr em `FOLGA_PORTA`/`folgaPonta`; depois `node scripts/folga-ponta.mjs`. Hoje o mínimo é 6–14,5 mm por fonte; diminuir `FOLGA_TRILHO` ou aumentar `BH` no hardware baixa o mínimo.
+6. P2S nunca testada: pesquisa em `workflow/experimentos/p2s/PESQUISA.md`.
 
 ## Pendências técnicas
 

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Folga da ponta</title>
+<!-- Modelo de scripts/folga-ponta.mjs: o script troca os marcadores pelo código de src/maquina/folga.js e pelas letras. -->
+<style>
+:root { --fundo: #f6f2e8; --papel: #fffdf7; --tinta: #1a1a1a; --suave: #6b6458; --linha: #d8d0c0; --ideal: #b9b0a0; --ponta: #b3261e; --cabeca: #1f5fbf; --ok: #2e7d32; }
+@media (prefers-color-scheme: dark) { :root { --fundo: #1b1a17; --papel: #24221e; --tinta: #eee8dc; --suave: #a89f90; --linha: #3a372f; --ideal: #6b6458; --ponta: #ff6b5e; --cabeca: #6ea8ff; --ok: #7bc47f; } }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 16px; background: var(--fundo); color: var(--tinta); font: 15px/1.45 system-ui, sans-serif; }
+h1 { font-size: 1.3rem; margin: 0 0 4px; } h2 { font-size: 1.05rem; margin: 20px 0 8px; }
+p { margin: 4px 0; color: var(--suave); max-width: 80ch; }
+.ctrl { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 12px 0; }
+label { display: grid; gap: 2px; font-size: .85rem; color: var(--suave); }
+select, input { font: inherit; padding: 4px 6px; background: var(--papel); color: var(--tinta); border: 1px solid var(--linha); border-radius: 4px; }
+button { font: inherit; padding: 5px 12px; border-radius: 4px; border: 1px solid var(--linha); background: var(--papel); color: var(--tinta); cursor: pointer; }
+.grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.carta { background: var(--papel); border: 2px solid var(--linha); border-radius: 6px; padding: 4px; cursor: pointer; text-align: center; font-size: .72rem; color: var(--suave); }
+.carta.falha { border-color: var(--ponta); } .carta svg { width: 100%; height: 64px; display: block; }
+.carta b { color: var(--tinta); font-size: .9rem; } .carta .ruim { color: var(--ponta); }
+#anim { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 300px); gap: 12px; background: var(--papel); border: 1px solid var(--linha); border-radius: 6px; padding: 8px; }
+#anim svg { width: 100%; height: min(60vh, 460px); }
+@media (max-width: 640px) { #anim { grid-template-columns: 1fr; } }
+table { border-collapse: collapse; font-size: .85rem; width: 100%; max-width: 760px; }
+td, th { border-bottom: 1px solid var(--linha); padding: 3px 6px; text-align: left; } tr { cursor: pointer; } tr:hover td { background: var(--papel); }
+.leg span { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin: 0 4px 0 10px; }
+.tabela { overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>Folga da ponta da caneta</h1>
+<p id="resumo"></p>
+<p class="leg"><span style="background:var(--ideal);height:5px"></span>traço ideal (tinta da caneta)<span style="background:var(--ponta)"></span>onde a ponta passa<span style="background:var(--cabeca)"></span>cabeça (animação)</p>
+
+<div class="ctrl">
+  <label>fonte <select id="fonte"></select></label>
+  <label>tamanho (mm de em) <input id="tam" type="number" min="1" max="30" step="0.5"></label>
+  <label>raio da folga (mm) <input id="raio" type="number" min="0" max="2" step="0.01"></label>
+  <label>espessura da caneta (mm) <input id="esp" type="number" min="0.1" max="1.5" step="0.05"></label>
+  <button id="avaliar">Avaliar</button>
+</div>
+<p id="estado"></p>
+
+<h2>Animação (clique numa letra)</h2>
+<div id="anim"><svg id="cena" role="img" aria-label="Cabeça e ponta da caneta"></svg><div id="info"><p>Clique numa letra abaixo. A cabeça (azul) segue o G-code; a ponta (vermelha) só anda quando a cabeça encosta na borda da folga (círculo).</p><button id="denovo">Repetir</button></div></div>
+
+<h2>Letras</h2>
+<div class="grade" id="grade"></div>
+
+<h2>Tamanho mínimo por fonte</h2>
+<div class="tabela"><table id="tabela"><thead><tr><th>fonte</th><th>mínimo (mm)</th><th>reprovam abaixo do mínimo</th></tr></thead><tbody></tbody></table></div>
+
+<script>
+/*CODIGO*/
+/*DADOS*/
+const $ = (s) => document.querySelector(s), NS = 'http://www.w3.org/2000/svg';
+const caminho = (tracos) => tracos.map((t) => 'M' + t.map(([x, y]) => `${x.toFixed(3)} ${(-y).toFixed(3)}`).join('L')).join('');
+const caixa = (tracos, m) => {
+  const p = tracos.flat(), xs = p.map((q) => q[0]), ys = p.map((q) => -q[1]);
+  const x0 = Math.min(...xs) - m, y0 = Math.min(...ys) - m;
+  return `${x0} ${y0} ${Math.max(...xs) + m - x0} ${Math.max(...ys) + m - y0}`;
+};
+
+$('#resumo').textContent = `Folga de ±${TABELA.r} mm na ponta (furo do bloco Ø4,4 em vareta Ø4, guia de 25 mm, caneta 12 mm abaixo do bloco). ` +
+  `Letra legível = desvio da ponta ≤ ${TABELA.desvioMax * 100}% da altura-x (ou meia espessura) E a letra continua mais perto dela mesma que de qualquer outra da fonte, com a tinta de ${TABELA.esp} mm.`;
+const nomes = Object.keys(TABELA.fontes);
+$('#fonte').innerHTML = nomes.map((n) => `<option>${n}</option>`).join('');
+$('#raio').value = TABELA.r; $('#esp').value = TABELA.esp;
+$('#tabela tbody').innerHTML = nomes.map((n) => { const f = TABELA.fontes[n]; return `<tr data-f="${n}"><td>${n}</td><td>${f.minimo ?? '— (nem 15)'}</td><td>${f.reprovadas}</td></tr>`; }).join('');
+$('#tabela').onclick = (e) => { const tr = e.target.closest('tr[data-f]'); if (tr) escolher(tr.dataset.f); };
+$('#avaliar').onclick = () => rodar();
+$('#fonte').onchange = () => escolher($('#fonte').value);
+
+let atual = null;
+function escolher(n) {
+  $('#fonte').value = n; $('#tam').value = TABELA.fontes[n].minimo ?? 15;
+  rodar(); scrollTo({ top: 0, behavior: 'smooth' });
+}
+function rodar() {
+  const n = $('#fonte').value, T = +$('#tam').value, r = +$('#raio').value, e = +$('#esp').value, L = LETRAS_FONTES[n];
+  $('#estado').textContent = 'Calculando…';
+  setTimeout(() => {
+    const a = avaliar(L, T, r, e), falhas = Object.values(a.letras).filter((v) => !v.ok).length;
+    $('#estado').innerHTML = a.ok ? `<b style="color:var(--ok)">Todas as ${Object.keys(L).length} letras legíveis em ${T} mm.</b>`
+      : `<b style="color:var(--ponta)">${falhas} de ${Object.keys(L).length} letras reprovam em ${T} mm.</b> Mínimo da tabela: ${TABELA.fontes[n].minimo ?? 'nenhum'} mm.`;
+    atual = { L, T, r, e };
+    $('#grade').innerHTML = '';
+    for (const [ch, v] of Object.entries(a.letras)) {
+      const ideal = escala(L[ch], T), sim = simularPonta(ideal, r);
+      const d = document.createElement('div');
+      d.className = 'carta' + (v.ok ? '' : ' falha');
+      d.innerHTML = `<svg viewBox="${caixa(ideal, r + e)}"><path d="${caminho(ideal)}" fill="none" stroke="var(--ideal)" stroke-width="${e}" stroke-linecap="round" stroke-linejoin="round"/>` +
+        `<path d="${caminho(sim)}" fill="none" stroke="var(--ponta)" stroke-width="${Math.max(0.06, e / 4)}"/></svg>` +
+        `<b>${ch}</b> <span class="${v.desvio > v.limite ? 'ruim' : ''}">${v.desvio.toFixed(2)}/${v.limite.toFixed(2)}</span>${v.confunde ? ` <span class="ruim">≈ ${v.confunde}</span>` : ''}`;
+      d.onclick = () => animar(ch);
+      $('#grade').append(d);
+    }
+    animar(Object.keys(a.letras)[0]);
+  }, 20);
+}
+
+let quadro = 0, ultima = null;
+function animar(ch) {
+  ultima = ch;
+  const { L, T, r, e } = atual, ideal = escala(L[ch], T), passo = r > 0 ? Math.min(0.05, r / 4) : 0.05;
+  const cab = ideal.map((t) => reamostra(t, passo)), sim = simularPonta(ideal, r);
+  const cena = $('#cena');
+  cena.setAttribute('viewBox', caixa(ideal, r + e + 0.3));
+  cena.innerHTML = `<path d="${caminho(ideal)}" fill="none" stroke="var(--ideal)" stroke-width="${e}" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>` +
+    `<path id="pc" fill="none" stroke="var(--cabeca)" stroke-width="${e / 5}"/><path id="pp" fill="none" stroke="var(--ponta)" stroke-width="${e}" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>` +
+    `<circle id="cf" r="${r}" fill="none" stroke="var(--cabeca)" stroke-width="${e / 6}" stroke-dasharray="${r / 4} ${r / 6}"/><circle id="cc" r="${e / 4}" fill="var(--cabeca)"/><circle id="cp" r="${e / 3}" fill="var(--ponta)"/>`;
+  $('#info').querySelector('p').innerHTML = `Letra <b>${ch}</b> em ${T} mm, folga ±${r} mm. A cabeça (azul) segue o G-code; a ponta (vermelha) só anda quando a cabeça encosta na borda da folga (círculo tracejado), então cantos e laços pequenos encolhem.`;
+  const total = cab.reduce((s, t) => s + t.length, 0), dur = Math.min(9000, 1500 + total * 4), t0 = performance.now(), id = ++quadro;
+  const passo1 = (agora) => {
+    if (id !== quadro) return;
+    let k = Math.floor(Math.min(1, (agora - t0) / dur) * total), dc = '', dp = '', c = null, p = null;
+    for (let i = 0; i < cab.length && k > 0; i++) {
+      const n = Math.min(k, cab[i].length); k -= n;
+      const cs = cab[i].slice(0, n), ps = sim[i].slice(0, n + 1);
+      dc += caminho([cs]); dp += caminho([ps]); c = cs.at(-1); p = ps.at(-1);
+    }
+    $('#pc').setAttribute('d', dc); $('#pp').setAttribute('d', dp);
+    for (const [idc, q] of [['#cf', c], ['#cc', c], ['#cp', p]]) if (q) { $(idc).setAttribute('cx', q[0]); $(idc).setAttribute('cy', -q[1]); }
+    if (agora - t0 < dur) requestAnimationFrame(passo1);
+  };
+  requestAnimationFrame(passo1);
+}
+$('#denovo').onclick = () => ultima && animar(ultima);
+escolher(nomes.find((n) => TABELA.fontes[n].minimo) ?? nomes[0]);
+</script>
+</body>
+</html>

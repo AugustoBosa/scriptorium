@@ -1,5 +1,7 @@
 import { ROTULOS, AJUDA } from '../ajuda.js';
 import { ret } from '../geo.js';
+import { raioFolga } from './folga.js';
+import { FOLGA_FONTES } from './folga-fontes.js';
 
 const megaS = {
   nome: 'megaS', mesaX: 210, mesaY: 210,
@@ -52,17 +54,27 @@ const trocaMegaS = (eixo, base, afasta, recuo) => ({
 });
 // caneta = posição da ponta em relação ao bico; janela = onde a ponta escreve, em coordenadas da mesa (onde o papel fica).
 const megaSTroca = { // frente: base na borda da frente, a caneta não alcança o fundo da mesa
-  ...structuredClone(megaS), nome: 'megaSTroca', experimental: true,
+  ...structuredClone(megaS), nome: 'megaSTroca', experimental: true, folgaPonta: raioFolga(),
   caneta: { x: 0, y: -PORTA.bico },
   janela: { x0: 0, y0: PORTA.livre, x1: 210, y1: 210 - PORTA.bico },
   troca: trocaMegaS('X', PORTA.bico - PORTA.pousada, 40, 12),
 };
 const megaSTrocaLado = { // lado direito: base na borda direita; o X perde curso porque o suporte bate na estrutura
-  ...structuredClone(megaS), nome: 'megaSTrocaLado', experimental: true,
+  ...structuredClone(megaS), nome: 'megaSTrocaLado', experimental: true, folgaPonta: raioFolga(),
   caneta: { x: PORTA.bico, y: 0 },
   janela: { x0: PORTA.bico, y0: 0, x1: Math.min(210 - PORTA.livre, 210 - PORTA.lateral + 6 + PORTA.bico), y1: 210 },
   troca: trocaMegaS('Y', 210 + PORTA.pousada - PORTA.bico, -40, -12),
 };
+
+// folgaPonta (mm): quanto a cabeça anda sem a ponta sair do lugar (src/maquina/folga.js). 0 ou ausente = sem limite de tamanho.
+// Tamanho mínimo de letra legível com a folga do perfil, para as fontes da mão: { valor, sem } (sem = fontes que nem 15 mm salva).
+// null quando o perfil não tem folga. ponytail: a tabela foi calculada com FOLGA_FONTES.r; outra folga pede rodar scripts/folga-ponta.mjs.
+export function minimoTamanho(perfil, mao) {
+  if (!(perfil?.folgaPonta > 0)) return null;
+  const fontes = [...new Set((mao?.base ?? []).map((b) => b.fonte))].map((n) => [n, FOLGA_FONTES.fontes[n]]).filter(([, f]) => f);
+  if (!fontes.length) return null;
+  return { valor: Math.max(...fontes.map(([, f]) => f.minimo ?? 15)), sem: fontes.filter(([, f]) => f.minimo == null).map(([n]) => n) };
+}
 
 export const PERFIS = { megaS, megaSTroca, megaSTrocaLado, p2s, personalizado: { ...structuredClone(megaS), nome: 'personalizado' } };
 
