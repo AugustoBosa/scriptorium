@@ -18,3 +18,17 @@ test('perfil com porta-caneta limita a escala da letra e avisa', async ({ page }
   await perfil(page, 0) // Mega S sem porta-caneta
   await expect(nota).toBeHidden()
 })
+
+test('a máquina escolhida vale no editor de personagem: o tamanho mostra o mínimo da folga', async ({ page }) => {
+  await page.goto('index.html#carta')
+  await page.waitForSelector('#previa svg')
+  await perfil(page, 2) // Mega S + porta-caneta no lado: fica lembrada (writer.maquina)
+  await page.locator('nav.oficinas a[href="#personagens"]').click()
+  const ed = page.locator('.pers-editor')
+  await ed.locator('summary', { hasText: /^Tamanho e linhas$/ }).click()
+  await expect(ed.locator('[data-chave=tamanho] .controle-nota')).toContainText('folga do porta-caneta')
+  await page.reload() // depois de recarregar a oficina abre com a mesma máquina
+  await page.goto('index.html#carta')
+  await page.waitForSelector('#previa svg')
+  await expect(page.locator('[data-chave=escala] .controle-nota').first()).toContainText('folga do porta-caneta')
+})

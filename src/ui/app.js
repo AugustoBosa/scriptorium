@@ -3,7 +3,7 @@ import '@fontsource/eb-garamond/500.css';
 import '@fontsource/eb-garamond/400-italic.css';
 import './tema.css';
 import { parseFonte, FONTES } from '../fonte.js';
-import { PERFIS, mesclarPerfil } from '../maquina/perfis.js';
+import { PERFIS } from '../maquina/perfis.js';
 import { papel, deTracos } from '../materiais/documento.js';
 import { novoPersonagem } from '../personagem.js';
 import { EXEMPLOS, trocarExemplo, aplicarVisual } from '../materiais/exemplos.js';
@@ -55,8 +55,7 @@ function criarEscrita() {
   };
   try { pPersonagem.restaurar(estado); } catch { /* usa personagem novo */ }
   trabalho.restaurar('escrita', estado);
-  const salvo = lerJSON('writer.perfil');
-  if (salvo && typeof salvo === 'object') { estado.perfil = mesclarPerfil(salvo); estado.perfilNome = 'personalizado'; }
+  Object.assign(estado, pExportar.maquinaSalva()); // última máquina escolhida
   return {
     estado,
     grupos: [
@@ -87,8 +86,7 @@ function criarSigilos() {
     personagem: novoPersonagem(), fontes: {}, perfil: structuredClone(PERFIS.megaS), perfilNome: 'megaS', otimizar: true, trajeto: false, paginaAtual: 0,
   };
   try { pPersonagem.restaurar(estado); } catch { /* usa personagem novo */ }
-  const salvo = lerJSON('writer.perfil');
-  if (salvo && typeof salvo === 'object') { estado.perfil = mesclarPerfil(salvo); estado.perfilNome = 'personalizado'; }
+  Object.assign(estado, pExportar.maquinaSalva()); // última máquina escolhida
   estado.pagina = papel('A6');
   trabalho.restaurar('sigilos', estado);
   return {
@@ -111,8 +109,7 @@ function criarColeta() {
     paginaNome: 'A5', variacao: 'normal', col: coleta0(),
     personagem: novoPersonagem(), fontes: {}, perfil: structuredClone(PERFIS.megaS), perfilNome: 'megaS', otimizar: true, trajeto: false, paginaAtual: 0,
   };
-  const salvo = lerJSON('writer.perfil');
-  if (salvo && typeof salvo === 'object') { estado.perfil = mesclarPerfil(salvo); estado.perfilNome = 'personalizado'; }
+  Object.assign(estado, pExportar.maquinaSalva()); // última máquina escolhida
   estado.pagina = papel('A5'); // A5 cabe na mesa da Mega S (210×210)
   trabalho.restaurar('coleta', estado);
   return {

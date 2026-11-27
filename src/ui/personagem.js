@@ -2,6 +2,7 @@ import { resolver, validar, ajustarVariacao, escritaDe, notasDe, NOTAS } from '.
 import { PARAMS as PARAMS_LAYOUT } from '../layout.js';
 import { PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
 import * as pFontes from './fontes.js';
+import { maquinaSalva } from './exportar.js';
 import { rotulo, AJUDA } from '../ajuda.js';
 import { controle, dica } from './controle.js';
 import { PARAMS } from '../motor/mao.js';
@@ -133,8 +134,9 @@ export function editor(elemento, estado, aoMudar) {
     aoMudar();
   });
 
-  // Controles de parâmetro: prévia viva com o valor atual
+  // Controles de parâmetro: prévia viva com o valor atual. perfil: a máquina escolhida por último (limite da folga da ponta).
   const ctx = () => ({
+    perfil: maquinaSalva()?.perfil,
     fontes: estado.fontes,
     mao: resolver(estado.personagem, estado.variacao || null),
     escrever: (m, t, o) => amostra(estado.fontes, m, t, o),

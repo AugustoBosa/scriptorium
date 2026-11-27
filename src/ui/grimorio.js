@@ -47,6 +47,7 @@ export function criar() {
     Object.assign(estado, JSON.parse(localStorage.getItem(CHAVE)) ?? {});
     estado.cfg = { ...structuredClone(CFG_PADRAO), ...estado.cfg };
   } catch { /* estado salvo ilegível: começa do zero */ }
+  Object.assign(estado, pExportar.maquinaSalva()); // última máquina escolhida
   estado.personagem = novoPersonagem();
   const variacaoSalva = estado.variacao;
   try { pPersonagem.restaurar(estado); } catch { /* usa personagem novo */ }

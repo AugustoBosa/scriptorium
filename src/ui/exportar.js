@@ -46,6 +46,17 @@ function gerarGcode(estado, i, camadas, rapido = false) {
   }
 }
 
+// Máquina escolhida por último (nome em PERFIS ou 'personalizado'). Vale para todas as telas, inclusive o editor de
+// personagem, que mostra o tamanho mínimo da letra quando a máquina tem folga da ponta (porta-caneta).
+const CHAVE_MAQUINA = 'writer.maquina';
+const lembrarMaquina = (nome) => { try { localStorage.setItem(CHAVE_MAQUINA, nome); } catch { /* sem armazenamento */ } };
+export function maquinaSalva() {
+  let nome = null, salvo = null;
+  try { nome = localStorage.getItem(CHAVE_MAQUINA); salvo = JSON.parse(localStorage.getItem(CHAVE_PERFIL)); } catch { /* ilegível: padrão */ }
+  if ((nome === 'personalizado' || !nome) && salvo && typeof salvo === 'object') return { perfil: mesclarPerfil(salvo), perfilNome: 'personalizado' };
+  return Object.hasOwn(PERFIS, nome ?? '') && nome !== 'personalizado' ? { perfil: structuredClone(PERFIS[nome]), perfilNome: nome } : null;
+}
+
 const gravarPerfil = (perfil) => {
   try { localStorage.setItem(CHAVE_PERFIL, JSON.stringify(perfil)); } catch { /* sem armazenamento: vale só nesta sessão */ }
 };
@@ -59,6 +70,7 @@ export function montar(elemento, estado, aoMudar) {
     estado.perfil.nome = 'personalizado';
     estado.perfilNome = 'personalizado';
     gravarPerfil(estado.perfil);
+    lembrarMaquina('personalizado');
   };
 
   const controles = ['zEscrita', 'zLevantada', 'fDesenho', 'fViagem', 'fZ', 'offsetX', 'offsetY', 'mesaX', 'mesaY']
@@ -89,6 +101,7 @@ export function montar(elemento, estado, aoMudar) {
     estado.perfil = structuredClone(PERFIS[estado.perfilNome === 'personalizado' ? 'megaS' : estado.perfilNome]);
     estado.perfilNome = estado.perfil.nome === 'p2s' ? 'p2s' : 'megaS';
     try { localStorage.removeItem(CHAVE_PERFIL); } catch { /* ignora */ }
+    lembrarMaquina(estado.perfilNome);
     aoMudar();
   });
 
@@ -114,6 +127,7 @@ export function montarBarra(elemento, estado, aoMudar) {
       estado.perfil = structuredClone(PERFIS[nome]);
     }
     estado.perfilNome = nome;
+    lembrarMaquina(nome);
     aoMudar();
   };
   const seletor = controle(PP.perfil, { ler: () => estado.perfilNome, gravar: trocar, ctx }, aoMudar);
