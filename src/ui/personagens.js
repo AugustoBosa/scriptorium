@@ -12,7 +12,7 @@ const primeiraVariacao = (p) => Object.keys(p.variacoes ?? {})[0] ?? '';
 
 // Contrato de página: montar(el, { fontes }) → atualizar()
 export function montar(raiz, { fontes }) {
-  const estado = { personagem: novoPersonagem(), variacao: 'normal', fontes };
+  const estado = { personagem: novoPersonagem(), variacao: 'normal', fontes, nomesFontes: Object.keys(fontes) };
   pPersonagem.restaurar(estado);
   let salvos = {};
 

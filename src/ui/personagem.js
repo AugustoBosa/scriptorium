@@ -1,4 +1,7 @@
-import { resolver, validar, ajustarVariacao } from '../personagem.js';
+import { resolver, validar, ajustarVariacao, escritaDe, notasDe, NOTAS } from '../personagem.js';
+import { PARAMS as PARAMS_LAYOUT } from '../layout.js';
+import { PARAMS as PARAMS_NOTAS } from '../materiais/notas.js';
+import * as pFontes from './fontes.js';
 import { rotulo, AJUDA } from '../ajuda.js';
 import { controle, dica } from './controle.js';
 import { PARAMS } from '../motor/mao.js';
@@ -6,6 +9,8 @@ import { amostra } from '../layout.js';
 import { el, botao, lerPersonagens as lerSalvos, novaFicha } from './util.js';
 
 const P = Object.fromEntries(PARAMS.map((p) => [p.chave, p]));
+const PL = Object.fromEntries(PARAMS_LAYOUT.map((p) => [p.chave, p]));
+const PN = Object.fromEntries(PARAMS_NOTAS.map((p) => [p.chave, p]));
 const CHAVES_IDENTIDADE = ['inclinacao', 'largura', 'altura', 'espacamento', 'espacoPalavra', 'idio', 'alternativas', 'contexto', 'arremate', 'ligadura', 'adiamento'];
 const CHAVES_EXECUCAO = ['pressa', 'capricho', 'tremor', 'queda', 'compressao', 'variacao', 'desleixo', 'ondulacao', 'deriva', 'ritmo', 'fadiga', 'fluidez', 'ultrapassagem', 'retoque'];
 
@@ -102,7 +107,7 @@ export function montar(elemento, estado, aoMudar) {
   return atualizar;
 }
 
-// Aba Personagens: edita a mão em uso (nome, variações, identidade, execução).
+// Aba Personagens: edita tudo da letra (nome, perfis, fontes, tamanho, identidade, execução, notas). As oficinas só escolhem.
 export function editor(elemento, estado, aoMudar) {
   const inputNome = el('input');
   inputNome.type = 'text';
@@ -144,6 +149,20 @@ export function editor(elemento, estado, aoMudar) {
     gravar: (v) => ajustarVariacao(estado.personagem, estado.variacao || null, chave, v),
     ctx,
   }, aoMudar));
+  // Tamanho e entrelinha: por perfil (variação), como a execução
+  const ctrlEscrita = ['tamanho', 'entrelinha'].map((chave) => controle(PL[chave], {
+    ler: () => escritaDe(resolver(estado.personagem, estado.variacao || null))[chave],
+    gravar: (v) => ajustarVariacao(estado.personagem, estado.variacao || null, chave, v),
+    ctx,
+  }, aoMudar));
+  // Gesto das notas na margem: um só por personagem
+  const ctrlNotas = NOTAS.filter((k) => PN[k]).map((chave) => controle(PN[chave], {
+    ler: () => notasDe(estado.personagem)[chave],
+    gravar: (v) => { estado.personagem.notas = { ...notasDe(estado.personagem), [chave]: v }; },
+    ctx,
+  }, aoMudar));
+  const letra = el('div');
+  const atualizarFontes = pFontes.montar(letra, estado, aoMudar);
   const avancado = el('div');
   avancado.dataset.nivel = 'avancado';
   avancado.append(linhaBotoes(
@@ -175,8 +194,11 @@ export function editor(elemento, estado, aoMudar) {
   mao.open = true;
   elemento.append(
     mao,
+    secao('Letra', letra),
+    secao('Tamanho e linhas', el('p', 'nota-secao', 'Vale para o perfil escolhido. Nas oficinas dá para só aumentar ou diminuir.'), ...ctrlEscrita.map((c) => c.el)),
     secao('Identidade', ...ctrlIdentidade.map((c) => c.el)),
     secao('Execução', ...ctrlExecucao.map((c) => c.el)),
+    secao('Notas na margem', el('p', 'nota-secao', 'Como este personagem desenha setas e anotações nas cartas e livros.'), ...ctrlNotas.map((c) => c.el)),
   );
 
   function atualizar() {
@@ -188,7 +210,8 @@ export function editor(elemento, estado, aoMudar) {
     selVar.value = estado.variacao;
     atualizarNota(nota, p, estado.variacao);
     btnRenomear.disabled = btnRemover.disabled = !chaves.length;
-    [...ctrlIdentidade, ...ctrlExecucao].forEach((c) => c.atualizar());
+    [...ctrlEscrita, ...ctrlIdentidade, ...ctrlExecucao, ...ctrlNotas].forEach((c) => c.atualizar());
+    atualizarFontes();
     lembrar(estado);
   }
   atualizar();
