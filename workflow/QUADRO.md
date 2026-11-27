@@ -2,7 +2,14 @@
 
 Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no git, até o commit `156fdca`.
 
-## Retomada (2026-11-21) — LEIA PRIMEIRO
+## Redesign "manual do grimório" (2026-11-27, branch `redesign`)
+
+- **A letra é do personagem.** Tamanho e entrelinha ficam em `mao` e cada perfil pode mudar (`ESCRITA`, `escritaDe`). O gesto das notas fica em `p.notas` (`notasDe`). Tudo isso está em `src/personagem.js`. O material só tem `escala` (Carta e Livro: `opcoes.escala`; Magias: `cfg.escala`). Fontes, tamanho e notas saíram das oficinas e foram para o editor de Personagens.
+- **Navegação**: home com Personagens, Escrever e Continuar; navegação à vista no desktop; "Escrito por" em cima da prévia; Minha letra entra em "Novo personagem" (ficha D&D, minha letra, em branco).
+- **Visual**: Claro = manual do aventureiro; Vela = grimório iluminado. Ver `DESIGN.md`.
+- Gates: `npm test` 862 ok; `npx playwright test` 101/101; build ok; `impeccable detect` só acusa o filete de 3 px em cima e embaixo dos blocos de ficha, que é de propósito.
+
+## Retomada (2026-11-21)
 
 - Tudo PUBLICADO até `3efc803` (2026-11-21): auditoria, redesenho estrutural e os acordeões. Pages verde.
 - Gates na última entrega: `npm test` 838 ok + 1 pulado; `npx playwright test` 98/98 (tema escuro só roda `visual.spec.js`); build ok; `impeccable detect` com zero achados.

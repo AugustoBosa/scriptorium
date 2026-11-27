@@ -7,10 +7,13 @@ Um app de navegador que escreve à mão com uma plotter de caneta. O app gera le
 O dono do projeto, em casa, ao lado de uma Anycubic i3 Mega S adaptada como plotter (mesa 210 × 210 mm). Ele usa no desktop para compor e no celular para baixar o G-code perto da máquina. Faz cartas, páginas de livro, magias de D&D, sigilos e folhas de coleta da própria letra.
 
 ## Tarefas principais
-1. Escolher uma oficina (Carta, Livro, Magias, Sigilos, Minha letra).
-2. Escrever ou importar o conteúdo e ajustar a mão do personagem e o papel.
+1. **Criar quem escreve** (Personagens): da ficha de D&D, da própria letra (Minha letra) ou em branco. Toda a letra é do personagem: fontes, tamanho e entrelinha por perfil, identidade, execução e gesto das notas.
+2. **Escrever o material** (Carta, Livro, Magias, Sigilos): escolher quem escreve e o perfil, escrever o conteúdo, ajustar papel, layout e a escala da letra.
 3. Conferir na prévia (Página) e na cena da máquina (Mesa).
 4. Baixar o G-code da página ou da passada e plotar.
+
+## Regra de fronteira
+O material nunca edita a letra. Ele escolhe personagem e perfil e pode só aumentar ou diminuir a letra (escala). Controle de letra novo entra no editor de personagem.
 
 ## Restrições
 - **Traço único**: tudo que sai na folha é linha de caneta, sem preenchimento nem rasterização.
@@ -20,8 +23,8 @@ O dono do projeto, em casa, ao lado de uma Anycubic i3 Mega S adaptada como plot
 
 ## Modo de cada superfície (impeccable)
 - Oficinas, Personagens, Biblioteca: **Operate** (tarefa e escaneabilidade antes de expressão).
-- Home (`#inicio`): **Operate** com vitrine. Os cartões mostram a miniatura real de cada oficina, desenhada traço a traço.
+- Home (`#inicio`): **Operate** com vitrine. Duas áreas, Personagens e Escrever, e a faixa Continuar. Os cartões de material mostram a miniatura real, desenhada traço a traço.
 
 ## Compromissos de marca
-- O mundo é o de um scriptorium: pergaminho, tinta ferro-gálica, rubrica e pauta dupla de escriba. Ver `DESIGN.md`.
+- Temática: **fantasia medieval e D&D** (pedido do usuário em 2026-11-27). O visual é um manual do aventureiro de dia e um grimório iluminado à noite. Ver `DESIGN.md`.
 - A folha da prévia é sempre papel claro, nos dois temas, porque é o objeto físico que sai da máquina.
