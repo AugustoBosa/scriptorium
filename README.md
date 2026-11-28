@@ -1,89 +1,88 @@
-# Scriptorium: gerador de caligrafia para pen plotter
+# Scriptorium: handwriting generator for pen plotters
+[![en](https://img.shields.io/badge/lang-en-red.svg)](README.md) [![pt-br](https://img.shields.io/badge/lang-pt--br-green.svg)](README.pt-br.md)
 
-Gerador online e grátis de **letra manuscrita de traço único** para **plotter de caneta** (ou impressora 3D adaptada como plotter). Escreve cartas, livros, grimórios e sigilos de D&D e exporta **SVG** e **G-code**.
+Free online generator of **single-stroke handwriting** for **pen plotters** (or a 3D printer converted into a plotter). Writes letters, books, D&D grimoires and sigils, and exports **SVG** and **G-code**. Interface in Brazilian Portuguese.
 
-**Usar online:** https://augustobosa.github.io/scriptorium/
+**Use it online:** https://augustobosa.github.io/scriptorium/
 
-> **In English:** Free browser-based handwriting generator for pen plotters and 3D printers converted into plotters. Procedural single-line (single-stroke) fonts with per-character hands, ligatures and pen kinematics; letters, books, D&D spell scrolls, grimoires and sigils; exports SVG and G-code. Runs fully in the browser, no server. Interface in Brazilian Portuguese.
+The app generates handwriting with a procedural, deterministic hand (same seed, same result), lays out the page and exports SVG and G-code.
 
-Caligrafia de traço único para plotter de caneta. O app gera a letra com uma mão procedural e determinística (mesma seed, mesmo resultado), monta a página e exporta SVG e G-code.
+- **Each character has its own hand**: single-line fonts mixed and mutated, with per-occurrence variation, fitting, ligatures, slow drift and pen kinematics.
+- **Moods** (normal, hurried, angry, tired...) change only the execution; the handwriting stays recognizable.
+- **Ornament and arcana**: borders, vines, drop caps, filigree, sigils and an arcane alphabet.
 
-- **Mão própria por personagem**: fontes de traço único misturadas e mutadas, com variação por ocorrência, encaixe, ligaduras, deriva lenta e cinemática da caneta.
-- **Variações** (normal, apressado, raiva, cansaço...) mudam só a execução; a letra continua reconhecível.
-- **Ornamento e arcano**: bordas, vinhas, capitulares, filigranas, sigilos e alfabeto arcano.
+## Workshops
 
-## Oficinas
+The site has two paths, and the home page (`#inicio`) shows both side by side:
 
-O site tem dois caminhos, e a home (`#inicio`) mostra os dois lado a lado:
+1. **Characters** (who writes): `#personagens`. Everything about the handwriting lives in the character: fonts, seed, mutation, size and line spacing (per profile), identity, execution and the gesture of margin notes. A new character starts in three ways: from a D&D character sheet (`#ficha`), from your own handwriting (`#letra`) or blank.
+2. **Write** (what to write): the `#carta`, `#livro`, `#magias` and `#sigilos` workshops. Each one only picks who writes and the profile ("Escrito por …" above the preview) and handles the material: content, paper, margins, alignment, columns and a **letter scale** (1 = the profile size).
 
-1. **Personagens** (quem escreve): `#personagens`. Tudo da letra mora no personagem: fontes, semente, mutação, tamanho e entrelinha (por perfil), identidade, execução e o gesto das notas na margem. Um personagem novo começa de três jeitos: da ficha de D&D (`#ficha`), da minha letra (`#letra`) ou em branco.
-2. **Escrever** (o que escrever): as oficinas `#carta`, `#livro`, `#magias` e `#sigilos`. Cada uma só escolhe quem escreve e o perfil ("Escrito por …" em cima da prévia) e cuida do material: conteúdo, papel, margens, alinhamento, colunas e uma **escala da letra** (1 = o tamanho do perfil).
+The **Continuar** (continue) strip opens the most recent saved materials. Navigation is visible in the header (☰ on mobile). The old `#scroll` and `#grimorio` routes lead to `#magias`.
 
-A faixa **Continuar** abre os materiais salvos mais recentes. A navegação fica à vista no cabeçalho (☰ no celular). As rotas antigas `#scroll` e `#grimorio` levam a `#magias`.
+All workshops share the same panel order: Character, content, Paper, own panel, Table and sheet, Machine. Each type opens with a sample text and its own default scale.
 
-Todas as oficinas têm a mesma ordem de painéis: Personagem, conteúdo, Papel, painel próprio, Mesa e folha, Máquina. Cada tipo abre com um texto de exemplo e uma escala padrão própria.
-
-- **Carta** (`#carta`): carta, anotação ou diário. Marcações no texto: `{nota: ...}`, `{~errado~>certo}`, `{_sublinhar_}`, `{o:circular}`. As notas vão para uma camada própria (margem, risco, sublinhado, laço), com caneta e personagem próprios. Sem posição, a nota vai para a margem de notas (anotação e diário) ou para o lugar livre mais perto da palavra, ligada por seta. `{nota@direita: ...}` fixa o lado (esquerda, direita, acima, abaixo) e `{nota@x,y: ...}` fixa a posição em mm; o painel Notas lista as notas (lado e ângulo de cada uma), e arrastar a nota na prévia grava a posição. `{nota@direita/30: ...}` ou `{nota@/30: ...}` fixam o ângulo. O gesto das notas (curva da seta, irregularidade, ponta, inclinação e girar para caber) é do personagem que anota, na seção "Notas na margem" do editor. No painel Notas fica só quem anota e a caneta.
-- **Magias** (`#magias`): magias de D&D. Ligado "uma magia por página", cada magia vira um pergaminho avulso; desligado, as magias seguem como num grimório, com ou sem separador decorado entre elas (losango, asteriscos ou onda). O bloco marcado sai em alfabeto arcano, com chave opcional. O sigilo de cada magia codifica nível, escola, concentração, ritual e componentes.
-- **Livro** (`#livro`): colunas, título corrente, numeração, reclamo, rubrica, capitular e borda. Usa o mesmo texto da Carta e aceita as mesmas marcações: notas soltas com seta, correções, sublinhados, laços e rabiscos nas margens, sem tocar a paginação, a borda nem a capitular.
-- **Sigilos** (`#sigilos`): cada frase vira um selo, um sigilo (método kamea, roda ou fusão) ou um círculo, com legenda. Os sigilos ficam em grade numa folha.
-- **Minha letra** (`#letra`, parte do fluxo de personagem): a máquina plota as folhas de coleta (texto modelo por língua e letras soltas, com marcas de canto e código da folha) para você escrever à mão. A leitura da foto e a geração da fonte são as próximas etapas (`workflow/experimentos/fonte-propria/PESQUISA.md`).
+- **Letter** (`#carta`): letter, note or diary. Text markup: `{nota: ...}`, `{~wrong~>right}`, `{_underline_}`, `{o:circle}`. Notes go to their own layer (margin, strike, underline, loop), with their own pen and character. Without a position, a note goes to the notes margin (note and diary) or to the nearest free spot to the word, linked by an arrow. `{nota@direita: ...}` fixes the side (esquerda/left, direita/right, acima/above, abaixo/below) and `{nota@x,y: ...}` fixes the position in mm; the Notes panel lists the notes (side and angle of each), and dragging a note on the preview saves its position. `{nota@direita/30: ...}` or `{nota@/30: ...}` fix the angle. The note gesture (arrow curve, irregularity, tip, slant and rotate to fit) belongs to the annotating character, in the "Notas na margem" section of the editor. The Notes panel only holds who annotates and the pen.
+- **Spells** (`#magias`): D&D spells. With "one spell per page" on, each spell becomes a loose scroll; off, spells flow like a grimoire, with or without a decorated separator between them (diamond, asterisks or wave). The marked block comes out in the arcane alphabet, with an optional key. Each spell's sigil encodes level, school, concentration, ritual and components.
+- **Book** (`#livro`): columns, running title, page numbers, catchword, rubric, drop cap and border. Uses the same text as Letter and accepts the same markup: loose notes with arrows, corrections, underlines, loops and margin scribbles, without touching pagination, border or drop cap.
+- **Sigils** (`#sigilos`): each phrase becomes a seal, a sigil (kamea, wheel or fusion method) or a circle, with a caption. Sigils are laid out in a grid on a sheet.
+- **My handwriting** (`#letra`, part of the character flow): the machine plots the collection sheets (sample text per language and loose letters, with corner marks and sheet code) for you to write by hand. Reading the photo and generating the font are the next steps (`workflow/experimentos/fonte-propria/PESQUISA.md`).
 
 ## Interface
 
-- **Básico / Avançado**: o básico mostra o essencial; o avançado mostra os ajustes finos e a máquina.
-- **Prévia viva**: cada controle mostra uma amostra ao passar o mouse ou focar. O que o controle altera aparece em vermelho; o resto, em tinta. Os controles de valor têm régua e escala de 10 mm, e os valores têm no máximo 2 casas depois da vírgula.
-- **Personagens**: galeria com espécime e o editor completo da letra (Letra, Tamanho e linhas, Identidade, Execução, Notas na margem); a mão em uso vale para todas as oficinas.
-- **Criar personagem** (`#ficha`): "Da ficha de D&D" abre uma ficha de D&D 5e (raça, classe, antecedente, atributos, alinhamento, idiomas). A ficha sugere a letra (3 propostas e mistura) e os perfis de escrita (diário, grimório, carta formal, uma escrita por idioma…); cada perfil pode ter letra e tamanho próprios. "Reabrir ficha" na galeria volta ao wizard.
-- **Temas**: claro (manual do aventureiro) e vela (grimório iluminado, escuro).
-- **Salvos no navegador**: personagens (`writer.personagens`), perfil de máquina (`writer.perfil`), preferências (`writer.ui`) e o trabalho em andamento de cada oficina (`trabalho.escrita`, `trabalho.sigilos`, `grimorio.estado`), no localStorage. No IndexedDB (`scriptorium`): os materiais da biblioteca e o `magias.json` importado. Nada vai para servidor.
-- **Biblioteca** (`#biblioteca`): "Salvar na biblioteca" guarda o trabalho com nome (oficina, texto ou magias, ajustes e personagem). A aba abre, baixa (.json), renomeia e apaga; "Baixar cópia de tudo" leva personagens e materiais para outro navegador. A home mostra os mais recentes.
-- **Mesa** (botão Mesa acima da prévia): a mesa da máquina vista de cima, com a frente embaixo, a origem X0 Y0, até onde a caneta alcança, a folha e o texto projetado no lugar onde a caneta vai escrever. Sem imposição, mostra a página atual; com imposição, a folha inteira, com o texto da passada em tinta e o das outras em cinza (passadas vazias ficam marcadas e não geram arquivo). "Ampliar" abre a cena em tela cheia.
-- **Trajeto**: "mostrar trajeto" na prévia mostra a viagem no ar, início, fim e ordem de cada traço.
-- **Texto**: pode ser digitado ou importado de um `.txt` de até 200 KB.
+- **Basic / Advanced**: basic shows the essentials; advanced shows fine tuning and the machine.
+- **Live preview**: each control shows a sample on hover or focus. What the control changes appears in red; the rest, in ink. Value controls have a ruler and a 10 mm scale, and values have at most 2 decimal places.
+- **Characters**: gallery with specimen and the full handwriting editor (Handwriting, Size and lines, Identity, Execution, Margin notes); the hand in use applies to all workshops.
+- **Create character** (`#ficha`): "Da ficha de D&D" opens a D&D 5e character sheet (race, class, background, abilities, alignment, languages). The sheet suggests the handwriting (3 proposals and a mix) and the writing profiles (diary, grimoire, formal letter, one hand per language…); each profile can have its own hand and size. "Reabrir ficha" in the gallery returns to the wizard.
+- **Themes**: light (adventurer's handbook) and candle (illuminated grimoire, dark).
+- **Saved in the browser**: characters (`writer.personagens`), machine profile (`writer.perfil`), preferences (`writer.ui`) and the work in progress of each workshop (`trabalho.escrita`, `trabalho.sigilos`, `grimorio.estado`), in localStorage. In IndexedDB (`scriptorium`): library materials and the imported `magias.json`. Nothing goes to a server.
+- **Library** (`#biblioteca`): "Salvar na biblioteca" saves the work with a name (workshop, text or spells, settings and character). The tab opens, downloads (.json), renames and deletes; "Baixar cópia de tudo" takes characters and materials to another browser. The home page shows the most recent.
+- **Table** (Mesa button above the preview): the machine bed seen from above, front at the bottom, with the X0 Y0 origin, how far the pen reaches, the sheet and the text projected where the pen will write. Without imposition, it shows the current page; with imposition, the whole sheet, with the current pass in ink and the others in grey (empty passes are marked and produce no file). "Ampliar" opens the scene full screen.
+- **Path**: "mostrar trajeto" on the preview shows air travel, start, end and order of each stroke.
+- **Text**: can be typed or imported from a `.txt` of up to 200 KB.
 
-## Máquinas (`src/maquina/perfis.js`)
+## Machines (`src/maquina/perfis.js`)
 
-- **megaS**: Anycubic i3 Mega S como plotter, mesa 210 × 210 mm. É o único perfil testado no equipamento.
-- **megaSTroca** e **megaSTrocaLado**: Mega S com o porta-caneta de troca automática (4 vagas, ímãs; modelo em `hardware/pen_holder`, branch `hardware-pen-holder`), preso na frente ou no lado direito do cabeçote. A caneta fica a 41,5 mm do bico (porta-caneta v4), então a área útil cai para 210 × 152,5 mm na frente (A5 deitado cabe) e 152,5 × 210 mm no lado (A5 em pé cabe); o G-code já desconta essa distância. Experimental: as posições (`troca` em `src/maquina/perfis.js`) são estimativas do modelo 3D, nada medido. A caneta de cada camada vai para a vaga da sua posição em `canetas` (preta = vaga 1, vermelha = vaga 2…). No lugar do `M0`, o G-code pega a primeira caneta, troca entre camadas e devolve a última.
-- **p2s**: Bambu P2S, experimental. Janela útil de cerca de 207 × 200 mm. Nunca testada no equipamento.
-- **personalizado**: perfil editável, a partir do megaS.
+- **megaS**: Anycubic i3 Mega S as a plotter, 210 × 210 mm bed. The only profile tested on the hardware.
+- **megaSTroca** and **megaSTrocaLado**: Mega S with the automatic pen-change holder (4 slots, magnets; model in `hardware/pen_holder`, branch `hardware-pen-holder`), mounted on the front or on the right side of the head. The pen sits 41.5 mm from the nozzle (pen holder v4), so the usable area drops to 210 × 152.5 mm on the front (A5 landscape fits) and 152.5 × 210 mm on the side (A5 portrait fits); the G-code already accounts for this offset. Experimental: the positions (`troca` in `src/maquina/perfis.js`) are estimates from the 3D model, nothing measured. Each layer's pen goes to the slot of its position in `canetas` (black = slot 1, red = slot 2…). Instead of `M0`, the G-code picks the first pen, swaps between layers and returns the last one.
+- **p2s**: Bambu P2S, experimental. Usable window of about 207 × 200 mm. Never tested on the hardware.
+- **personalizado**: editable profile, based on megaS.
 
-O papel máximo é a janela útil do perfil. Papel maior que a janela é bloqueado na exportação, com mensagem. Depois do header, a caneta sobe para `zLevantada` antes da 1ª viagem; `zLevantada` tem que ficar acima de `zEscrita`, senão a exportação recusa. A troca de caneta gera `M0` com aviso. A exportação é por página e por camada (SVG e G-code), ou por "Todas as páginas".
+The maximum paper size is the profile's usable window. Paper larger than the window is blocked on export, with a message. After the header, the pen rises to `zLevantada` before the 1st travel; `zLevantada` must be above `zEscrita`, otherwise the export refuses. A pen change produces `M0` with a warning. Export is per page and per layer (SVG and G-code), or "Todas as páginas" (all pages).
 
-## Papéis (`src/materiais/documento.js`)
+## Papers (`src/materiais/documento.js`)
 
-A3, A4, A5, A6, A7, A8, carta, ofício e personalizado, em retrato ou paisagem, com margens por lado. Todas as oficinas usam a mesma lista; o limite é a janela da máquina.
+A3, A4, A5, A6, A7, A8, letter, legal (ofício) and custom, portrait or landscape, with per-side margins. All workshops use the same list; the limit is the machine window.
 
-## Estrutura
+## Structure
 
-- `src/motor/`: mão, ductus, escrita, cinemática.
-- `src/ornamento/`: bordas, vinhas, capitulares, filigranas.
-- `src/arcano/`: alfabeto, círculo, sigilo.
-- `src/materiais/`: carta, livro, scroll (magias), sigilos, notas, documento, exemplos (texto e visual padrão de cada tipo).
-- `src/maquina/`: perfis, G-code, otimização do trajeto, imposição na mesa.
-- `src/letra/`: folhas de coleta da Minha letra e textos modelo por língua (`linguas/`).
-- `src/geo.js`: geometria comum (`dist`, `comprimento`, `clamp`, `ret`, `VAO`, `valido`, recortes, hachura). Não copiar esses helpers em outro arquivo.
-- `src/ui/`: interface (DOM e CSS). Fora de `src/ui/` o código não usa DOM. Ajudantes de DOM e armazenamento em `src/ui/util.js`.
-- `fontes/`: 43 fontes de traço único (EMS, Hershey, Relief, Mistral, TwinSans). Licenças em `fontes/LICENCAS.md`.
-- `dados/`: dados das magias. Fica fora do git.
-- `scripts/gerar-magias.mjs`: gera `dados/magias.json` a partir de 5etools (padrão: `../../dnd/data/spells`). A tradução é `dados/traducao-ptbr.txt` (uma linha `id|Nome|Resumo` por magia).
-- `test/`: testes de unidade. `e2e/`: testes Playwright.
-- `workflow/`: quadro do projeto (`QUADRO.md`) e experimentos (P2S, fonte própria).
-- `PRODUCT.md` e `DESIGN.md`: regras do produto e do design; ler antes de mexer na interface.
+- `src/motor/`: hand, ductus, writing, kinematics.
+- `src/ornamento/`: borders, vines, drop caps, filigree.
+- `src/arcano/`: alphabet, circle, sigil.
+- `src/materiais/`: letter, book, scroll (spells), sigils, notes, document, examples (default text and look of each type).
+- `src/maquina/`: profiles, G-code, path optimization, bed imposition.
+- `src/letra/`: "My handwriting" collection sheets and sample texts per language (`linguas/`).
+- `src/geo.js`: shared geometry (`dist`, `comprimento`, `clamp`, `ret`, `VAO`, `valido`, clipping, hatching). Do not copy these helpers into another file.
+- `src/ui/`: interface (DOM and CSS). Outside `src/ui/` the code does not use the DOM. DOM and storage helpers in `src/ui/util.js`.
+- `fontes/`: 43 single-stroke fonts (EMS, Hershey, Relief, Mistral, TwinSans). Licenses in `fontes/LICENCAS.md`.
+- `dados/`: spell data. Not in git.
+- `scripts/gerar-magias.mjs`: builds `dados/magias.json` from 5etools (default: `../../dnd/data/spells`). The translation is `dados/traducao-ptbr.txt` (one `id|Name|Summary` line per spell).
+- `test/`: unit tests. `e2e/`: Playwright tests.
+- `workflow/`: project board (`QUADRO.md`) and experiments (P2S, own font).
+- `PRODUCT.md` and `DESIGN.md`: product and design rules; read before touching the interface.
 
-## Rodar
+## Run
 
-Requisito: Node 24 ou mais novo (o CI usa o 24 LTS). Depois de `npm ci`:
+Requirement: Node 24 or newer (CI uses 24 LTS). After `npm ci`:
 
-- `npm run dev`: servidor em `http://localhost:8765/`. A porta é fixa (`--strictPort`): se estiver ocupada, o comando falha.
-- `npm test`: testes de unidade (`node --test`), com snapshots em `test/*.snapshot`.
-- `npm run e2e`: Playwright (Chromium). O projeto `claro` roda tudo; o `vela` (tema escuro) roda só `visual.spec.js`. Sobe o `npm run dev` sozinho se ele não estiver rodando.
-- `npm run build`: gera `dist/` e copia `fontes/` e `dados/` (se existirem).
-- `npm run golden`: regrava os snapshots. Use só de propósito e revise o diff.
+- `npm run dev`: server at `http://localhost:8765/`. The port is fixed (`--strictPort`): if it is busy, the command fails.
+- `npm test`: unit tests (`node --test`), with snapshots in `test/*.snapshot`.
+- `npm run e2e`: Playwright (Chromium). The `claro` project runs everything; `vela` (dark theme) runs only `visual.spec.js`. Starts `npm run dev` on its own if it is not running.
+- `npm run build`: builds `dist/` and copies `fontes/` and `dados/` (if present).
+- `npm run golden`: rewrites the snapshots. Use only on purpose and review the diff.
 
-Roteiro manual da interface: `test/ui-smoke.md`.
+Manual interface checklist: `test/ui-smoke.md`.
 
-## Publicação
+## Deploy
 
-`.github/workflows/pages.yml` publica no GitHub Pages a cada push em `main`: `npm ci`, `npm test`, `npm run build` e envio de `dist/`. Em pull request roda os mesmos testes e o build, sem publicar. Pré-requisito único no GitHub: Settings › Pages › Source = "GitHub Actions". `dados/` não vai para o Pages (está no `.gitignore`); sem `dados/magias.json`, a oficina Magias oferece importar o JSON ou criar magias em branco.
+`.github/workflows/pages.yml` deploys to GitHub Pages on every push to `main`: `npm ci`, `npm test`, `npm run build` and upload of `dist/`. On pull requests it runs the same tests and build, without deploying. One-time GitHub prerequisite: Settings › Pages › Source = "GitHub Actions". `dados/` does not go to Pages (it is in `.gitignore`); without `dados/magias.json`, the Spells workshop offers to import the JSON or create blank spells.
