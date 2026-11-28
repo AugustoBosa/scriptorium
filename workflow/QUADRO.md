@@ -2,6 +2,35 @@
 
 Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no git, até o commit `156fdca`.
 
+## Oficina Símbolos (2026-11-28, branch `simbolos`, sem push)
+
+- **O que é.** É um editor de *sistemas de símbolos*: regras que transformam os atributos de uma magia no sigilo dela. O sistema fica salvo no personagem, em `personagem.simbolos`. O Grimório desenha os sigilos com ele (`ctx.sistema` em `scroll.js`). Um sigilo desenhado à mão continua tendo prioridade.
+- **Motor** (`src/arcano/sistema.js`): `desenharSistema(s, magia, seed, ctx)` devolve coordenadas em [-1,1] e compõe numa caixa de 60 mm. Cada código liga um atributo a um desenho:
+  - Atributos: nível, escola, dano, área, alcance, duração, salvaguarda, concentração, ritual e componentes.
+  - Desenhos: `colar` (cordas binárias), `glifo`, `anel`, `lados` e `marca`.
+  - Também entram o nome da magia (kamea, roda, spare ou anel), as molduras e o traço (complexidade, ornamento e firmeza).
+- **Colar** (`colares(n)`): cada valor vira um número binário guardado como necklace (um representante por classe de rotação; N=13 dá 632). Cada bit 1 é uma corda de passo k. O método vem do Gorilla of Destiny (MIT).
+- **Atributos** (`src/magia-atributos.js`): são extraídos dos textos pt-BR (`mec`, `alcance`, `duracao`, `resumo`, `texto`), porque a fonte 5etools não está mais no disco. O teste roda nas 525 magias quando `dados/` existe.
+- **Modelos** (`src/arcano/presets.js`):
+
+  | Modelo | O que faz |
+  |---|---|
+  | `classico` | delega para `sigilo()`; os goldens continuam iguais |
+  | `colar` | cordas binárias (Gorilla of Destiny) |
+  | `transmutacao` | círculo alquímico |
+  | `kamea` | nome traçado no quadrado mágico |
+  | `selo` | selo de cera |
+  | `spare` | monograma |
+
+- **Ficha** (`src/ficha/simbolos.js`): `sugerirPreset` usa classe + 1,5×antecedente. `modular` muda o traço: INT → complexidade, CAR → ornamento, DES → firmeza, caótico gira a base. `sistemaDe(p)` escolhe nesta ordem: o sistema salvo, o sugerido pela ficha, o clássico. Por isso, **personagem com ficha e sem sistema salvo já sai com o sugerido**. A ficha grava `simbolos` ao salvar e não sobrescreve um sistema editado ao reabrir.
+- **Oficina** `#simbolos` (`src/ui/simbolos.js`): seções Sistema, Códigos, Base e cordas, Nome da magia, Molduras, Traço do personagem, Amostras, Papel e Máquina. Os códigos têm um acordeão interno (`details name="codigos"`). Exporta e importa o sistema em `.json`. A folha-chave (`src/materiais/chave.js`) é uma grade de amostras com legenda em 2 linhas; o sigilo sai na caneta vermelha.
+- Gates: `npm test` 890 ok + 1 pulado; `npx playwright test` 104/104; build ok.
+- **Falta**:
+  - testar em papel (35 mm no A6);
+  - legenda/chave impressa explicando cada código para os jogadores;
+  - editor de glifo à mão por valor;
+  - `impeccable detect` na oficina nova.
+
 ## Redesign "manual do grimório" (2026-11-27, publicado em 531e5c8)
 
 - **A letra é do personagem.** Tamanho e entrelinha ficam em `mao` e cada perfil pode mudar (`ESCRITA`, `escritaDe`). O gesto das notas fica em `p.notas` (`notasDe`). Tudo isso está em `src/personagem.js`. O material só tem `escala` (Carta e Livro: `opcoes.escala`; Magias: `cfg.escala`). Fontes, tamanho e notas saíram das oficinas e foram para o editor de Personagens.
@@ -41,6 +70,7 @@ Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no 
 | Oficinas Carta e Livro | `src/materiais/carta.js`, `livro.js`, painéis em `src/ui/materiais.js`, `texto.js` |
 | Oficina Magias (pergaminho/grimório, separador) | `src/materiais/scroll.js`, `src/ui/grimorio.js` |
 | Sigilos | `src/materiais/sigilos.js`, `src/arcano/*` |
+| Símbolos (sistemas de sigilo de magia por personagem) | motor `src/arcano/sistema.js`, modelos `src/arcano/presets.js`, atributos `src/magia-atributos.js`, ficha `src/ficha/simbolos.js`, folha-chave `src/materiais/chave.js`, oficina `src/ui/simbolos.js` |
 | Notas (marcação, posição livre, seta natural) | `src/materiais/notas.js` (`PADRAO_MAO`, `tracoMao`, `curvaMao`, `pontaMao`, `girarEm`, `posicionarNota`), arrastar: `src/ui/arrastar.js` |
 | Texto de exemplo e visual padrão por tipo | `src/materiais/exemplos.js` |
 | Controles e prévia viva (`{ fundo, foco }`, 2 casas) | `src/ui/controle.js`; contrato em `test/params.test.mjs` |
