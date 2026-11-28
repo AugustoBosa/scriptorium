@@ -1,6 +1,10 @@
-# Scriptorium
+# Scriptorium: gerador de caligrafia para pen plotter
 
-Publicado em https://augustobosa.github.io/scriptorium/
+Gerador online e grátis de **letra manuscrita de traço único** para **plotter de caneta** (ou impressora 3D adaptada como plotter). Escreve cartas, livros, grimórios e sigilos de D&D e exporta **SVG** e **G-code**.
+
+**Usar online:** https://augustobosa.github.io/scriptorium/
+
+> **In English:** Free browser-based handwriting generator for pen plotters and 3D printers converted into plotters. Procedural single-line (single-stroke) fonts with per-character hands, ligatures and pen kinematics; letters, books, D&D spell scrolls, grimoires and sigils; exports SVG and G-code. Runs fully in the browser, no server. Interface in Brazilian Portuguese.
 
 Caligrafia de traço único para plotter de caneta. O app gera a letra com uma mão procedural e determinística (mesma seed, mesmo resultado), monta a página e exporta SVG e G-code.
 
