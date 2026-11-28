@@ -5,7 +5,7 @@ import { amostra, minimoFolga } from '../layout.js';
 import { resolver, escritaDe } from '../personagem.js';
 import { AJUDA, rotulo } from '../ajuda.js';
 import { controle, dica, ligar } from './controle.js';
-import { resumoMesa, otim } from './mesa.js';
+import { resumoMesa, otim, mesaLigada, gcodesMesa } from './mesa.js';
 import { baixar } from './util.js';
 
 const PP = Object.fromEntries(PARAMS_PERFIL.map((p) => [p.chave, p]));
@@ -156,7 +156,12 @@ export function montarBarra(elemento, estado, aoMudar) {
   rotuloCamada.append('Camada ', camada);
 
   const bSvg = botao('Baixar SVG', () => baixarSvg(estado.paginaAtual, escolhida(estado, estado.paginaAtual)));
+  // com a imposição ligada, os botões de G-code baixam as passadas (a folha como a vista Mesa mostra), não a página solta
+  const passadas = (todas) => {
+    try { const r = gcodesMesa(estado, todas); erro.textContent = r.fora ?? ''; r.arquivos.forEach(([n, t]) => baixar(t, n, 'text/plain')); } catch (e) { erro.textContent = e.message; }
+  };
   const bGcode = botao('Baixar G-code', () => {
+    if (mesaLigada(estado)) return passadas(false);
     const cam = escolhida(estado, estado.paginaAtual);
     const r = gerarGcode(estado, estado.paginaAtual, cam);
     erro.textContent = r.erro ?? '';
@@ -165,6 +170,7 @@ export function montarBarra(elemento, estado, aoMudar) {
   }, 'primario');
   const bTodosSvg = botao('Todos os SVG', () => estado.doc.paginas.forEach((_, i) => baixarSvg(i)));
   const bTodosGcode = botao('Todos os G-code', () => {
+    if (mesaLigada(estado)) return passadas(true);
     const rs = estado.doc.paginas.map((_, i) => gerarGcode(estado, i));
     const falha = rs.findIndex((r) => r.bloqueia);
     if (falha >= 0) { erro.textContent = `Página ${falha + 1}: ${rs[falha].erro}`; return; }
@@ -201,5 +207,7 @@ export function montarBarra(elemento, estado, aoMudar) {
     }
     resumo.textContent = texto;
     bGcode.disabled = bTodosGcode.disabled = bloqueado;
+    bGcode.textContent = mesaLigada(estado) ? 'Baixar passada' : 'Baixar G-code';
+    bTodosGcode.textContent = mesaLigada(estado) ? 'Todas as passadas' : 'Todos os G-code';
   };
 }

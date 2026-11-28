@@ -113,6 +113,20 @@ function arquivos(estado, p, f, k) {
     .map((i) => [`${of}-p${pg(p, f, i) + 1}-f${f + 1}-pa${k + 1}${sf}.gcode`, () => gcodePassada(estado, p, f, k, i)]);
 }
 
+// G-code da imposição: a passada escolhida na vista Mesa (estado.mesaSel) ou todas as que têm página; { arquivos: [nome, texto][], fora }.
+// Gera tudo antes de baixar: no perfil experimental, traço fora da janela não gera arquivo nenhum (throw).
+export function gcodesMesa(estado, todas) {
+  const p = plano(estado);
+  if (p.erro) throw new Error(p.erro);
+  const comPagina = (x) => p.imp.passadas[x.k].slots.some((i) => p.doc.paginas[pg(p, x.f, i)]);
+  const sel = estado.mesaSel ?? {};
+  const lista = todas ? p.passos.filter(comPagina) : [p.passos.find((x) => x.f === sel.f && x.k === sel.k) ?? p.passos.find(comPagina) ?? p.passos[0]];
+  const gerados = lista.flatMap((x) => arquivos(estado, p, x.f, x.k)).map(([n, g]) => [n, g()]);
+  const fora = gerados.map(([, r]) => r.fora).find(Boolean);
+  if (fora && estado.perfil.experimental) throw new Error(MSG_EXP);
+  return { arquivos: gerados.map(([n, r]) => [n, r.texto]), fora };
+}
+
 // Liga a vista da mesa com imposição? (sem imposição a vista mostra a página atual na posição da exportação normal)
 export const mesaLigada = (estado) => !!mesaDe(estado).ligada;
 
@@ -237,12 +251,10 @@ export function desenharMesa(elemento, estado) {
     b.addEventListener('click', () => { aviso.textContent = ''; try { fn(); } catch (e) { aviso.textContent = e.message; } });
     return b;
   };
-  // gera tudo antes de baixar: no perfil experimental, traço fora da janela não gera arquivo nenhum
-  const baixarTodos = (lista) => {
-    const gerados = lista.map(([n, g]) => [n, g()]), fora = gerados.map(([, r]) => r.fora).find(Boolean);
-    if (fora && perfil.experimental) throw new Error(MSG_EXP);
-    gerados.forEach(([n, r]) => baixar(r.texto, n));
-    if (fora) aviso.textContent = fora;
+  const baixarTodos = (todas) => {
+    const r = gcodesMesa(estado, todas);
+    r.arquivos.forEach(([n, t]) => baixar(t, n));
+    if (r.fora) aviso.textContent = r.fora;
   };
   try { const { fora } = gcodePassada(estado, p, f, k, undefined, true); if (fora) aviso.textContent = perfil.experimental ? MSG_EXP : fora; } catch { /* sem G-code, sem aviso */ }
   const barra = el('div', 'mesa-barra'), rot = el('label', null, 'Passada '), s = el('select');
@@ -252,8 +264,8 @@ export function desenharMesa(elemento, estado) {
   rot.append(s);
   barra.append(
     rot,
-    botao('Baixar esta passada', () => baixarTodos(arquivos(estado, p, f, k)), 'primario'),
-    botao('Baixar todas as passadas', () => baixarTodos(passos.filter(comPagina).flatMap((x) => arquivos(estado, p, x.f, x.k)))),
+    botao('Baixar esta passada', () => baixarTodos(false), 'primario'),
+    botao('Baixar todas as passadas', () => baixarTodos(true)),
   );
 
   // a folha inteira nesta passada, com o texto de todas as páginas dela: as desta passada em tinta, as outras em cinza

@@ -67,6 +67,14 @@ test('"Baixar todas as passadas" pula a passada sem página e põe a instrução
   expect(texto.startsWith('; Passada')).toBe(true)
 })
 
+test('com a imposição ligada, a barra de exportar baixa a passada (não a página solta no canto)', async ({ page }) => {
+  await page.locator('summary', { hasText: 'Todas as páginas' }).click()
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Todas as passadas', exact: true }).click()])
+  expect(dl.suggestedFilename()).toMatch(/^carta-f1-pa[12]\.gcode$/)
+  expect((await readFile(await dl.path(), 'utf8')).startsWith('; Passada')).toBe(true)
+  await expect(page.getByRole('button', { name: 'Baixar passada', exact: true })).toBeVisible()
+})
+
 test('modo "um por página" baixa um arquivo por slot com página', async ({ page }) => {
   await subsecao(page, 'Arquivos')
   await page.getByRole('combobox', { name: 'arquivos', exact: true }).selectOption({ label: 'um por página' })
