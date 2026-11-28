@@ -7,6 +7,7 @@ const CHAVES = {
   escrita: ['texto', 'exemplo', 'vistos', 'opcoes', 'carta', 'livro', 'colunasLivro', 'papelCfg', 'paginaNome'],
   grimorio: ['selecionadas', 'atual', 'papelCfg', 'cfg', 'estilo', 'simbolos'],
   sigilos: ['sig', 'estilo', 'papelCfg', 'paginaNome'],
+  simbolos: ['amostra', 'papelCfg', 'paginaNome'],
   coleta: ['col', 'papelCfg', 'paginaNome'],
 };
 

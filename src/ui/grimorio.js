@@ -13,6 +13,7 @@ import * as pExportar from './exportar.js';
 import * as armazem from './armazem.js';
 import { controle, dica, ligar } from './controle.js';
 import { baixarJson } from './util.js';
+import { sistemaDe } from '../ficha/simbolos.js';
 
 const $ = (id) => document.getElementById(id);
 const CHAVE = 'grimorio.estado';
@@ -70,6 +71,7 @@ export function criar() {
       maoArcana: { ...NEUTRA, base: [{ fonte: 'arcano', peso: 1 }], seed: estado.estilo.seed },
       sigilos: estado.simbolos.sigilos,
       seed: estado.estilo.seed,
+      sistema: sistemaDe(estado.personagem), // sistema de símbolos do personagem (oficina Símbolos)
     };
   }
 
@@ -229,6 +231,7 @@ export function criar() {
         baixarJson(`tradicao-${estado.estilo.seed}.json`, { estilo: estado.estilo, simbolos: estado.simbolos });
       } }, 'Exportar tradição'),
       el('button', { type: 'button', onclick: () => importar.click() }, 'Importar tradição'), importar));
+    raiz.append(el('p', {}, 'O desenho dos sigilos segue o sistema de símbolos do personagem. ', el('a', { href: '#simbolos' }, 'Editar sistema de símbolos ›')));
 
     return () => ctrls.forEach((c) => c.atualizar());
   }

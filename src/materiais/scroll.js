@@ -4,6 +4,7 @@ import { glifo } from '../motor/mao.js';
 import { blocos } from '../magia.js';
 import { cifrar, sigilo, moldura, LETRAS } from '../arcano/alfabeto.js';
 import { CANETAS } from './documento.js';
+import { desenharSistema } from '../arcano/sistema.js';
 import { separador } from '../ornamento/filigrana.js';
 
 
@@ -49,7 +50,7 @@ function comporMagia(m, ctx, cfg, pagina, topo, { tamanho, completo, sigilo: com
   if (d > 0) {
     if (y + d > limite && y > margens.topo) { pags.push([]); y = margens.topo; }
     const cx = margens.esq + W / 2, cy = y + d / 2;
-    const tr = ctx.sigilos?.[m.id] ?? sigilo(m, ctx.seed);
+    const tr = ctx.sigilos?.[m.id] ?? (ctx.sistema ? desenharSistema(ctx.sistema, m, ctx.seed, ctx) : sigilo(m, ctx.seed));
     const pos = tr.map((t) => t.map(([x, yy]) => [cx + (x * d) / 2, cy + (yy * d) / 2]));
     for (const t of pos) SIGILO.add(t);
     pags[pags.length - 1].push(...pos);

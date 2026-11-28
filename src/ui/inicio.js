@@ -7,6 +7,8 @@ import { comporCarta } from '../materiais/carta.js';
 import { comporLivro } from '../materiais/livro.js';
 import { comporGrimorio } from '../materiais/scroll.js';
 import { comporSigilos } from '../materiais/sigilos.js';
+import { comporChave } from '../materiais/chave.js';
+import { dePreset } from '../arcano/presets.js';
 import { EXEMPLOS } from '../materiais/exemplos.js';
 import { gerarAlfabeto } from '../arcano/alfabeto.js';
 import { magiaVazia } from '../magia.js';
@@ -30,6 +32,8 @@ const OFICINAS = [
       maoArcana: { ...NEUTRA, base: [{ fonte: 'arcano', peso: 1 }], seed: 1 }, sigilos: {}, seed: 1 }, { papel: papel('A7'), tamanho: 3, completo: 'nao' })],
   ['sigilos', 'Sigilos', 'Frases viram selos e círculos mágicos.',
     (ctx) => comporSigilos('luz\nmar\nsol\nlua', ctx, { papel: papel('A7'), tipo: 'selo', colunas: 2, legendas: true, seed: 1 })],
+  ['simbolos', 'Símbolos', 'Seu sistema de escrita mágica: escola, nível e a magia viram sigilo.',
+    (ctx) => comporChave([{ ...MAGIA, escola: 'V', mec: 'Res. DES · 8d6 fogo' }, { ...MAGIA, id: 'escudo', nome: 'Escudo', nivel: 1, escola: 'A', alcance: 'Pessoal', duracao: '1 rodada', mec: '' }], dePreset('colar'), ctx, { papel: papel('A7'), colunas: 2, tamanhoLegenda: 2 })],
 ];
 
 function ler(chave, padrao) {

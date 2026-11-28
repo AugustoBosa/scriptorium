@@ -35,4 +35,4 @@ export const INICIOS = [
   ['branco', 'Em branco', 'Comece de uma mão neutra e ajuste tudo.'],
 ];
 
-export const NOMES_OFICINA = { carta: 'Carta', livro: 'Livro', magias: 'Magias', sigilos: 'Sigilos', letra: 'Minha letra' };
+export const NOMES_OFICINA = { carta: 'Carta', livro: 'Livro', magias: 'Magias', sigilos: 'Sigilos', simbolos: 'Símbolos', letra: 'Minha letra' };

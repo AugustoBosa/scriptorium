@@ -6,6 +6,7 @@ import { novoPersonagem, nomeLivre, validar, ESCRITA_PADRAO, notasDe } from '../
 import { RACAS, CLASSES, ANTECEDENTES, IDIOMAS, ALINHAMENTOS, IDADES, ESCRITAS } from '../ficha/dnd.js';
 import { propostas, sugerirLetras, letrasDerivadas, maoDaFicha } from '../ficha/sugerir.js';
 import { montarPerfis, variacoesDe } from '../ficha/perfis.js';
+import { sugerirSistema } from '../ficha/simbolos.js';
 import { controle } from './controle.js';
 import { abrirCatalogo } from './catalogo.js';
 import { amostra } from '../layout.js';
@@ -365,10 +366,11 @@ function passoResumo(corpo, s) {
     const errosPerfis = erroPerfis(lista);
     if (errosPerfis) { erro.textContent = errosPerfis; return; }
     const salvos = lerPersonagens();
+    const simbolos = salvos[r.editando]?.simbolos ?? sugerirSistema(r.ficha); // sistema editado à mão não se perde ao reabrir a ficha
     if (r.editando) delete salvos[r.editando];
     const final = nomeLivre(Object.keys(salvos), nome);
     const mao = { ...maoDaFicha(r.ficha, baseDe(r)), ...ESCRITA_PADRAO };
-    const personagem = { nome: final, mao, variacoes: variacoesDe(mao, lista.map((p) => ({ ...p, nome: p.nome.trim() }))), notas: notasDe(null), ficha: structuredClone(r.ficha) };
+    const personagem = { nome: final, mao, variacoes: variacoesDe(mao, lista.map((p) => ({ ...p, nome: p.nome.trim() }))), notas: notasDe(null), ficha: structuredClone(r.ficha), simbolos };
     const errosP = validar(personagem);
     if (errosP.length) { erro.textContent = 'Erro: ' + errosP.join('; '); return; }
     try {

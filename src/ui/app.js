@@ -16,6 +16,7 @@ import * as pPersonagem from './personagem.js';
 import * as pTexto from './texto.js';
 import * as pExportar from './exportar.js';
 import { criar as criarGrimorio } from './grimorio.js';
+import { criar as criarSimbolos } from './simbolos.js';
 import * as pMat from './materiais.js';
 import { montar as montarMesa, desenharMesa, mesaLigada } from './mesa.js';
 import { montar as montarInicio } from './inicio.js';
@@ -26,11 +27,11 @@ import { montarColeta, comporDeColeta, coleta0 } from './letra.js';
 import * as trabalho from './trabalho.js';
 import { NOMES_OFICINA } from './util.js';
 
-const OFICINAS = { carta: 'escrita', livro: 'escrita', magias: 'grimorio', sigilos: 'sigilos', letra: 'coleta' };
+const OFICINAS = { carta: 'escrita', livro: 'escrita', magias: 'grimorio', sigilos: 'sigilos', simbolos: 'simbolos', letra: 'coleta' };
 const ANTIGAS = { scroll: true, grimorio: false }; // rota antiga → porPagina em #magias
 const PAGINAS = { inicio: montarInicio, personagens: montarPersonagens, biblioteca: montarBiblioteca, ficha: montarFicha };
 const NOMES = { inicio: 'Início', personagens: 'Personagens', biblioteca: 'Biblioteca', ficha: 'Criar personagem', ...NOMES_OFICINA };
-const VAZIO = { magias: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.', letra: 'Nada para plotar.' };
+const VAZIO = { magias: 'Escolha uma magia na lista.', carta: 'Escreva o texto no painel Texto.', livro: 'Escreva o texto no painel Texto.', sigilos: 'Escreva as frases no painel.', simbolos: 'Sem magias de amostra: importe um magias.json na oficina Magias.', letra: 'Nada para plotar.' };
 const COMPARTILHADAS = ['fontes', 'nomesFontes', 'personagem', 'perfilNome', 'perfil', 'otimizar', 'trajeto', 'mesa'];
 const $ = (id) => document.getElementById(id);
 
@@ -125,7 +126,7 @@ function criarColeta() {
   };
 }
 
-const FABRICAS = { escrita: criarEscrita, grimorio: criarGrimorio, sigilos: criarSigilos, coleta: criarColeta };
+const FABRICAS = { escrita: criarEscrita, grimorio: criarGrimorio, sigilos: criarSigilos, simbolos: criarSimbolos, coleta: criarColeta };
 const insts = {}; // nome → instância
 const vistas = new Map(); // instância → { detalhes, barra, atualizar: [] }
 let atual = null, fontesCarregadas = null, ticket = 0, vindoDePagina = false, porPaginaPedido = null, materialAberto = false;
