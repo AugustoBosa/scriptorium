@@ -2,7 +2,7 @@
 
 Estado do projeto e o que falta. O histórico antigo (ciclos M1–M23) está no git, até o commit `156fdca`.
 
-## Oficina Símbolos (2026-11-28, branch `simbolos`, sem push)
+## Oficina Símbolos (2026-11-28, publicada em 202abb8)
 
 - **O que é.** É um editor de *sistemas de símbolos*: regras que transformam os atributos de uma magia no sigilo dela. O sistema fica salvo no personagem, em `personagem.simbolos`. O Grimório desenha os sigilos com ele (`ctx.sistema` em `scroll.js`). Um sigilo desenhado à mão continua tendo prioridade.
 - **Motor** (`src/arcano/sistema.js`): `desenharSistema(s, magia, seed, ctx)` devolve coordenadas em [-1,1] e compõe numa caixa de 60 mm. Cada código liga um atributo a um desenho:
